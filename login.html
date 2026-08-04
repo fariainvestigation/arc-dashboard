@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARC Sign In</title>
+  <link rel="stylesheet" href="arc_uniform_design.css">
+  <style>
+    body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1720;color:#edf5f8;font-family:Segoe UI,Arial,sans-serif}
+    .card{width:min(420px,calc(100vw - 32px));background:#122331;border:1px solid #284252;border-radius:14px;padding:24px;box-shadow:0 16px 40px rgba(0,0,0,.28)}
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 18px;color:#9fb4bf;font-size:13px;line-height:1.5}
+    label{display:block;font-size:12px;margin:0 0 6px;color:#cbe1ea}
+    input{width:100%;box-sizing:border-box;margin:0 0 14px;padding:11px 12px;border-radius:8px;border:1px solid #284252;background:#07121a;color:#edf5f8}
+    button{width:100%;padding:12px;border:0;border-radius:8px;background:#55d2ff;color:#00131b;font-weight:700;cursor:pointer}
+    .err{color:#ff7f86;font-size:13px;min-height:18px;margin-bottom:10px}
+    .meta{margin-top:14px;font-size:11px;color:#9fb4bf}
+  </style>
+</head>
+<body>
+  <form class="card" id="loginForm">
+    <h1>ARC Sign In</h1>
+    <p>Per-user authentication is required before case or report APIs can be used. Cloudflare Access users are signed in automatically when that gate is enabled.</p>
+    <div class="err" id="error"></div>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Sign in</button>
+    <div class="meta" id="meta">Checking auth modes…</div>
+  </form>
+  <script src="arc_auth_session.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const next = params.get("next") || "/index.html";
+    const errorEl = document.getElementById("error");
+    const meta = document.getElementById("meta");
+
+    fetch("/api/auth/session", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.authenticated) {
+          location.replace(next);
+          return;
+        }
+        const modes = [];
+        if (data.modes && data.modes.cloudflareAccess) modes.push("Cloudflare Access");
+        if (data.modes && data.modes.passwordLogin) modes.push("email/password");
+        meta.textContent = modes.length
+          ? ("Available: " + modes.join(" · "))
+          : "No login providers configured. Set ARC_BOOTSTRAP_EMAIL/PASSWORD or Cloudflare Access env vars.";
+      })
+      .catch(function () {
+        meta.textContent = "Unable to reach /api/auth/session";
+      });
+
+    document.getElementById("loginForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      errorEl.textContent = "";
+      try {
+        await arcAuth.login(
+          document.getElementById("email").value,
+          document.getElementById("password").value
+        );
+        location.replace(next);
+      } catch (error) {
+        errorEl.textContent = error.message || "Login failed";
+      }
+    });
+  </script>
+</body>
+</html>

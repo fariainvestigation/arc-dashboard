@@ -1,0 +1,2404 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARC Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="libs/pptxgen.bundle.js"></script>
+<script src="libs/html-docx.js"></script>
+<script src="arc_shared_keys.js"></script>
+<script src="arc_report_header.js"></script>
+<style>
+:root{
+  --bg:#15161B;
+  --panel:#1D1F26;
+  --panel2:#232630;
+  --line:#2E3140;
+  --gold:#C9A84C;
+  --gold-soft:rgba(201,168,76,.14);
+  --text:#E8E6E0;
+  --muted:#9A9CA8;
+  --danger:#D06A5C;
+  --ok:#7FAE7A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.55}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit;color:var(--text)}
+::selection{background:var(--gold-soft)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ---------- header ---------- */
+.hdr{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);background:var(--panel)}
+.hdr .mono{width:38px;height:38px;border:1px solid var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;color:var(--gold);font-size:17px;letter-spacing:.5px;flex:0 0 auto}
+.hdr h1{font-family:'Playfair Display',serif;font-size:19px;font-weight:600;letter-spacing:.3px}
+.hdr .sub{font-size:12px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.hdr .spacer{flex:1}
+.iconbtn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:7px 12px;font-size:13px}
+.iconbtn:hover{border-color:var(--gold);color:var(--gold)}
+.backbtn{background:none;border:none;color:var(--gold);font-size:14px;padding:4px 8px}
+.backbtn:hover{text-decoration:underline}
+
+/* ---------- home ---------- */
+.home{max-width:1040px;margin:0 auto;padding:38px 22px}
+.home h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;margin-bottom:6px}
+.home .lead{color:var(--muted);margin-bottom:28px;max-width:640px}
+.nbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.nbcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;cursor:pointer;position:relative;transition:border-color .15s}
+.nbcard:hover{border-color:var(--gold)}
+.nbcard h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:4px;padding-right:28px}
+.nbcard .case{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);margin-bottom:10px}
+.nbcard .meta{font-size:12.5px;color:var(--muted)}
+.nbcard .del{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);font-size:15px;padding:4px}
+.nbcard .del:hover{color:var(--danger)}
+.newcard{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:18px}
+.newcard h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--gold);margin-bottom:12px}
+.newcard input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-size:14px;margin-bottom:10px}
+.newcard input:focus{border-color:var(--gold);outline:none}
+.goldbtn{background:var(--gold);color:#14151A;border:none;border-radius:6px;padding:9px 16px;font-weight:700;font-size:13.5px;letter-spacing:.3px}
+.goldbtn:hover{filter:brightness(1.08)}
+.goldbtn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- workspace ---------- */
+.ws{display:grid;grid-template-columns:300px minmax(0,1fr) 330px;height:calc(100vh - 67px)}
+.pane{overflow-y:auto;border-right:1px solid var(--line)}
+.pane:last-child{border-right:none}
+.panehead{padding:14px 16px 10px;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;display:flex;align-items:center;gap:8px}
+.panehead .count{font-family:'DM Mono',monospace;color:var(--gold)}
+
+/* sources */
+.dropzone{margin:14px;border:1px dashed var(--line);border-radius:8px;padding:18px 14px;text-align:center;color:var(--muted);font-size:13px;transition:border-color .15s,background .15s}
+.dropzone.on{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.dropzone .browse{color:var(--gold);background:none;border:none;font-size:13px;text-decoration:underline;padding:0}
+.doclist{padding:0 10px 14px}
+.docrow{display:flex;gap:10px;align-items:flex-start;padding:10px 8px;border-radius:8px;cursor:pointer;position:relative}
+.docrow:hover{background:var(--panel)}
+.exhibit{width:30px;height:30px;flex:0 0 auto;border:1px solid var(--gold);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;color:var(--gold);font-size:14px}
+.docrow .dname{font-size:13.5px;font-weight:500;word-break:break-word;padding-right:22px}
+.docrow .dmeta{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
+.docrow .ddel{position:absolute;top:8px;right:6px;background:none;border:none;color:var(--muted);font-size:14px;padding:2px 4px}
+.docrow .ddel:hover{color:var(--danger)}
+.busy{margin:0 14px 14px;font-size:12.5px;color:var(--gold);font-family:'DM Mono',monospace}
+
+/* chat */
+.chatwrap{display:flex;flex-direction:column;height:100%;min-width:0}
+.groundbar{padding:8px 16px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel);display:flex;gap:8px;align-items:center}
+.groundbar .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto}
+.msgs{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.msg{max-width:86%;border-radius:10px;padding:12px 15px;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;background:var(--panel2);border:1px solid var(--line)}
+.msg.ai{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}
+.msg.err{align-self:flex-start;background:none;border:1px solid var(--danger);color:var(--danger);font-size:13.5px}
+.msg .mtools{margin-top:10px;display:flex;gap:8px}
+.pinbtn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:5px;font-size:11.5px;padding:4px 9px}
+.pinbtn:hover{border-color:var(--gold);color:var(--gold)}
+.cite{display:inline-flex;align-items:center;background:var(--gold-soft);border:1px solid var(--gold);color:var(--gold);border-radius:4px;font-family:'DM Mono',monospace;font-size:10.5px;padding:0 5px;margin:0 2px;vertical-align:baseline;cursor:pointer;line-height:1.6}
+.cite:hover{background:var(--gold);color:#14151A}
+.aihead{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--gold);display:block;margin:6px 0 2px}
+.typing{align-self:flex-start;color:var(--muted);font-family:'DM Mono',monospace;font-size:12.5px;padding:4px 2px}
+.emptychat{margin:auto;text-align:center;color:var(--muted);max-width:420px;padding:20px}
+.emptychat .big{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);margin-bottom:8px}
+.askbar{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line);background:var(--panel)}
+.askbar textarea{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14.5px;resize:none;height:46px;line-height:1.4}
+.askbar textarea:focus{border-color:var(--gold);outline:none}
+
+/* studio */
+.studio{padding:0 0 20px}
+.stubox{padding:14px 16px;border-bottom:1px solid var(--line)}
+.stubox h4{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.synthbtn{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13.5px;margin-bottom:8px}
+.synthbtn:hover{border-color:var(--gold)}
+.synthbtn:disabled{opacity:.4;cursor:not-allowed}
+.synthbtn .hint{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.notelist{padding:6px 16px}
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:10px;position:relative}
+.note .ntitle{font-weight:700;font-size:13px;margin-bottom:4px;padding-right:24px}
+.note .ntext{font-size:12.5px;color:var(--muted);white-space:pre-wrap;max-height:130px;overflow:hidden}
+.note .ndel{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);font-size:13px}
+.note .ndel:hover{color:var(--danger)}
+.addnote textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;resize:vertical;min-height:56px;margin-bottom:8px}
+.addnote textarea:focus{border-color:var(--gold);outline:none}
+.emptynotes{color:var(--muted);font-size:12.5px;padding:4px 16px 12px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(10,10,14,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(860px,100%);max-height:88vh;display:flex;flex-direction:column}
+.modal .mhead{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.modal .mhead h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;flex:1;word-break:break-word}
+.modal .mclose{background:none;border:none;color:var(--muted);font-size:20px;padding:2px 8px}
+.modal .mclose:hover{color:var(--text)}
+.modal .mbody{overflow-y:auto;padding:18px;font-size:13.5px;white-space:pre-wrap;font-family:'DM Mono',monospace;line-height:1.7;color:#C9CAD2}
+.modal .mbody mark{background:var(--gold-soft);color:var(--gold);border-radius:3px;padding:1px 2px;border:1px solid var(--gold)}
+.modal.small{width:min(460px,100%)}
+.modal .mbody.sans{font-family:'DM Sans',sans-serif;white-space:normal}
+.modal .mbody label{display:block;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.modal .mbody input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-size:14px;margin-bottom:12px;font-family:'DM Mono',monospace}
+.modal .mbody input:focus{border-color:var(--gold);outline:none}
+.modal .mbody .row{display:flex;gap:10px}
+.finemeta{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* create tools */
+.bigmodal{width:min(1100px,96vw)}
+.toolrow{display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.toolrow .tspacer{flex:1}
+.mmwrap{overflow:auto;flex:1;padding:12px;min-height:320px}
+.genhint{color:var(--muted);font-size:13px;padding:28px;text-align:center;max-width:520px;margin:0 auto}
+.deckwrap{overflow-y:auto;flex:1;padding:14px 18px;min-height:320px}
+.slidecard{background:var(--panel2);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.slidecard .sc-top{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.slidecard .sc-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:.8px;flex:1}
+.slidecard .sc-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:5px;font-size:11px;padding:3px 8px}
+.slidecard .sc-btn:hover{border-color:var(--gold);color:var(--gold)}
+.slidecard .sc-btn:disabled{opacity:.35;cursor:not-allowed}
+.slidecard input.sc-title{width:100%;background:none;border:none;font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);padding:12px 16px 6px}
+.slidecard input.sc-title:focus{outline:none}
+.slidecard textarea.sc-bullets{width:100%;background:none;border:none;color:var(--text);font-size:13.5px;padding:8px 16px 14px;resize:vertical;min-height:84px;line-height:1.7}
+.slidecard textarea.sc-bullets:focus{outline:none}
+.goldrule{height:2px;background:var(--gold);margin:0 16px;opacity:.85;width:110px}
+.repbody{overflow-y:auto;flex:1;padding:16px 18px;min-height:320px}
+.repgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-bottom:8px}
+.repgrid label{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--text);cursor:pointer}
+.repgrid input{accent-color:var(--gold)}
+.rephead{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:12px 0 8px}
+.repsel{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;max-width:240px}
+.repsel:focus{border-color:var(--gold);outline:none}
+.repnote{background:var(--gold-soft);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:9px 12px;font-size:12.5px;margin:8px 0 4px}
+.custfield{margin-bottom:10px}
+.custfield label{display:block;font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.custfield input,.custfield textarea,.custfield select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13.5px;color:var(--text);font-family:'DM Sans',sans-serif}
+.custfield textarea{resize:vertical;min-height:64px}
+.custfield input:focus,.custfield textarea:focus,.custfield select:focus{border-color:var(--gold);outline:none}
+.custrow{display:flex;gap:8px;margin-bottom:8px}
+.reppreview{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:18px;font-size:14px;white-space:pre-wrap;margin-top:14px}
+@media(max-width:700px){.repgrid{grid-template-columns:1fr}}
+
+/* mobile */
+.tabbar{display:none}
+@media(max-width:1000px){
+  .ws{grid-template-columns:1fr;height:calc(100vh - 108px)}
+  .pane{display:none;border-right:none}
+  .pane.active{display:block}
+  .chatwrap{display:none}
+  .chatwrap.active{display:flex}
+  .tabbar{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+  .tabbar button{flex:1;background:none;border:none;color:var(--muted);padding:11px;font-size:13px;letter-spacing:.5px;border-bottom:2px solid transparent}
+  .tabbar button.on{color:var(--gold);border-bottom-color:var(--gold)}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+  <link rel="stylesheet" href="arc_uniform_design.css">
+</head>
+<body>
+
+<header class="hdr">
+  <div class="mono">A</div>
+  <div>
+    <h1 id="hdrTitle">ARC Notebook</h1>
+    <div class="sub" id="hdrSub">Grounded document intelligence</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="backbtn" id="backBtn" style="display:none">&#8592; Notebooks</button>
+  <button class="iconbtn" id="settingsBtn">Settings</button>
+</header>
+
+<div class="tabbar" id="tabbar" style="display:none">
+  <button data-tab="sources">Sources</button>
+  <button data-tab="chat" class="on">Chat</button>
+  <button data-tab="studio">Studio</button>
+</div>
+
+<main id="app"></main>
+
+<div class="overlay" id="srcOverlay">
+  <div class="modal">
+    <div class="mhead"><h3 id="srcTitle">Source</h3><button class="mclose" id="srcClose">&times;</button></div>
+    <div class="mbody" id="srcBody"></div>
+  </div>
+</div>
+
+<div class="overlay" id="setOverlay">
+  <div class="modal small">
+    <div class="mhead"><h3>Settings</h3><button class="mclose" id="setClose">&times;</button></div>
+    <div class="mbody sans">
+      <label for="keyInput">Gemini API key</label>
+      <input type="password" id="keyInput" autocomplete="off" placeholder="AIza...">
+      <div class="row">
+        <button class="goldbtn" id="keySave">Save key</button>
+        <button class="iconbtn" id="keyClear">Clear key</button>
+      </div>
+      <p class="finemeta">The key is stored only in this browser's localStorage under ARC_GEMINI_KEY_V1 and is sent only to the Google Gemini API. Answers are strictly limited to your uploaded sources.</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="mmOverlay">
+  <div class="modal bigmodal">
+    <div class="mhead"><h3>Mind map</h3><button class="mclose" data-close="mmOverlay">&times;</button></div>
+    <div class="toolrow">
+      <button class="goldbtn" id="mmGen">Generate</button>
+      <button class="iconbtn" id="mmSvg">Export SVG</button>
+      <button class="iconbtn" id="mmPng">Export PNG</button>
+      <span class="tspacer"></span>
+      <span class="finemeta" id="mmStatus"></span>
+    </div>
+    <div class="mmwrap" id="mmWrap"></div>
+  </div>
+</div>
+
+<div class="overlay" id="deckOverlay">
+  <div class="modal bigmodal">
+    <div class="mhead"><h3>Slide deck</h3><button class="mclose" data-close="deckOverlay">&times;</button></div>
+    <div class="toolrow">
+      <button class="goldbtn" id="deckGen">Generate</button>
+      <button class="iconbtn" id="deckAdd">Add slide</button>
+      <button class="iconbtn" id="deckPptx">Export .pptx</button>
+      <span class="tspacer"></span>
+      <span class="finemeta" id="deckStatus"></span>
+    </div>
+    <div class="deckwrap" id="deckWrap"></div>
+  </div>
+</div>
+
+<div class="overlay" id="repOverlay">
+  <div class="modal bigmodal">
+    <div class="mhead"><h3>Create report</h3><button class="mclose" data-close="repOverlay">&times;</button></div>
+    <div class="toolrow">
+      <select id="repType" class="repsel" aria-label="Report type"></select>
+      <button class="goldbtn" id="repGen">Generate narrative</button>
+      <button class="iconbtn" id="repMd">Markdown</button>
+      <button class="iconbtn" id="repDocx">Word .docx</button>
+      <button class="iconbtn" id="repPrint">Print / PDF</button>
+      <button class="iconbtn" id="repJson">Draft JSON v6</button>
+      <span class="tspacer"></span>
+      <span class="finemeta" id="repStatus"></span>
+    </div>
+    <div class="repbody">
+      <div id="repOpts"></div>
+      <div class="reppreview" id="repPreview"></div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md" style="display:none">
+
+<script>
+(function () {
+  'use strict';
+
+  /* ===================== constants ===================== */
+  var INDEX_KEY = 'ARC_NB_INDEX_V1';
+  var GEMINI_KEY = 'ARC_GEMINI_KEY_V1';
+  var MODEL_CACHE_KEY = 'ARC_NB_MODEL_V1';
+  var MODEL_LADDER = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-flash-latest'];
+  var CHUNK_SIZE = 1400;
+  var CHUNK_OVERLAP = 200;
+  var RETRIEVE_TOP = 12;
+  var RETRIEVE_CHAR_CAP = 22000;
+  var SYNTH_CHAR_CAP = 26000;
+  var DOC_CHAR_CAP = 1500000;
+  var NOT_FOUND_LINE = 'The uploaded documents do not contain information to answer this question.';
+  var STOP = {};
+  ('the a an and or but if then else of in on at to for from by with as is are was were be been this that these those it its not no yes do does did have has had can could will would may might about into over under between within their there here what which when where who whom whose how why all any each such than very own same so too also').split(' ').forEach(function (w) { STOP[w] = 1; });
+
+  /* ===================== small utils ===================== */
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uid() { return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function fmtDate(ts) {
+    var d = new Date(ts);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtSize(n) {
+    if (n > 1000000) return (n / 1000000).toFixed(1) + 'M chars';
+    if (n > 1000) return Math.round(n / 1000) + 'k chars';
+    return n + ' chars';
+  }
+  function download(filename, text) {
+    var blob = new Blob([text], { type: 'text/markdown' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  }
+
+  /* ===================== storage: index + IndexedDB ===================== */
+  function loadIndex() {
+    try { return JSON.parse(localStorage.getItem(INDEX_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function saveIndex(idx) { localStorage.setItem(INDEX_KEY, JSON.stringify(idx)); }
+
+  var dbPromise = null;
+  function idb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req = indexedDB.open('ARC_NOTEBOOK_DB_V1', 1);
+      req.onupgradeneeded = function () {
+        req.result.createObjectStore('notebooks', { keyPath: 'id' });
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+    return dbPromise;
+  }
+  function nbGet(id) {
+    return idb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var r = db.transaction('notebooks').objectStore('notebooks').get(id);
+        r.onsuccess = function () { resolve(r.result || null); };
+        r.onerror = function () { reject(r.error); };
+      });
+    });
+  }
+  function nbPut(nb) {
+    nb.updatedAt = Date.now();
+    return idb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction('notebooks', 'readwrite');
+        tx.objectStore('notebooks').put(nb);
+        tx.oncomplete = function () { resolve(nb); };
+        tx.onerror = function () { reject(tx.error); };
+      });
+    }).then(function () {
+      var idx = loadIndex();
+      var found = false;
+      for (var i = 0; i < idx.length; i++) {
+        if (idx[i].id === nb.id) {
+          idx[i] = indexEntry(nb);
+          found = true;
+        }
+      }
+      if (!found) idx.unshift(indexEntry(nb));
+      idx.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+      saveIndex(idx);
+      return nb;
+    });
+  }
+  function nbDelete(id) {
+    return idb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction('notebooks', 'readwrite');
+        tx.objectStore('notebooks').delete(id);
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = function () { reject(tx.error); };
+      });
+    }).then(function () {
+      saveIndex(loadIndex().filter(function (e) { return e.id !== id; }));
+    });
+  }
+  function indexEntry(nb) {
+    return { id: nb.id, name: nb.name, caseNo: nb.caseNo || '', docCount: (nb.docs || []).length, updatedAt: nb.updatedAt || Date.now() };
+  }
+
+  /* ===================== app state ===================== */
+  var current = null;        // full notebook object currently open
+  var pending = false;       // a Gemini call is in flight
+  var parsing = 0;           // files currently being parsed
+
+  /* ===================== Gemini ===================== */
+  function arcGetGeminiKey() {
+    var k = localStorage.getItem(GEMINI_KEY);
+    if (!k) {
+      openSettings();
+      throw new Error('Add your Gemini API key in Settings to continue.');
+    }
+    return k;
+  }
+
+  function geminiCallModel(model, key, promptText) {
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key);
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+      })
+    }).then(function (res) {
+      if (res.status === 404) return { notFound: true };
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+          throw new Error('Gemini API error: ' + msg);
+        }
+        var out = '';
+        try {
+          var parts = data.candidates[0].content.parts;
+          for (var i = 0; i < parts.length; i++) out += parts[i].text || '';
+        } catch (e) {
+          throw new Error('Gemini returned an empty response. Try again.');
+        }
+        if (!out.trim()) throw new Error('Gemini returned an empty response. Try again.');
+        return { text: out };
+      });
+    });
+  }
+
+  function geminiDiscoverModels(key) {
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(key);
+    return fetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      var models = (data.models || [])
+        .filter(function (m) {
+          return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0 &&
+                 m.name.indexOf('flash') >= 0 && m.name.indexOf('embedding') < 0;
+        })
+        .map(function (m) { return m.name.replace(/^models\//, ''); })
+        .sort()
+        .reverse();
+      return models;
+    });
+  }
+
+  function arcGeminiGenerate(promptText) {
+    var key = arcGetGeminiKey();
+    var cached = localStorage.getItem(MODEL_CACHE_KEY);
+    var ladder = MODEL_LADDER.slice();
+    if (cached && ladder.indexOf(cached) !== 0) {
+      ladder = [cached].concat(ladder.filter(function (m) { return m !== cached; }));
+    }
+    function tryAt(i) {
+      if (i >= ladder.length) {
+        return geminiDiscoverModels(key).then(function (models) {
+          if (!models.length) throw new Error('No compatible Gemini model was found on this API key.');
+          return tryDiscovered(models, 0);
+        });
+      }
+      return geminiCallModel(ladder[i], key, promptText).then(function (r) {
+        if (r.notFound) return tryAt(i + 1);
+        localStorage.setItem(MODEL_CACHE_KEY, ladder[i]);
+        return r.text;
+      });
+    }
+    function tryDiscovered(models, i) {
+      if (i >= models.length || i >= 4) throw new Error('No compatible Gemini model responded. Check the API key and quota.');
+      return geminiCallModel(models[i], key, promptText).then(function (r) {
+        if (r.notFound) return tryDiscovered(models, i + 1);
+        localStorage.setItem(MODEL_CACHE_KEY, models[i]);
+        return r.text;
+      });
+    }
+    return tryAt(0);
+  }
+
+  /* ===================== intake ===================== */
+  function chunkOffsets(text) {
+    var chunks = [];
+    var s = 0;
+    while (s < text.length) {
+      var e = Math.min(text.length, s + CHUNK_SIZE);
+      if (e < text.length) {
+        var brk = text.lastIndexOf('\n', e);
+        if (brk > s + CHUNK_SIZE * 0.5) e = brk;
+      }
+      chunks.push({ start: s, end: e });
+      if (e >= text.length) break;
+      s = Math.max(e - CHUNK_OVERLAP, s + 1);
+    }
+    return chunks;
+  }
+
+  function pageMarkers(text) {
+    var out = [];
+    var re = /\[Page (\d+)\]/g;
+    var m;
+    while ((m = re.exec(text)) !== null) out.push({ pos: m.index, page: parseInt(m[1], 10) });
+    return out;
+  }
+
+  function pageAt(doc, offset) {
+    var pm = doc.pm || [];
+    var page = null;
+    for (var i = 0; i < pm.length; i++) {
+      if (pm[i].pos <= offset) page = pm[i].page; else break;
+    }
+    return page;
+  }
+
+  function extractPdf(buf) {
+    return window.pdfjsLib.getDocument({ data: buf }).promise.then(function (pdf) {
+      var chain = Promise.resolve('');
+      var total = pdf.numPages;
+      for (var p = 1; p <= total; p++) {
+        (function (pageNo) {
+          chain = chain.then(function (acc) {
+            return pdf.getPage(pageNo).then(function (page) {
+              return page.getTextContent().then(function (tc) {
+                var line = tc.items.map(function (it) { return it.str; }).join(' ');
+                return acc + '\n[Page ' + pageNo + ']\n' + line + '\n';
+              });
+            });
+          });
+        })(p);
+      }
+      return chain.then(function (text) { return { text: text, pages: total }; });
+    });
+  }
+
+  function extractFile(file) {
+    var name = file.name.toLowerCase();
+    if (name.endsWith('.pdf')) {
+      return file.arrayBuffer().then(extractPdf).then(function (r) { return { kind: 'PDF', text: r.text, pages: r.pages }; });
+    }
+    if (name.endsWith('.docx')) {
+      return file.arrayBuffer().then(function (buf) {
+        return window.mammoth.extractRawText({ arrayBuffer: buf }).then(function (r) {
+          return { kind: 'DOCX', text: r.value, pages: null };
+        });
+      });
+    }
+    if (name.endsWith('.txt') || name.endsWith('.md')) {
+      return file.text().then(function (t) { return { kind: name.endsWith('.md') ? 'MD' : 'TXT', text: t, pages: null }; });
+    }
+    return Promise.reject(new Error('Unsupported file type: ' + file.name + '. Upload PDF, DOCX, TXT, or MD.'));
+  }
+
+  function handleFiles(fileList) {
+    if (!current) return;
+    var files = Array.prototype.slice.call(fileList);
+    if (!files.length) return;
+    files.forEach(function (file) {
+      parsing++;
+      renderSources();
+      extractFile(file).then(function (r) {
+        var text = (r.text || '').replace(/\r\n/g, '\n');
+        var truncated = false;
+        if (text.length > DOC_CHAR_CAP) { text = text.slice(0, DOC_CHAR_CAP); truncated = true; }
+        if (!text.trim()) throw new Error('No readable text was found in ' + file.name + '. If it is a scanned PDF, run OCR first.');
+        var doc = {
+          id: uid(),
+          name: file.name,
+          kind: r.kind,
+          pages: r.pages,
+          chars: text.length,
+          truncated: truncated,
+          text: text,
+          chunks: chunkOffsets(text),
+          pm: pageMarkers(text),
+          addedAt: Date.now()
+        };
+        current.docs.push(doc);
+        return nbPut(current);
+      }).catch(function (err) {
+        alert(err.message || String(err));
+      }).then(function () {
+        parsing--;
+        renderSources();
+        renderStudio();
+        renderHeader();
+      });
+    });
+  }
+
+  /* ===================== retrieval ===================== */
+  function tokenize(t) {
+    return t.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) {
+      return w.length > 2 && !STOP[w];
+    });
+  }
+
+  function allChunks(nb) {
+    var out = [];
+    nb.docs.forEach(function (doc) {
+      doc.chunks.forEach(function (c, i) {
+        out.push({ docId: doc.id, docName: doc.name, i: i, start: c.start, end: c.end });
+      });
+    });
+    return out;
+  }
+
+  function chunkTextOf(nb, ch) {
+    var doc = null;
+    for (var i = 0; i < nb.docs.length; i++) if (nb.docs[i].id === ch.docId) { doc = nb.docs[i]; break; }
+    return doc ? doc.text.slice(ch.start, ch.end) : '';
+  }
+
+  function retrieve(nb, question) {
+    var terms = tokenize(question);
+    var uniq = [];
+    terms.forEach(function (t) { if (uniq.indexOf(t) < 0) uniq.push(t); });
+    var chunks = allChunks(nb);
+    if (!uniq.length) return chunks.slice(0, 6);
+    // document frequency per term
+    var lowers = chunks.map(function (ch) { return chunkTextOf(nb, ch).toLowerCase(); });
+    var df = {};
+    uniq.forEach(function (t) {
+      var n = 0;
+      for (var i = 0; i < lowers.length; i++) if (lowers[i].indexOf(t) >= 0) n++;
+      df[t] = n;
+    });
+    var scored = chunks.map(function (ch, i) {
+      var score = 0;
+      uniq.forEach(function (t) {
+        if (!df[t]) return;
+        var count = 0, pos = 0;
+        while ((pos = lowers[i].indexOf(t, pos)) >= 0) { count++; pos += t.length; }
+        if (count > 0) score += (1 + Math.log(count)) * (1 / Math.log(2 + df[t]));
+      });
+      return { ch: ch, score: score };
+    }).filter(function (s) { return s.score > 0; });
+    scored.sort(function (a, b) { return b.score - a.score; });
+    var picked = [];
+    var chars = 0;
+    for (var k = 0; k < scored.length && picked.length < RETRIEVE_TOP; k++) {
+      var ch = scored[k].ch;
+      var len = ch.end - ch.start;
+      if (chars + len > RETRIEVE_CHAR_CAP && picked.length > 0) continue;
+      picked.push(ch);
+      chars += len;
+    }
+    return picked;
+  }
+
+  function spreadChunks(nb) {
+    // even coverage across all documents for synthesis tasks
+    var budget = SYNTH_CHAR_CAP;
+    var picked = [];
+    if (!nb.docs.length) return picked;
+    var perDoc = Math.floor(budget / nb.docs.length);
+    nb.docs.forEach(function (doc) {
+      var used = 0;
+      var step = 1;
+      var estTotal = doc.chars;
+      if (estTotal > perDoc) step = Math.ceil(estTotal / perDoc);
+      for (var i = 0; i < doc.chunks.length; i += step) {
+        var c = doc.chunks[i];
+        var len = c.end - c.start;
+        if (used + len > perDoc && used > 0) break;
+        picked.push({ docId: doc.id, docName: doc.name, i: i, start: c.start, end: c.end });
+        used += len;
+      }
+    });
+    return picked;
+  }
+
+  /* ===================== grounded prompting ===================== */
+  function buildExcerptBlock(nb, chunks) {
+    var lines = [];
+    var cites = [];
+    chunks.forEach(function (ch, idx) {
+      var n = idx + 1;
+      var doc = null;
+      for (var i = 0; i < nb.docs.length; i++) if (nb.docs[i].id === ch.docId) { doc = nb.docs[i]; break; }
+      var page = doc ? pageAt(doc, ch.start) : null;
+      var head = '[S' + n + '] From "' + ch.docName + '"' + (page ? ' (page ' + page + ')' : '') + ':';
+      lines.push(head + '\n' + chunkTextOf(nb, ch));
+      cites.push({ n: n, docId: ch.docId, docName: ch.docName, start: ch.start, end: ch.end, page: page });
+    });
+    return { block: lines.join('\n\n'), cites: cites };
+  }
+
+  function historyBlock(nb) {
+    var msgs = (nb.messages || []).filter(function (m) { return m.role === 'user' || m.role === 'assistant'; });
+    var last = msgs.slice(-6);
+    if (!last.length) return '';
+    var lines = last.map(function (m) {
+      var t = m.text.length > 700 ? m.text.slice(0, 700) + ' ...' : m.text;
+      return (m.role === 'user' ? 'User: ' : 'Assistant: ') + t;
+    });
+    return '\n\nPRIOR CONVERSATION (context only; the grounding rules above still apply):\n' + lines.join('\n');
+  }
+
+  function groundedPrompt(nb, excerpts, task, includeHistory) {
+    return 'You are ARC Notebook, a document analysis assistant for a criminal defense investigation firm.\n\n' +
+      'STRICT GROUNDING RULES:\n' +
+      '1. Answer ONLY from the numbered source excerpts below. They are your entire universe of knowledge.\n' +
+      '2. Never use outside knowledge, training data, assumptions, or general legal knowledge. Do not fill gaps.\n' +
+      '3. If the excerpts do not contain the information needed, reply with exactly this sentence and nothing else: ' + NOT_FOUND_LINE + '\n' +
+      '4. Cite every factual statement with the matching excerpt tag in square brackets, for example [S3]. Multiple tags are allowed, for example [S1][S4].\n' +
+      '5. Never invent citations. Only use tags that appear in the excerpts below.\n' +
+      '6. Quote sparingly and accurately. Flag uncertainty or conflicting sources explicitly.\n' +
+      '7. Do not use em dashes anywhere in your output.\n\n' +
+      'SOURCE EXCERPTS:\n\n' + excerpts +
+      (includeHistory ? historyBlock(nb) : '') +
+      '\n\nTASK:\n' + task;
+  }
+
+  /* ===================== chat ===================== */
+  function pushMessage(msg) {
+    current.messages.push(msg);
+    return nbPut(current);
+  }
+
+  function ask(question, taskOverride, useSpread, label) {
+    if (pending || !current) return;
+    if (!current.docs.length) {
+      current.messages.push({ role: 'err', text: 'Upload at least one source document first. Answers can only come from your sources.', ts: Date.now() });
+      nbPut(current).then(renderChat);
+      return;
+    }
+    pending = true;
+    current.messages.push({ role: 'user', text: label || question, ts: Date.now() });
+    renderChat();
+    renderTyping(true);
+    nbPut(current);
+
+    var chunks = useSpread ? spreadChunks(current) : retrieve(current, question);
+    if (!chunks.length) chunks = allChunks(current).slice(0, 6);
+    var built = buildExcerptBlock(current, chunks);
+    var task = taskOverride || ('Answer this question: ' + question);
+    var prompt = groundedPrompt(current, built.block, task, !taskOverride);
+
+    arcGeminiGenerate(prompt).then(function (text) {
+      current.messages.push({ role: 'assistant', text: text.trim(), cites: built.cites, ts: Date.now() });
+      return nbPut(current);
+    }).catch(function (err) {
+      current.messages.push({ role: 'err', text: err.message || String(err), ts: Date.now() });
+      return nbPut(current);
+    }).then(function () {
+      pending = false;
+      renderTyping(false);
+      renderChat();
+    });
+  }
+
+  var SYNTH = {
+    briefing: {
+      title: 'Briefing document',
+      hint: 'Overview, parties, key facts, issues',
+      task: 'Produce a structured briefing document of the uploaded sources with these sections, using ## headings: Overview, Parties and Roles, Key Facts, Key Dates, Issues and Discrepancies, Open Questions. Every factual statement must carry a citation tag. If a section has no supporting material in the excerpts, write "Not covered in the uploaded sources." under it.'
+    },
+    timeline: {
+      title: 'Timeline of events',
+      hint: 'Chronology built from the sources',
+      task: 'Build a chronological timeline of events found in the excerpts. One line per event in the form: date, event description, citation tag. Order by date. List events with no stated date in a final section titled Undated Events. Do not infer dates that are not stated.'
+    },
+    contradictions: {
+      title: 'Contradiction check',
+      hint: 'Conflicts between sources',
+      task: 'Compare the excerpts across documents and identify every contradiction, inconsistency, or material discrepancy between sources. For each, state what each source says with citation tags for both sides. If no contradictions appear in the excerpts, say exactly: No contradictions were found within the excerpted material.'
+    }
+  };
+
+  function runSynthesis(kind) {
+    var s = SYNTH[kind];
+    if (!s) return;
+    ask(s.title, s.task, true, 'Generate: ' + s.title);
+  }
+
+  /* ===================== notes ===================== */
+  function addNote(title, text, cites) {
+    current.notes.push({ id: uid(), title: title, text: text, cites: cites || null, ts: Date.now() });
+    nbPut(current).then(renderStudio);
+  }
+
+  function exportNotes() {
+    if (!current.notes.length) { alert('There are no notes to export yet. Pin an answer or add a note first.'); return; }
+    var lines = ['# ' + current.name + (current.caseNo ? ' (' + current.caseNo + ')' : ''), '', 'Exported ' + new Date().toLocaleString(), ''];
+    current.notes.forEach(function (n) {
+      lines.push('## ' + n.title);
+      lines.push('');
+      lines.push(n.text);
+      lines.push('');
+    });
+    download((current.name || 'arc-notebook').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-notes.md', lines.join('\n'));
+  }
+
+  /* ===================== rendering ===================== */
+  var app = $('app');
+
+  function renderHeader() {
+    if (current) {
+      $('hdrTitle').textContent = current.name;
+      $('hdrSub').textContent = (current.caseNo ? current.caseNo + '  |  ' : '') + current.docs.length + (current.docs.length === 1 ? ' source' : ' sources');
+      $('backBtn').style.display = '';
+      $('tabbar').style.display = '';
+    } else {
+      $('hdrTitle').textContent = 'ARC Notebook';
+      $('hdrSub').textContent = 'Grounded document intelligence';
+      $('backBtn').style.display = 'none';
+      $('tabbar').style.display = 'none';
+    }
+  }
+
+  function renderHome() {
+    current = null;
+    renderHeader();
+    app.innerHTML = '';
+    var home = el('div', 'home');
+    home.appendChild(el('h2', null, 'Notebooks'));
+    home.appendChild(el('p', 'lead', 'One notebook per case or matter. Upload reports, then ask questions answered strictly from those documents, with citations back to the exact passage.'));
+    var grid = el('div', 'nbgrid');
+
+    var newcard = el('div', 'newcard');
+    newcard.appendChild(el('h3', null, 'New notebook'));
+    var nameIn = el('input');
+    nameIn.placeholder = 'Notebook name, e.g. Commonwealth v. Murray';
+    var caseIn = el('input');
+    caseIn.placeholder = 'Case number (optional)';
+    var createBtn = el('button', 'goldbtn', 'Create notebook');
+    createBtn.addEventListener('click', function () {
+      var name = nameIn.value.trim();
+      if (!name) { nameIn.focus(); return; }
+      var nb = { id: uid(), name: name, caseNo: caseIn.value.trim(), docs: [], messages: [], notes: [], createdAt: Date.now() };
+      nbPut(nb).then(function () { openNotebook(nb.id); });
+    });
+    nameIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') createBtn.click(); });
+    caseIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') createBtn.click(); });
+    newcard.appendChild(nameIn);
+    newcard.appendChild(caseIn);
+    newcard.appendChild(createBtn);
+    grid.appendChild(newcard);
+
+    loadIndex().forEach(function (entry) {
+      var card = el('div', 'nbcard');
+      card.setAttribute('role', 'button');
+      card.tabIndex = 0;
+      card.appendChild(el('h3', null, entry.name));
+      if (entry.caseNo) card.appendChild(el('div', 'case', entry.caseNo));
+      card.appendChild(el('div', 'meta', entry.docCount + (entry.docCount === 1 ? ' source' : ' sources') + '  |  updated ' + fmtDate(entry.updatedAt)));
+      var del = el('button', 'del', '\u2715');
+      del.title = 'Delete notebook';
+      del.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Delete "' + entry.name + '" and all of its sources, chat, and notes? This cannot be undone.')) return;
+        nbDelete(entry.id).then(renderHome);
+      });
+      card.appendChild(del);
+      card.addEventListener('click', function () { openNotebook(entry.id); });
+      card.addEventListener('keydown', function (e) { if (e.key === 'Enter') openNotebook(entry.id); });
+      grid.appendChild(card);
+    });
+
+    home.appendChild(grid);
+    app.appendChild(home);
+  }
+
+  function openNotebook(id) {
+    nbGet(id).then(function (nb) {
+      if (!nb) { renderHome(); return; }
+      if (!nb.docs) nb.docs = [];
+      if (!nb.messages) nb.messages = [];
+      if (!nb.notes) nb.notes = [];
+      current = nb;
+      renderWorkspace();
+    });
+  }
+
+  function renderWorkspace() {
+    renderHeader();
+    app.innerHTML = '';
+    var ws = el('div', 'ws');
+
+    var sources = el('section', 'pane');
+    sources.id = 'paneSources';
+    ws.appendChild(sources);
+
+    var chat = el('section', 'chatwrap active');
+    chat.id = 'paneChat';
+    ws.appendChild(chat);
+
+    var studio = el('section', 'pane studio');
+    studio.id = 'paneStudio';
+    ws.appendChild(studio);
+
+    app.appendChild(ws);
+    renderSources();
+    buildChatShell();
+    renderChat();
+    renderStudio();
+    setTab('chat');
+  }
+
+  function renderSources() {
+    var pane = $('paneSources');
+    if (!pane || !current) return;
+    pane.innerHTML = '';
+    var head = el('div', 'panehead');
+    head.appendChild(el('span', null, 'Sources'));
+    head.appendChild(el('span', 'count', String(current.docs.length)));
+    pane.appendChild(head);
+
+    var dz = el('div', 'dropzone');
+    dz.innerHTML = 'Drop PDF, DOCX, TXT, or MD files here, or ';
+    var browse = el('button', 'browse', 'browse');
+    browse.addEventListener('click', function () { $('fileInput').click(); });
+    dz.appendChild(browse);
+    dz.addEventListener('dragover', function (e) { e.preventDefault(); dz.classList.add('on'); });
+    dz.addEventListener('dragleave', function () { dz.classList.remove('on'); });
+    dz.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dz.classList.remove('on');
+      handleFiles(e.dataTransfer.files);
+    });
+    pane.appendChild(dz);
+
+    if (parsing > 0) pane.appendChild(el('div', 'busy', 'Reading ' + parsing + (parsing === 1 ? ' file...' : ' files...')));
+
+    var list = el('div', 'doclist');
+    current.docs.forEach(function (doc, i) {
+      var row = el('div', 'docrow');
+      row.setAttribute('role', 'button');
+      row.tabIndex = 0;
+      var letter = String.fromCharCode(65 + (i % 26)) + (i >= 26 ? Math.floor(i / 26) : '');
+      row.appendChild(el('div', 'exhibit', letter));
+      var info = el('div');
+      info.appendChild(el('div', 'dname', doc.name));
+      var meta = doc.kind + '  |  ' + (doc.pages ? doc.pages + ' pp  |  ' : '') + fmtSize(doc.chars) + (doc.truncated ? '  |  truncated' : '');
+      info.appendChild(el('div', 'dmeta', meta));
+      row.appendChild(info);
+      var del = el('button', 'ddel', '\u2715');
+      del.title = 'Remove source';
+      del.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Remove "' + doc.name + '" from this notebook?')) return;
+        current.docs = current.docs.filter(function (d) { return d.id !== doc.id; });
+        nbPut(current).then(function () { renderSources(); renderStudio(); renderHeader(); });
+      });
+      row.appendChild(del);
+      row.addEventListener('click', function () { openSource(doc.id, null, null); });
+      row.addEventListener('keydown', function (e) { if (e.key === 'Enter') openSource(doc.id, null, null); });
+      list.appendChild(row);
+    });
+    pane.appendChild(list);
+  }
+
+  function buildChatShell() {
+    var pane = $('paneChat');
+    pane.innerHTML = '';
+    var bar = el('div', 'groundbar');
+    bar.appendChild(el('span', 'dot'));
+    bar.appendChild(el('span', null, 'Strict mode: answers come only from your uploaded sources. Anything outside them is refused.'));
+    pane.appendChild(bar);
+    var msgs = el('div', 'msgs');
+    msgs.id = 'msgs';
+    pane.appendChild(msgs);
+    var askbar = el('div', 'askbar');
+    var ta = el('textarea');
+    ta.id = 'askInput';
+    ta.placeholder = 'Ask the sources a question...';
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAsk(); }
+    });
+    var send = el('button', 'goldbtn', 'Ask');
+    send.id = 'askSend';
+    send.addEventListener('click', sendAsk);
+    askbar.appendChild(ta);
+    askbar.appendChild(send);
+    pane.appendChild(askbar);
+  }
+
+  function sendAsk() {
+    var ta = $('askInput');
+    var q = ta.value.trim();
+    if (!q || pending) return;
+    ta.value = '';
+    ask(q, null, false, null);
+  }
+
+  function mdLite(text) {
+    var h = esc(text);
+    h = h.replace(/^######?\s*(.+)$/gm, '<span class="aihead">$1</span>');
+    h = h.replace(/^####\s*(.+)$/gm, '<span class="aihead">$1</span>');
+    h = h.replace(/^###\s*(.+)$/gm, '<span class="aihead">$1</span>');
+    h = h.replace(/^##\s*(.+)$/gm, '<span class="aihead">$1</span>');
+    h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    return h;
+  }
+
+  function renderCites(html, cites) {
+    if (!cites) return html;
+    return html.replace(/\[S(\d+)\]/g, function (full, num) {
+      var n = parseInt(num, 10);
+      var c = null;
+      for (var i = 0; i < cites.length; i++) if (cites[i].n === n) { c = cites[i]; break; }
+      if (!c) return full;
+      var title = c.docName + (c.page ? ', page ' + c.page : '');
+      return '<button class="cite" data-doc="' + esc(c.docId) + '" data-start="' + c.start + '" data-end="' + c.end + '" title="' + esc(title) + '">S' + n + '</button>';
+    });
+  }
+
+  function renderChat() {
+    var msgs = $('msgs');
+    if (!msgs || !current) return;
+    msgs.innerHTML = '';
+    if (!current.messages.length) {
+      var empty = el('div', 'emptychat');
+      empty.appendChild(el('div', 'big', 'Ask the record, not the internet.'));
+      empty.appendChild(el('div', null, 'Upload reports on the left, then ask a question. Every answer cites the exact source passage, and anything not in the documents is refused.'));
+      msgs.appendChild(empty);
+      return;
+    }
+    current.messages.forEach(function (m, idx) {
+      var b;
+      if (m.role === 'user') {
+        b = el('div', 'msg user', m.text);
+      } else if (m.role === 'err') {
+        b = el('div', 'msg err', m.text);
+      } else {
+        b = el('div', 'msg ai');
+        b.innerHTML = renderCites(mdLite(m.text), m.cites);
+        var tools = el('div', 'mtools');
+        var pin = el('button', 'pinbtn', 'Pin to notes');
+        pin.addEventListener('click', function () {
+          var title = 'Pinned answer';
+          for (var j = idx - 1; j >= 0; j--) {
+            if (current.messages[j].role === 'user') { title = current.messages[j].text.slice(0, 80); break; }
+          }
+          addNote(title, m.text, m.cites);
+        });
+        var copy = el('button', 'pinbtn', 'Copy');
+        copy.addEventListener('click', function () {
+          navigator.clipboard.writeText(m.text).then(function () {
+            copy.textContent = 'Copied';
+            setTimeout(function () { copy.textContent = 'Copy'; }, 1200);
+          });
+        });
+        tools.appendChild(pin);
+        tools.appendChild(copy);
+        b.appendChild(tools);
+      }
+      msgs.appendChild(b);
+    });
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function renderTyping(on) {
+    var msgs = $('msgs');
+    if (!msgs) return;
+    var t = $('typingRow');
+    if (t) t.remove();
+    if (on) {
+      var row = el('div', 'typing', 'Reading sources...');
+      row.id = 'typingRow';
+      msgs.appendChild(row);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    var send = $('askSend');
+    if (send) send.disabled = on;
+  }
+
+  function renderStudio() {
+    var pane = $('paneStudio');
+    if (!pane || !current) return;
+    pane.innerHTML = '';
+    var head = el('div', 'panehead');
+    head.appendChild(el('span', null, 'Studio'));
+    pane.appendChild(head);
+
+    var synth = el('div', 'stubox');
+    synth.appendChild(el('h4', null, 'Synthesis'));
+    Object.keys(SYNTH).forEach(function (k) {
+      var s = SYNTH[k];
+      var btn = el('button', 'synthbtn');
+      btn.appendChild(document.createTextNode(s.title));
+      btn.appendChild(el('span', 'hint', s.hint));
+      btn.disabled = !current.docs.length;
+      btn.addEventListener('click', function () { runSynthesis(k); setTab('chat'); });
+      synth.appendChild(btn);
+    });
+    if (!current.docs.length) synth.appendChild(el('div', 'finemeta', 'Upload sources to enable synthesis.'));
+    pane.appendChild(synth);
+
+    var create = el('div', 'stubox');
+    create.appendChild(el('h4', null, 'Create'));
+    [
+      { title: 'Mind map', hint: 'Topic tree with cited nodes', fn: openMindMap },
+      { title: 'Slide deck', hint: 'Editable deck with .pptx export', fn: openDeck },
+      { title: 'Report', hint: 'Toggled sections; MD, DOCX, PDF, v6 JSON', fn: openReport }
+    ].forEach(function (c) {
+      var cbtn = el('button', 'synthbtn');
+      cbtn.appendChild(document.createTextNode(c.title));
+      cbtn.appendChild(el('span', 'hint', c.hint));
+      cbtn.disabled = !current.docs.length;
+      cbtn.addEventListener('click', c.fn);
+      create.appendChild(cbtn);
+    });
+    if (!current.docs.length) create.appendChild(el('div', 'finemeta', 'Upload sources to enable creation tools.'));
+    pane.appendChild(create);
+
+    var notesBox = el('div', 'stubox');
+    var nh = el('h4', null, 'Notes');
+    notesBox.appendChild(nh);
+    var addWrap = el('div', 'addnote');
+    var ta = el('textarea');
+    ta.placeholder = 'Write a note for this notebook...';
+    var row = el('div', 'row');
+    row.style.display = 'flex';
+    row.style.gap = '8px';
+    var addBtn = el('button', 'goldbtn', 'Add note');
+    addBtn.addEventListener('click', function () {
+      var t = ta.value.trim();
+      if (!t) { ta.focus(); return; }
+      addNote(t.split('\n')[0].slice(0, 60), t, null);
+      ta.value = '';
+    });
+    var expBtn = el('button', 'iconbtn', 'Export .md');
+    expBtn.addEventListener('click', exportNotes);
+    row.appendChild(addBtn);
+    row.appendChild(expBtn);
+    addWrap.appendChild(ta);
+    addWrap.appendChild(row);
+    notesBox.appendChild(addWrap);
+    pane.appendChild(notesBox);
+
+    var list = el('div', 'notelist');
+    if (!current.notes.length) {
+      pane.appendChild(el('div', 'emptynotes', 'Pin an answer from the chat or add a note above. Notes export to Markdown.'));
+    } else {
+      current.notes.slice().reverse().forEach(function (n) {
+        var card = el('div', 'note');
+        card.appendChild(el('div', 'ntitle', n.title));
+        card.appendChild(el('div', 'ntext', n.text));
+        var del = el('button', 'ndel', '\u2715');
+        del.title = 'Delete note';
+        del.addEventListener('click', function () {
+          if (!confirm('Delete this note?')) return;
+          current.notes = current.notes.filter(function (x) { return x.id !== n.id; });
+          nbPut(current).then(renderStudio);
+        });
+        card.appendChild(del);
+        list.appendChild(card);
+      });
+      pane.appendChild(list);
+    }
+  }
+
+  /* ===================== source viewer ===================== */
+  function openSource(docId, start, end) {
+    if (!current) return;
+    var doc = null;
+    for (var i = 0; i < current.docs.length; i++) if (current.docs[i].id === docId) { doc = current.docs[i]; break; }
+    if (!doc) return;
+    $('srcTitle').textContent = doc.name + (start !== null && doc.pm && doc.pm.length ? (function () {
+      var p = pageAt(doc, start);
+      return p ? '  (page ' + p + ')' : '';
+    })() : '');
+    var body = $('srcBody');
+    if (start !== null && end !== null) {
+      body.innerHTML = esc(doc.text.slice(0, start)) + '<mark id="srcMark">' + esc(doc.text.slice(start, end)) + '</mark>' + esc(doc.text.slice(end));
+    } else {
+      body.innerHTML = esc(doc.text);
+    }
+    $('srcOverlay').classList.add('show');
+    var mk = $('srcMark');
+    if (mk) setTimeout(function () { mk.scrollIntoView({ block: 'center' }); }, 30);
+    else body.scrollTop = 0;
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('cite')) {
+      openSource(t.getAttribute('data-doc'), parseInt(t.getAttribute('data-start'), 10), parseInt(t.getAttribute('data-end'), 10));
+    }
+  });
+
+  /* ===================== settings ===================== */
+  function openSettings() {
+    $('keyInput').value = localStorage.getItem(GEMINI_KEY) || '';
+    $('setOverlay').classList.add('show');
+  }
+
+  /* ===================== tabs (mobile) ===================== */
+  function setTab(name) {
+    var map = { sources: 'paneSources', chat: 'paneChat', studio: 'paneStudio' };
+    Object.keys(map).forEach(function (k) {
+      var p = $(map[k]);
+      if (p) p.classList.toggle('active', k === name);
+    });
+    var btns = $('tabbar').querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('on', btns[i].getAttribute('data-tab') === name);
+    }
+  }
+
+  /* ===================== v2 create tools: shared ===================== */
+
+  function arcPublishCaseBrief() {
+    try {
+      if (!current) return;
+
+      var context = window.ARC_CASE_CONTEXT || {};
+      var reports = nbReports();
+      var bestText = '';
+      var bestType = '';
+
+      Object.keys(reports).forEach(function (key) {
+        var report = reports[key];
+        if (report && report.text && report.text.length > bestText.length) {
+          bestText = report.text;
+          bestType = key;
+        }
+      });
+
+      var brief = {
+        version: 1,
+        matter: context.matter || current.name || '',
+        docket: context.docket || current.caseNo || '',
+        caseContext: context,
+        notebookName: current.name || '',
+        docs: (current.docs || []).map(function (documentItem) {
+          return {
+            id: documentItem.id || '',
+            name: documentItem.name || '',
+            chars: documentItem.chars || String(documentItem.text || '').length || 0
+          };
+        }),
+        reportType: bestType,
+        reportText: bestText,
+        deck: current.deck
+          ? {
+              title: current.deck.title,
+              subtitle: current.deck.subtitle,
+              slides: current.deck.slides
+            }
+          : null,
+        mindmap: current.mindmap ? current.mindmap.data : null,
+        updatedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem('ARC_CASE_BRIEF_V1', JSON.stringify(brief));
+
+      try {
+        if ('BroadcastChannel' in window) {
+          var channel = new BroadcastChannel('arc-unified-system');
+          channel.postMessage({
+            type: 'storage',
+            key: 'ARC_CASE_BRIEF_V1',
+            value: brief
+          });
+          channel.close();
+        }
+      } catch (channelError) {}
+
+      document.dispatchEvent(
+        new CustomEvent('arc:case-brief', {
+          detail: brief
+        })
+      );
+    } catch (error) {
+      console.warn('ARC Notebook could not publish the shared case brief.', error);
+    }
+  }
+
+  function parseJsonReply(text) {
+    var t = String(text).replace(/```json/gi, '').split('```').join('').trim();
+    var a = t.indexOf('{');
+    var b = t.lastIndexOf('}');
+    if (a < 0 || b <= a) throw new Error('The model did not return valid JSON. Try again.');
+    return JSON.parse(t.slice(a, b + 1));
+  }
+
+  function downloadBlob(filename, blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  }
+
+  function fileBase() {
+    return ((current && current.name) || 'arc-notebook').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  }
+
+  function exhibitLetter(i) {
+    return String.fromCharCode(65 + (i % 26)) + (i >= 26 ? Math.floor(i / 26) : '');
+  }
+
+  function groundedJsonPrompt(excerpts, task) {
+    return 'You are ARC Notebook, a document analysis assistant for a criminal defense investigation firm.\n\n' +
+      'STRICT GROUNDING RULES:\n' +
+      '1. Use ONLY the numbered source excerpts below. They are your entire universe of knowledge.\n' +
+      '2. Never use outside knowledge, training data, assumptions, or general legal knowledge. Do not fill gaps.\n' +
+      '3. Respond with a single JSON object only. No markdown, no code fences, no commentary before or after.\n' +
+      '4. Reference sources by excerpt number as integers in "cites" arrays, or as [S#] tags where the shape asks for text. Only use numbers that exist below.\n' +
+      '5. If the excerpts do not contain enough material for the task, respond with exactly {"error":"insufficient sources"}.\n' +
+      '6. Do not use em dashes anywhere.\n\n' +
+      'SOURCE EXCERPTS:\n\n' + excerpts + '\n\nTASK:\n' + task;
+  }
+
+  /* ===================== mind map ===================== */
+  function openMindMap() {
+    if (!current) return;
+    $('mmOverlay').classList.add('show');
+    $('mmStatus').textContent = '';
+    renderMindMap();
+  }
+
+  function mmGenerate() {
+    if (pending || !current) return;
+    if (!current.docs.length) { $('mmStatus').textContent = 'Upload sources first.'; return; }
+    if (current.mindmap && !confirm('Regenerate the mind map? The current map will be replaced.')) return;
+    pending = true;
+    $('mmGen').disabled = true;
+    $('mmStatus').textContent = 'Reading sources...';
+    var built = buildExcerptBlock(current, spreadChunks(current));
+    var task = 'Build a mind map of the uploaded sources. Return JSON with this exact shape: ' +
+      '{"root":"central theme, max 6 words","branches":[{"label":"topic, max 7 words","cites":[1],"children":[{"label":"fact or detail, max 12 words","cites":[2]}]}]}. ' +
+      'Use 4 to 7 branches and 2 to 5 children per branch. Every label must come from the excerpts and every branch and child must include at least one cite number.';
+    arcGeminiGenerate(groundedJsonPrompt(built.block, task)).then(function (text) {
+      var data = parseJsonReply(text);
+      if (data.error) throw new Error('The uploaded documents do not contain enough material for a mind map.');
+      if (!data.root || !data.branches || !data.branches.length) throw new Error('The model returned an unexpected mind map shape. Try again.');
+      data.branches.forEach(function (b) {
+        b.open = true;
+        if (!b.children) b.children = [];
+        if (!b.cites) b.cites = [];
+        b.children.forEach(function (c) { if (!c.cites) c.cites = []; });
+      });
+      current.mindmap = { data: data, cites: built.cites, generatedAt: Date.now() };
+      $('mmStatus').textContent = '';
+      arcPublishCaseBrief();
+      return nbPut(current);
+    }).catch(function (err) {
+      $('mmStatus').textContent = err.message || String(err);
+    }).then(function () {
+      pending = false;
+      $('mmGen').disabled = false;
+      renderMindMap();
+    });
+  }
+
+  function mmTextW(label, size) {
+    return Math.max(56, 20 + String(label).length * size * 0.58);
+  }
+
+  function renderMindMap() {
+    var wrap = $('mmWrap');
+    if (!wrap || !current) return;
+    wrap.innerHTML = '';
+    var mm = current.mindmap;
+    if (!mm) {
+      wrap.appendChild(el('div', 'genhint', 'Generate a mind map from the current sources. Every node cites the passages it came from; click an S tag to open the source at that passage. Click a topic to collapse or expand its details.'));
+      return;
+    }
+    var GOLD = '#C9A84C', LINE = '#3A3E50', TXT = '#E8E6E0', PANEL = '#1D1F26', BG = '#15161B';
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var rowH = 36, gapB = 22, chipW = 26, chipH = 15;
+    var data = mm.data;
+
+    var rootW = mmTextW(data.root, 15);
+    var maxBW = 0;
+    data.branches.forEach(function (b) {
+      maxBW = Math.max(maxBW, mmTextW(b.label, 13) + (b.cites.length * chipW) + 8);
+    });
+    var x0 = 12, x1 = x0 + rootW + 70, x2 = x1 + maxBW + 60;
+
+    var yCur = 14;
+    var pos = [];
+    data.branches.forEach(function (b) {
+      var kids = b.open ? b.children : [];
+      var h = Math.max(rowH, kids.length * rowH);
+      pos.push({ b: b, y: yCur, h: h });
+      yCur += h + gapB;
+    });
+    var totalH = Math.max(yCur, 140);
+    var maxCW = 0;
+    data.branches.forEach(function (b) {
+      b.children.forEach(function (c) {
+        maxCW = Math.max(maxCW, mmTextW(c.label, 12) + (c.cites.length * chipW) + 8);
+      });
+    });
+    var totalW = x2 + maxCW + 20;
+
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('xmlns', svgNS);
+    svg.setAttribute('width', totalW);
+    svg.setAttribute('height', totalH);
+    svg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + totalH);
+    svg.setAttribute('font-family', 'DM Sans, Arial, sans-serif');
+
+    function node(tag, attrs, textContent) {
+      var n = document.createElementNS(svgNS, tag);
+      Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+      if (textContent !== undefined) n.textContent = textContent;
+      return n;
+    }
+    function link(xa, ya, xb, yb) {
+      var mx = (xa + xb) / 2;
+      return node('path', { d: 'M' + xa + ',' + ya + ' C' + mx + ',' + ya + ' ' + mx + ',' + yb + ' ' + xb + ',' + yb, stroke: LINE, fill: 'none', 'stroke-width': 1.4 });
+    }
+    function chips(x, cy, cites) {
+      cites.forEach(function (n, i) {
+        var cx = x + i * chipW;
+        var cg = node('g', { 'data-cite': n, cursor: 'pointer' });
+        cg.appendChild(node('rect', { x: cx, y: cy - chipH / 2, width: chipW - 4, height: chipH, rx: 3, fill: 'rgba(201,168,76,0.14)', stroke: GOLD, 'stroke-width': 0.8 }));
+        cg.appendChild(node('text', { x: cx + (chipW - 4) / 2, y: cy + 3.5, 'text-anchor': 'middle', 'font-size': 9, fill: GOLD, 'font-family': 'DM Mono, monospace' }, 'S' + n));
+        svg.appendChild(cg);
+      });
+    }
+
+    svg.appendChild(node('rect', { x: 0, y: 0, width: totalW, height: totalH, fill: BG }));
+
+    var rootY = totalH / 2;
+    pos.forEach(function (p, pi) {
+      var by = p.y + p.h / 2;
+      svg.appendChild(link(x0 + rootW, rootY, x1, by));
+      var bw = mmTextW(p.b.label, 13) + (p.b.cites.length * chipW) + 8;
+      var bg = node('g', { 'data-branch': pi, cursor: 'pointer' });
+      bg.appendChild(node('rect', { x: x1, y: by - 16, width: bw, height: 32, rx: 6, fill: PANEL, stroke: p.b.open ? GOLD : LINE, 'stroke-width': 1 }));
+      var marker = p.b.children.length ? (p.b.open ? '\u2212 ' : '+ ') : '';
+      bg.appendChild(node('text', { x: x1 + 10, y: by + 4.5, 'font-size': 13, fill: TXT }, marker + p.b.label));
+      svg.appendChild(bg);
+      chips(x1 + mmTextW(p.b.label, 13) + 4, by, p.b.cites);
+      if (p.b.open) {
+        p.b.children.forEach(function (c, j) {
+          var cy2 = p.y + j * rowH + rowH / 2;
+          svg.appendChild(link(x1 + bw, by, x2, cy2));
+          svg.appendChild(node('rect', { x: x2, y: cy2 - 13, width: mmTextW(c.label, 12) + (c.cites.length * chipW) + 8, height: 26, rx: 5, fill: 'none', stroke: LINE, 'stroke-width': 1 }));
+          svg.appendChild(node('text', { x: x2 + 8, y: cy2 + 4, 'font-size': 12, fill: TXT }, c.label));
+          chips(x2 + mmTextW(c.label, 12) + 2, cy2, c.cites);
+        });
+      }
+    });
+
+    var rg = node('g', {});
+    rg.appendChild(node('rect', { x: x0, y: rootY - 20, width: rootW, height: 40, rx: 7, fill: PANEL, stroke: GOLD, 'stroke-width': 1.4 }));
+    rg.appendChild(node('text', { x: x0 + 10, y: rootY + 5, 'font-size': 15, fill: GOLD, 'font-family': 'Playfair Display, Georgia, serif', 'font-weight': 'bold' }, data.root));
+    svg.appendChild(rg);
+
+    svg.addEventListener('click', function (e) {
+      var t = e.target;
+      while (t && t !== svg) {
+        if (t.getAttribute) {
+          var cn = t.getAttribute('data-cite');
+          if (cn !== null) {
+            var n = parseInt(cn, 10);
+            for (var i = 0; i < mm.cites.length; i++) {
+              if (mm.cites[i].n === n) { openSource(mm.cites[i].docId, mm.cites[i].start, mm.cites[i].end); return; }
+            }
+            return;
+          }
+          var bi = t.getAttribute('data-branch');
+          if (bi !== null) {
+            var br = data.branches[parseInt(bi, 10)];
+            if (br && br.children.length) { br.open = !br.open; nbPut(current); renderMindMap(); }
+            return;
+          }
+        }
+        t = t.parentNode;
+      }
+    });
+
+    wrap.appendChild(svg);
+  }
+
+  function mmExportSvg() {
+    var svg = $('mmWrap').querySelector('svg');
+    if (!svg) { $('mmStatus').textContent = 'Generate the mind map first.'; return; }
+    var str = new XMLSerializer().serializeToString(svg);
+    downloadBlob(fileBase() + '-mindmap.svg', new Blob([str], { type: 'image/svg+xml' }));
+  }
+
+  function mmExportPng() {
+    var svg = $('mmWrap').querySelector('svg');
+    if (!svg) { $('mmStatus').textContent = 'Generate the mind map first.'; return; }
+    var str = new XMLSerializer().serializeToString(svg);
+    var img = new Image();
+    img.onload = function () {
+      var scale = 2;
+      var c = document.createElement('canvas');
+      c.width = svg.viewBox.baseVal.width * scale;
+      c.height = svg.viewBox.baseVal.height * scale;
+      var ctx = c.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+      c.toBlob(function (b) {
+        if (b) downloadBlob(fileBase() + '-mindmap.png', b);
+        else $('mmStatus').textContent = 'PNG export failed. Use Export SVG instead.';
+      });
+    };
+    img.onerror = function () { $('mmStatus').textContent = 'PNG export failed in this browser. Use Export SVG instead.'; };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str);
+  }
+
+  /* ===================== slide deck ===================== */
+  function openDeck() {
+    if (!current) return;
+    $('deckOverlay').classList.add('show');
+    $('deckStatus').textContent = '';
+    renderDeck();
+  }
+
+  function deckGenerate() {
+    if (pending || !current) return;
+    if (!current.docs.length) { $('deckStatus').textContent = 'Upload sources first.'; return; }
+    if (current.deck && !confirm('Regenerate the deck? Your current slides and edits will be replaced.')) return;
+    pending = true;
+    $('deckGen').disabled = true;
+    $('deckStatus').textContent = 'Reading sources...';
+    var built = buildExcerptBlock(current, spreadChunks(current));
+    var task = 'Design a slide deck summarizing the uploaded sources. Return JSON with this exact shape: ' +
+      '{"title":"deck title, max 8 words","subtitle":"one line","slides":[{"title":"slide title, max 8 words","bullets":["bullet text ending with [S#] citation tags"]}]}. ' +
+      'Use 6 to 10 slides. Cover, where the excerpts support it: overview, parties, key facts, timeline, evidence, issues and discrepancies, open questions. ' +
+      'Keep each bullet under 22 words and end every bullet with its [S#] tags.';
+    arcGeminiGenerate(groundedJsonPrompt(built.block, task)).then(function (text) {
+      var data = parseJsonReply(text);
+      if (data.error) throw new Error('The uploaded documents do not contain enough material for a slide deck.');
+      if (!data.slides || !data.slides.length) throw new Error('The model returned an unexpected deck shape. Try again.');
+      data.slides.forEach(function (s) { if (!s.bullets) s.bullets = []; });
+      current.deck = { title: data.title || current.name, subtitle: data.subtitle || '', slides: data.slides, cites: built.cites, generatedAt: Date.now() };
+      $('deckStatus').textContent = '';
+      arcPublishCaseBrief();
+      return nbPut(current);
+    }).catch(function (err) {
+      $('deckStatus').textContent = err.message || String(err);
+    }).then(function () {
+      pending = false;
+      $('deckGen').disabled = false;
+      renderDeck();
+    });
+  }
+
+  function renderDeck() {
+    var wrap = $('deckWrap');
+    if (!wrap || !current) return;
+    wrap.innerHTML = '';
+    var d = current.deck;
+    if (!d) {
+      wrap.appendChild(el('div', 'genhint', 'Generate a grounded slide deck from the current sources. Every bullet keeps its [S#] citation tags. Edit titles and bullets in place, reorder or delete slides, then export a PowerPoint file.'));
+      return;
+    }
+    var head = el('div', 'slidecard');
+    var ti = el('input', 'sc-title');
+    ti.value = d.title;
+    ti.setAttribute('aria-label', 'Deck title');
+    ti.addEventListener('change', function () { d.title = ti.value; nbPut(current); });
+    head.appendChild(ti);
+    head.appendChild(el('div', 'goldrule'));
+    var si = el('input', 'sc-title');
+    si.style.fontFamily = "'DM Sans',sans-serif";
+    si.style.fontSize = '13px';
+    si.style.color = 'var(--muted)';
+    si.value = d.subtitle;
+    si.placeholder = 'Subtitle';
+    si.setAttribute('aria-label', 'Deck subtitle');
+    si.addEventListener('change', function () { d.subtitle = si.value; nbPut(current); });
+    head.appendChild(si);
+    wrap.appendChild(head);
+
+    d.slides.forEach(function (s, i) {
+      var card = el('div', 'slidecard');
+      var top = el('div', 'sc-top');
+      top.appendChild(el('span', 'sc-num', 'SLIDE ' + (i + 1)));
+      var up = el('button', 'sc-btn', 'Up');
+      up.disabled = i === 0;
+      up.addEventListener('click', function () { d.slides.splice(i, 1); d.slides.splice(i - 1, 0, s); nbPut(current); renderDeck(); });
+      var down = el('button', 'sc-btn', 'Down');
+      down.disabled = i === d.slides.length - 1;
+      down.addEventListener('click', function () { d.slides.splice(i, 1); d.slides.splice(i + 1, 0, s); nbPut(current); renderDeck(); });
+      var del = el('button', 'sc-btn', 'Delete');
+      del.addEventListener('click', function () {
+        if (!confirm('Delete slide ' + (i + 1) + '?')) return;
+        d.slides.splice(i, 1);
+        nbPut(current);
+        renderDeck();
+      });
+      top.appendChild(up);
+      top.appendChild(down);
+      top.appendChild(del);
+      card.appendChild(top);
+      var t = el('input', 'sc-title');
+      t.value = s.title || '';
+      t.setAttribute('aria-label', 'Slide title');
+      t.addEventListener('change', function () { s.title = t.value; nbPut(current); });
+      card.appendChild(t);
+      card.appendChild(el('div', 'goldrule'));
+      var b = el('textarea', 'sc-bullets');
+      b.value = (s.bullets || []).join('\n');
+      b.placeholder = 'One bullet per line';
+      b.setAttribute('aria-label', 'Slide bullets');
+      b.addEventListener('change', function () {
+        s.bullets = b.value.split('\n').map(function (x) { return x.trim(); }).filter(function (x) { return x; });
+        nbPut(current);
+      });
+      card.appendChild(b);
+      wrap.appendChild(card);
+    });
+  }
+
+  function deckAddSlide() {
+    if (!current) return;
+    if (!current.deck) { $('deckStatus').textContent = 'Generate the deck first.'; return; }
+    current.deck.slides.push({ title: 'New slide', bullets: [] });
+    nbPut(current);
+    renderDeck();
+  }
+
+  function deckExportPptx() {
+    if (!current || !current.deck) { $('deckStatus').textContent = 'Generate the deck first.'; return; }
+    if (!window.PptxGenJS) { $('deckStatus').textContent = 'The PptxGenJS library did not load. Check the network and reload the page.'; return; }
+    var d = current.deck;
+    var p = new window.PptxGenJS();
+    p.layout = 'LAYOUT_16x9';
+    var BG = '15161B', GOLD = 'C9A84C', TXT = 'E8E6E0', MUT = '9A9CA8';
+    var rectType = p.ShapeType ? p.ShapeType.rect : 'rect';
+
+    function footer(slide, num) {
+      slide.addText(current.name + (current.caseNo ? '  |  ' + current.caseNo : ''), { x: 0.6, y: 5.22, w: 7, h: 0.3, fontSize: 9, color: MUT, fontFace: 'Calibri' });
+      slide.addText(String(num), { x: 9.1, y: 5.22, w: 0.5, h: 0.3, fontSize: 9, color: MUT, fontFace: 'Calibri', align: 'right' });
+    }
+
+    var cover = p.addSlide();
+    cover.background = { color: BG };
+    cover.addText(d.title, { x: 0.6, y: 1.5, w: 8.8, h: 1.2, fontFace: 'Georgia', fontSize: 34, color: GOLD, bold: true });
+    cover.addShape(rectType, { x: 0.65, y: 2.75, w: 2.4, h: 0.035, fill: { color: GOLD } });
+    if (d.subtitle) cover.addText(d.subtitle, { x: 0.6, y: 2.95, w: 8.8, h: 0.6, fontFace: 'Calibri', fontSize: 16, color: TXT });
+    cover.addText((current.caseNo ? current.caseNo + '    ' : '') + new Date().toLocaleDateString(), { x: 0.6, y: 4.9, w: 8.8, h: 0.4, fontFace: 'Calibri', fontSize: 11, color: MUT });
+
+    d.slides.forEach(function (s, i) {
+      var sl = p.addSlide();
+      sl.background = { color: BG };
+      sl.addText(s.title || 'Slide ' + (i + 1), { x: 0.6, y: 0.35, w: 8.8, h: 0.7, fontFace: 'Georgia', fontSize: 24, color: GOLD, bold: true });
+      sl.addShape(rectType, { x: 0.65, y: 1.05, w: 1.8, h: 0.03, fill: { color: GOLD } });
+      var items = (s.bullets || []).map(function (bt) {
+        return { text: bt, options: { bullet: { code: '2022' }, color: TXT, fontSize: 14, fontFace: 'Calibri', paraSpaceAfter: 8 } };
+      });
+      if (items.length) sl.addText(items, { x: 0.7, y: 1.3, w: 8.6, h: 3.7, valign: 'top' });
+      footer(sl, i + 2);
+    });
+
+    var src = p.addSlide();
+    src.background = { color: BG };
+    src.addText('Source Exhibits', { x: 0.6, y: 0.35, w: 8.8, h: 0.7, fontFace: 'Georgia', fontSize: 24, color: GOLD, bold: true });
+    src.addShape(rectType, { x: 0.65, y: 1.05, w: 1.8, h: 0.03, fill: { color: GOLD } });
+    var lines = current.docs.map(function (doc, i) {
+      return { text: exhibitLetter(i) + '.  ' + doc.name + (doc.pages ? '  (' + doc.pages + ' pp)' : ''), options: { color: TXT, fontSize: 13, fontFace: 'Calibri', paraSpaceAfter: 6 } };
+    });
+    if (lines.length) src.addText(lines, { x: 0.7, y: 1.3, w: 8.6, h: 3.5, valign: 'top' });
+    src.addText('Citation tags [S#] map to source passages inside ARC Notebook.', { x: 0.6, y: 4.95, w: 8.8, h: 0.3, fontSize: 10, color: MUT, fontFace: 'Calibri', italic: true });
+    footer(src, d.slides.length + 2);
+
+    var res = p.writeFile({ fileName: fileBase() + '-deck.pptx' });
+    if (res && res.catch) {
+      res.catch(function (err) { $('deckStatus').textContent = 'PPTX export failed: ' + (err.message || String(err)); });
+    }
+  }
+
+  /* ===================== report ===================== */
+  var REPORT_CLOSING = 'End the report with exactly this line: Prepared for attorney review. This synthesis is drawn solely from the documents listed in the Source Exhibit Index and is not legal advice.';
+  var REPORT_WRITING_STANDARD =
+    'WRITING STANDARD: Write as a professional defense investigator preparing work product for counsel. ' +
+    'Use plain, direct, field-report language. Keep paragraphs short, concrete, and easy to understand. ' +
+    'Prefer active sentences such as "The report states..." and "Officer Smith reported..." over abstract summaries. ' +
+    'Do not sound like an AI assistant. Do not mention prompts, models, uploaded excerpts, or that you are generating text. ' +
+    'Do not use filler phrases such as "it is important to note," "delve into," "comprehensive analysis," "underscores," or "plays a crucial role." ' +
+    'Do not overstate. Separate facts, reported allegations, conflicts, gaps, and investigator observations. ' +
+    'When the record is unclear, say exactly what is unclear and what source would be needed to resolve it.';
+  var REPORT_GENERAL_STYLE =
+    'People by full name and role on first mention; exact dates, times, quantities, serial numbers, and document titles as the sources state them; ' +
+    'specific cited detail over general summary; short paragraphs, one subject each.';
+
+  var REPORT_TYPES = [
+    {
+      id: 'invest', label: 'Investigation Report', closing: false,
+      intro: 'Write the narrative sections of a defense investigation report from the uploaded sources.',
+      extra: 'Under Timeline of Events, use one line per event: date, then the event, then its [S#] tags; put undated events last.',
+      style: 'Open the Executive Overview with the two or three findings counsel most needs to know, one sentence each, cited. Identify every person by full name and role on first mention. Use exact dates, times, locations, quantities, serial numbers, and document titles as the sources state them; report the specific cited detail instead of a general summary. One subject per paragraph so counsel can scan section by section.',
+      sections: [
+        { id: 'overview', label: 'Executive Overview' },
+        { id: 'parties', label: 'Parties and Roles' },
+        { id: 'facts', label: 'Statement of Facts' },
+        { id: 'timeline', label: 'Timeline of Events' },
+        { id: 'evidence', label: 'Evidence Discussion' },
+        { id: 'issues', label: 'Issues and Discrepancies' },
+        { id: 'openq', label: 'Open Questions' }
+      ]
+    },
+    {
+      id: 'brief', label: 'Brief Document', closing: false,
+      intro: 'Write a condensed case brief from the uploaded sources.',
+      extra: 'Keep the entire brief under 900 words. Under Conclusions Supported by the Record, state only conclusions that follow directly from cited material; do not argue or speculate.',
+      style: 'Readable in five minutes. Lead every section with its bottom line in the first sentence. Use exact names, dates, charge language, and document titles; never use a general description where the record gives a specific one. Use one short paragraph per point.',
+      sections: [
+        { id: 'matter', label: 'Matter Summary' },
+        { id: 'posture', label: 'Procedural Posture' },
+        { id: 'facts', label: 'Statement of Facts' },
+        { id: 'keyev', label: 'Key Evidence' },
+        { id: 'issues', label: 'Issues Presented' },
+        { id: 'concl', label: 'Conclusions Supported by the Record' }
+      ]
+    },
+    {
+      id: 'analysis', label: 'Analysis', closing: true,
+      intro: 'Write an analytical assessment of the evidence in the uploaded sources.',
+      extra: 'Under Competing Explanations, list each plausible explanation the excerpts could support and the cited material consistent or inconsistent with it; do not rank explanations using outside knowledge. Under Weaknesses and Gaps in the Recorded Evidence, distinguish between contradicted material and merely absent material.',
+      style: 'State every strength and weakness as a concrete cited fact, not a characterization: name the witness, exhibit, test, or record, state exactly what it shows, and tag it. Each competing explanation must name the specific cited items for and against it. Use one point per paragraph, plain words, and no hedged abstractions.',
+      sections: [
+        { id: 'inv', label: 'Evidence Inventory' },
+        { id: 'str', label: 'Strengths of the Recorded Evidence' },
+        { id: 'weak', label: 'Weaknesses and Gaps in the Recorded Evidence' },
+        { id: 'compete', label: 'Competing Explanations' },
+        { id: 'consist', label: 'Consistency Assessment' },
+        { id: 'unknown', label: 'Questions the Record Cannot Answer' }
+      ]
+    },
+    {
+      id: 'roadmap', label: 'Procedure Road Map', closing: false,
+      intro: 'Reconstruct the procedural road map documented in the uploaded sources.',
+      extra: 'Under Documented Procedural Steps, use one line per step: date and time if stated, the step, who performed it, then its [S#] tags; order chronologically and put undated steps last. Under Steps Referenced but Not Documented, list every procedure, form, test, notification, or filing that a source mentions should exist or did occur but for which no underlying record appears in the excerpts. Under Timing Analysis, note only intervals computable from dates and times stated in the excerpts.',
+      style: 'Write each step so a reader who has never seen the file can follow the sequence: who did what, when, and on which form or record. Use exact clock times, form numbers, report numbers, and equipment identifiers where stated. Name every actor with full name, rank or title, and agency on first mention.',
+      sections: [
+        { id: 'steps', label: 'Documented Procedural Steps' },
+        { id: 'actors', label: 'Actors and Their Roles' },
+        { id: 'docs', label: 'Documents Generated at Each Step' },
+        { id: 'missing', label: 'Steps Referenced but Not Documented' },
+        { id: 'timing', label: 'Timing Analysis' }
+      ]
+    },
+    {
+      id: 'crimdef', label: 'Criminal Defense', closing: true,
+      intro: 'Write a charge-focused defense review of the uploaded sources.',
+      extra: 'Under Charges as Stated in the Record, list only charges, counts, and statute references that appear in the excerpts; do not add elements or definitions from outside knowledge. For each charge, map the cited evidence the record connects to it. Under Evidence in the Record Favorable to the Defense, include exculpatory statements, inconsistencies, recantations, negative test results, and absences the sources themselves document.',
+      style: 'Quote charge language, counts, and statute references exactly as they appear. Map evidence to charges in plain sentences: name the witness or exhibit, state exactly what it says, and tag it. Keep pivotal exculpatory language in short exact quotes with cites rather than paraphrasing it away.',
+      sections: [
+        { id: 'charges', label: 'Charges as Stated in the Record' },
+        { id: 'support', label: 'Evidence Cited in Support of Each Charge' },
+        { id: 'favorable', label: 'Evidence in the Record Favorable to the Defense' },
+        { id: 'witnesses', label: 'Witnesses and Their Accounts' },
+        { id: 'physical', label: 'Physical and Documentary Evidence' },
+        { id: 'unresolved', label: 'Unresolved Factual Questions' }
+      ]
+    },
+    {
+      id: 'strategy', label: 'Defense Strategy', closing: true,
+      intro: 'Identify defense leverage points documented in the uploaded sources.',
+      extra: 'A leverage point is a fact, gap, conflict, or irregularity that appears in the excerpts; do not propose legal theories, motions, or arguments that rely on law not quoted in the excerpts. Under Recommended Investigative Steps, recommend only steps that follow from a cited gap or conflict, and state the cited gap each step addresses.',
+      style: 'Write each leverage point as one concrete cited fact plus one sentence on why it matters to the record. Name documents to demand by the title the sources use. Make each recommended step specific enough to hand to an investigator as written and tie it to its cited gap.',
+      sections: [
+        { id: 'leverage', label: 'Leverage Points in the Record' },
+        { id: 'inconsist', label: 'Inconsistencies to Develop' },
+        { id: 'demand', label: 'Missing Documentation to Demand' },
+        { id: 'witness', label: 'Witness Issues in the Record' },
+        { id: 'custody', label: 'Chain of Custody Observations' },
+        { id: 'nextsteps', label: 'Recommended Investigative Steps' }
+      ]
+    },
+    {
+      id: 'standards', label: 'Fail to Meet Standards', closing: true, note: true,
+      intro: 'Audit the documented conduct in the uploaded sources against the standards, regulations, manuals, and protocols that are also contained in the uploaded sources.',
+      extra: 'Under Deviations Identified, use one entry per deviation with three parts: the requirement with its [S#] tag, the documented conduct with its [S#] tag, and the specific difference between them. Only report a deviation when both the requirement and the conduct are cited from the excerpts. Under Standards Referenced but Not Provided, list every standard, regulation, or manual the records mention that does not itself appear in the excerpts, so it can be obtained and uploaded.',
+      style: 'Quote requirement language exactly with its section or regulation number where shown. Describe conduct with dates, clock times, actors, and equipment identifiers as recorded. Write each deviation in requirement, conduct, difference order, with no editorializing.',
+      sections: [
+        { id: 'governing', label: 'Governing Standards Found in the Sources' },
+        { id: 'conduct', label: 'Documented Conduct Audited' },
+        { id: 'devs', label: 'Deviations Identified' },
+        { id: 'compliant', label: 'Conduct Compliant with the Cited Standards' },
+        { id: 'refnotprov', label: 'Standards Referenced but Not Provided' },
+        { id: 'material', label: 'Materiality Notes' }
+      ]
+    },
+    {
+      id: 'legalrev', label: 'Legal Review', closing: true,
+      intro: 'Review the legal documents contained in the uploaded sources.',
+      extra: 'Treat as a legal document any motion, order, docket entry, certificate, affidavit, notice, discovery demand, or correspondence with counsel or the court found in the excerpts. Summarize each document\'s stated content only; do not evaluate legal sufficiency or predict outcomes. Under Certificates and Attestations, note the certifying person, date, and what was certified.',
+      style: 'Identify every filing by exact caption or title, filing date, docket number if stated, and signer. Report rulings in the court\'s own terms with short exact quotes for operative language such as allowed, denied, or continued. Keep chronology strictly by date.',
+      sections: [
+        { id: 'docs', label: 'Legal Documents in the Record' },
+        { id: 'chron', label: 'Filing and Ruling Chronology' },
+        { id: 'rulings', label: 'Rulings and Their Stated Grounds' },
+        { id: 'pending', label: 'Pending and Unresolved Matters' },
+        { id: 'deadlines', label: 'Deadlines and Dates Stated in the Record' },
+        { id: 'certs', label: 'Certificates and Attestations' }
+      ]
+    },
+    {
+      id: 'contradict', label: 'Contradictions', closing: false, ownFallback: true,
+      intro: 'Identify every contradiction, inconsistency, and material discrepancy between and within the uploaded sources.',
+      extra: 'For each item use one entry with this structure: the topic, what the first source states with its [S#] tag, what the conflicting material states with its [S#] tag, and one sentence on why the difference matters to the record. Under Assessment of Materiality, rank the identified conflicts from most to least significant based only on their role in the cited record. If a category contains no findings, write only this line under its heading: No findings of this type appear in the excerpted material.',
+      style: 'Make each conflict visible at a glance: state the topic in a few words, then each side\'s statement in the source\'s own words or a tight paraphrase, each with its cite. Use exact figures, times, and descriptions in quantitative and identification conflicts; the numbers themselves are the finding.',
+      sections: [
+        { id: 'direct', label: 'Direct Contradictions Between Sources' },
+        { id: 'internal', label: 'Internal Inconsistencies Within a Single Source' },
+        { id: 'timeconf', label: 'Timeline Conflicts' },
+        { id: 'quant', label: 'Quantitative Discrepancies' },
+        { id: 'ident', label: 'Identification and Description Conflicts' },
+        { id: 'material', label: 'Assessment of Materiality' }
+      ]
+    },
+    {
+      id: 'custom', label: 'Create Your Own', closing: false,
+      intro: '', extra: '', sections: []
+    }
+  ];
+
+  var REPORT_DET_SECTIONS = [
+    { id: 'cover', label: 'Cover Page' },
+    { id: 'exhibits', label: 'Source Exhibit Index' },
+    { id: 'notes', label: 'Pinned Notes' },
+    { id: 'appendix', label: 'Citation Appendix' }
+  ];
+
+  var CUSTOM_KEY = 'ARC_NB_CUSTOM_REPORTS_V1';
+  var currentRepType = 'invest';
+  var customDraft = { tplId: '', name: '', title: '', headings: '', instructions: '' };
+
+  function repTypeById(id) {
+    for (var i = 0; i < REPORT_TYPES.length; i++) if (REPORT_TYPES[i].id === id) return REPORT_TYPES[i];
+    return REPORT_TYPES[0];
+  }
+
+  function nbReports() {
+    if (!current.reports) current.reports = {};
+    if (current.report && !current.reports.invest) current.reports.invest = current.report;
+    return current.reports;
+  }
+
+  function loadCustomTemplates() {
+    try { return JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function saveCustomTemplates(list) { localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); }
+
+  function customHeadingsFromDraft() {
+    return String(customDraft.headings || '').split('\n').map(function (h) { return h.trim(); }).filter(function (h) { return h; });
+  }
+
+  function repSectionsFor(typeId) {
+    var type = repTypeById(typeId);
+    if (type.id === 'custom') {
+      var rep = nbReports().custom;
+      var heads = (rep && rep.headings && rep.headings.length) ? rep.headings : customHeadingsFromDraft();
+      return heads.map(function (h, i) { return { id: 'c' + i, label: h }; });
+    }
+    return type.sections;
+  }
+
+  function repOn(id) {
+    var byType = (current && current.reportOptsByType) || {};
+    var o = byType[currentRepType] || (currentRepType === 'invest' ? ((current && current.reportOpts) || {}) : {});
+    return o[id] !== false;
+  }
+
+  function setRepOpt(id, val) {
+    if (!current.reportOptsByType) current.reportOptsByType = {};
+    if (!current.reportOptsByType[currentRepType]) {
+      current.reportOptsByType[currentRepType] = {};
+      if (currentRepType === 'invest' && current.reportOpts) {
+        Object.keys(current.reportOpts).forEach(function (k) { current.reportOptsByType.invest[k] = current.reportOpts[k]; });
+      }
+    }
+    current.reportOptsByType[currentRepType][id] = val;
+    nbPut(current);
+  }
+
+  function openReport() {
+    if (!current) return;
+    $('repOverlay').classList.add('show');
+    $('repStatus').textContent = '';
+    var sel = $('repType');
+    sel.innerHTML = '';
+    REPORT_TYPES.forEach(function (t) {
+      var o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = t.label;
+      sel.appendChild(o);
+    });
+    sel.value = currentRepType;
+    renderReportOpts();
+    renderReportPreview();
+  }
+
+  function renderReportOpts() {
+    var box = $('repOpts');
+    if (!box || !current) return;
+    box.innerHTML = '';
+    var type = repTypeById(currentRepType);
+    if (type.note) {
+      box.appendChild(el('div', 'repnote', 'This audit only compares conduct against standards that are themselves uploaded as sources. Add the governing regulations, manuals, and protocols (for example 501 CMR 2.00 or the device operator manual) to this notebook before generating, or the report will list them as missing.'));
+    }
+    if (type.id === 'custom') renderCustomFields(box);
+    function group(title, sections, toggles) {
+      if (!sections.length) return;
+      box.appendChild(el('div', 'rephead', title));
+      var grid = el('div', 'repgrid');
+      sections.forEach(function (s) {
+        var lab = el('label');
+        var cb = el('input');
+        cb.type = 'checkbox';
+        cb.checked = repOn(s.id);
+        cb.disabled = !toggles;
+        cb.addEventListener('change', function () {
+          setRepOpt(s.id, cb.checked);
+          renderReportPreview();
+        });
+        lab.appendChild(cb);
+        lab.appendChild(document.createTextNode(s.label));
+        grid.appendChild(lab);
+      });
+      box.appendChild(grid);
+    }
+    group('Deterministic sections (assembled, no AI)', REPORT_DET_SECTIONS, true);
+    if (type.id === 'custom') {
+      group('Custom narrative sections (from your headings)', repSectionsFor('custom'), false);
+    } else {
+      group('Narrative sections (AI, grounded and cited)', type.sections, true);
+    }
+  }
+
+  function renderCustomFields(box) {
+    var tpls = loadCustomTemplates();
+    var wrapT = el('div', 'custfield');
+    wrapT.appendChild(el('label', null, 'Template'));
+    var sel = el('select');
+    var optNew = document.createElement('option');
+    optNew.value = '';
+    optNew.textContent = 'New template';
+    sel.appendChild(optNew);
+    tpls.forEach(function (t) {
+      var o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = t.name;
+      sel.appendChild(o);
+    });
+    sel.value = customDraft.tplId || '';
+    sel.addEventListener('change', function () {
+      var t = null;
+      for (var i = 0; i < tpls.length; i++) if (tpls[i].id === sel.value) t = tpls[i];
+      if (t) customDraft = { tplId: t.id, name: t.name, title: t.title, headings: t.headings.join('\n'), instructions: t.instructions };
+      else customDraft = { tplId: '', name: '', title: '', headings: '', instructions: '' };
+      renderReportOpts();
+      renderReportPreview();
+    });
+    wrapT.appendChild(sel);
+    box.appendChild(wrapT);
+
+    function field(labelText, key, multi, placeholder) {
+      var w = el('div', 'custfield');
+      w.appendChild(el('label', null, labelText));
+      var inp = el(multi ? 'textarea' : 'input');
+      inp.value = customDraft[key] || '';
+      if (placeholder) inp.placeholder = placeholder;
+      inp.addEventListener('change', function () { customDraft[key] = inp.value; renderReportPreview(); });
+      w.appendChild(inp);
+      box.appendChild(w);
+    }
+    field('Template name', 'name', false, 'e.g. OUI Breath Test Audit');
+    field('Report title', 'title', false, 'e.g. Breath Test Compliance Review');
+    field('Section headings (one per line)', 'headings', true, 'Device History' + '\n' + 'Calibration Record' + '\n' + 'Deviations Identified');
+    field('Instructions', 'instructions', true, 'Structure, tone, emphasis. Grounding rules always control.');
+
+    var row = el('div', 'custrow');
+    var save = el('button', 'iconbtn', 'Save template');
+    save.addEventListener('click', function () {
+      var name = (customDraft.name || '').trim();
+      var title = (customDraft.title || '').trim();
+      var heads = customHeadingsFromDraft();
+      if (!name || !title || !heads.length) { $('repStatus').textContent = 'A template needs a name, a title, and at least one section heading.'; return; }
+      var list = loadCustomTemplates();
+      var existing = null;
+      for (var i = 0; i < list.length; i++) if (list[i].id === customDraft.tplId) existing = list[i];
+      if (existing) {
+        existing.name = name;
+        existing.title = title;
+        existing.headings = heads;
+        existing.instructions = customDraft.instructions || '';
+      } else {
+        var t = { id: uid(), name: name, title: title, headings: heads, instructions: customDraft.instructions || '' };
+        list.push(t);
+        customDraft.tplId = t.id;
+      }
+      saveCustomTemplates(list);
+      $('repStatus').textContent = 'Template saved.';
+      renderReportOpts();
+    });
+    var delb = el('button', 'iconbtn', 'Delete template');
+    delb.addEventListener('click', function () {
+      if (!customDraft.tplId) { $('repStatus').textContent = 'Select a saved template to delete.'; return; }
+      if (!confirm('Delete the template "' + (customDraft.name || '') + '"?')) return;
+      saveCustomTemplates(loadCustomTemplates().filter(function (t) { return t.id !== customDraft.tplId; }));
+      customDraft = { tplId: '', name: '', title: '', headings: '', instructions: '' };
+      renderReportOpts();
+    });
+    row.appendChild(save);
+    row.appendChild(delb);
+    box.appendChild(row);
+  }
+
+  function repGenerate() {
+    if (pending || !current) return;
+    if (!current.docs.length) { $('repStatus').textContent = 'Upload sources first.'; return; }
+    var type = repTypeById(currentRepType);
+    var task = '';
+    var meta = null;
+    if (type.id === 'custom') {
+      var title = (customDraft.title || '').trim();
+      var heads = customHeadingsFromDraft();
+      if (!title || !heads.length) { $('repStatus').textContent = 'Enter a report title and at least one section heading.'; return; }
+      meta = { title: title, headings: heads };
+      task = REPORT_WRITING_STANDARD + ' ' +
+        'Write a report titled "' + title + '" from the uploaded sources. ' +
+        'Produce exactly these sections, in this order, each starting with a heading line in the form "## Section Name": ' + heads.join(', ') + '. ' +
+        'STYLE FOR THIS REPORT: ' + REPORT_GENERAL_STYLE + ' ' +
+        'Follow these additional instructions, but only to the extent they do not conflict with the STRICT GROUNDING RULES above, which always control: ' +
+        ((customDraft.instructions || '').trim() || 'None.') + ' ' +
+        'Every factual statement must carry [S#] citation tags. If a section has no support in the excerpts, write only this line under its heading: Not covered in the uploaded sources.';
+    } else {
+      var wanted = type.sections.filter(function (s) { return repOn(s.id); });
+      if (!wanted.length) { $('repStatus').textContent = 'No narrative sections are selected. Deterministic sections export without generation.'; return; }
+      var names = wanted.map(function (s) { return s.label; }).join(', ');
+      task = REPORT_WRITING_STANDARD + ' ' +
+        type.intro +
+        ' Produce exactly these sections, in this order, each starting with a heading line in the form "## Section Name": ' + names + '.' +
+        (type.extra ? ' ' + type.extra : '') +
+        (type.style ? ' STYLE FOR THIS REPORT: ' + type.style : '') +
+        ' Every factual statement must carry [S#] citation tags.' +
+        (type.ownFallback ? '' : ' If a section has no support in the excerpts, write only this line under its heading: Not covered in the uploaded sources.') +
+        (type.closing ? ' ' + REPORT_CLOSING : '');
+    }
+    pending = true;
+    $('repGen').disabled = true;
+    $('repStatus').textContent = 'Reading sources...';
+    var built = buildExcerptBlock(current, spreadChunks(current));
+    arcGeminiGenerate(groundedPrompt(current, built.block, task, false)).then(function (text) {
+      var rep = { text: text.trim(), cites: built.cites, generatedAt: Date.now() };
+      if (meta) { rep.title = meta.title; rep.headings = meta.headings; }
+      nbReports()[currentRepType] = rep;
+      $('repStatus').textContent = 'Narrative generated at ' + new Date().toLocaleTimeString() + '.';
+      arcPublishCaseBrief();
+      return nbPut(current);
+    }).catch(function (err) {
+      $('repStatus').textContent = err.message || String(err);
+    }).then(function () {
+      pending = false;
+      $('repGen').disabled = false;
+      renderReportOpts();
+      renderReportPreview();
+    });
+  }
+
+  function splitReportSections(text) {
+    var map = {};
+    var parts = ('\n' + String(text || '')).split('\n## ');
+    parts.slice(1).forEach(function (pt) {
+      var nl = pt.indexOf('\n');
+      var name = (nl < 0 ? pt : pt.slice(0, nl)).trim().toLowerCase();
+      var body = (nl < 0 ? '' : pt.slice(nl + 1)).trim();
+      map[name] = body;
+    });
+    return map;
+  }
+
+  function usedTags(texts) {
+    var seen = {};
+    var out = [];
+    texts.forEach(function (t) {
+      var re = /\[S(\d+)\]/g;
+      var m;
+      while ((m = re.exec(t)) !== null) {
+        var n = parseInt(m[1], 10);
+        if (!seen[n]) { seen[n] = 1; out.push(n); }
+      }
+    });
+    out.sort(function (a, b) { return a - b; });
+    return out;
+  }
+
+  function buildReportBlocks() {
+    var type = repTypeById(currentRepType);
+    var rep = nbReports()[currentRepType] || null;
+    var blocks = [];
+    var secMap = splitReportSections(rep ? rep.text : '');
+    var repLabel = type.id === 'custom' ? ((rep && rep.title) || (customDraft.title || '').trim() || 'Custom Report') : type.label;
+    if (repOn('cover')) {
+      blocks.push({ type: 'cover', title: current.name, reportLabel: repLabel, caseNo: current.caseNo || '', date: new Date().toLocaleDateString(), firm: 'ARC Investigations and Consulting' });
+    }
+    var aiTexts = [];
+    repSectionsFor(currentRepType).forEach(function (s) {
+      if (type.id !== 'custom' && !repOn(s.id)) return;
+      var body = secMap[s.label.toLowerCase()] || 'Not generated yet. Run Generate narrative.';
+      aiTexts.push(body);
+      blocks.push({ type: 'narrative', label: s.label, body: body });
+    });
+    if (repOn('exhibits')) {
+      blocks.push({
+        type: 'exhibit_index',
+        rows: current.docs.map(function (doc, i) {
+          return { letter: exhibitLetter(i), name: doc.name, kind: doc.kind, pages: doc.pages || '', chars: doc.chars, added: fmtDate(doc.addedAt) };
+        })
+      });
+    }
+    if (repOn('notes') && current.notes.length) {
+      blocks.push({ type: 'notes', items: current.notes.map(function (n) { return { title: n.title, text: n.text }; }) });
+    }
+    if (repOn('appendix') && rep) {
+      var tags = usedTags(aiTexts);
+      var items = [];
+      tags.forEach(function (n) {
+        for (var i = 0; i < rep.cites.length; i++) {
+          var c = rep.cites[i];
+          if (c.n === n) { items.push({ tag: 'S' + n, doc: c.docName, page: c.page || '' }); break; }
+        }
+      });
+      if (items.length) blocks.push({ type: 'citation_appendix', items: items });
+    }
+    return blocks;
+  }
+
+  function blocksToMd(blocks) {
+    var L = [];
+    blocks.forEach(function (b) {
+      if (b.type === 'cover') {
+        L.push('# ' + b.title);
+        if (b.reportLabel) L.push(b.reportLabel);
+        if (b.caseNo) L.push('Case: ' + b.caseNo);
+        L.push('Prepared: ' + b.date);
+        L.push(b.firm);
+        L.push('');
+      } else if (b.type === 'narrative') {
+        L.push('## ' + b.label, '', b.body, '');
+      } else if (b.type === 'exhibit_index') {
+        L.push('## Source Exhibit Index', '');
+        L.push('| Exhibit | Document | Type | Pages | Size | Added |');
+        L.push('| --- | --- | --- | --- | --- | --- |');
+        b.rows.forEach(function (r) {
+          L.push('| ' + r.letter + ' | ' + r.name + ' | ' + r.kind + ' | ' + r.pages + ' | ' + fmtSize(r.chars) + ' | ' + r.added + ' |');
+        });
+        L.push('');
+      } else if (b.type === 'notes') {
+        L.push('## Pinned Notes', '');
+        b.items.forEach(function (n) { L.push('### ' + n.title, '', n.text, ''); });
+      } else if (b.type === 'citation_appendix') {
+        L.push('## Citation Appendix', '');
+        b.items.forEach(function (it) { L.push('- ' + it.tag + ': ' + it.doc + (it.page ? ', page ' + it.page : '')); });
+        L.push('');
+      }
+    });
+    return L.join('\n');
+  }
+
+  function blocksToHtml(blocks) {
+    var css = 'body{font-family:Georgia,serif;color:#1c1c1c;margin:48px;line-height:1.6;font-size:12pt}' +
+      ((window.ARC_REPORT_HEADER && window.ARC_REPORT_HEADER.css) || '') +
+      'h1{font-size:24pt;margin:0 0 4px}' +
+      '.rule{height:3px;background:#C9A84C;width:120px;margin:14px 0 24px}' +
+      'h2{font-size:15pt;margin:26px 0 8px;border-bottom:2px solid #C9A84C;padding-bottom:4px}' +
+      'h3{font-size:12pt;margin:16px 0 4px}' +
+      '.meta{color:#555;font-size:10.5pt}' +
+      'table{border-collapse:collapse;width:100%;font-size:10.5pt}' +
+      'th,td{border:1px solid #999;padding:5px 8px;text-align:left}' +
+      'th{background:#f2ede0}' +
+      'p{margin:0 0 10px;white-space:pre-wrap}' +
+      'ul{margin:0 0 10px 20px}';
+    var H = [];
+    blocks.forEach(function (b) {
+      if (b.type === 'cover') {
+        H.push('<h1>' + esc(b.title) + '</h1>');
+        H.push('<div class="meta">' + (b.reportLabel ? esc(b.reportLabel) + '<br>' : '') + (b.caseNo ? 'Case: ' + esc(b.caseNo) + '<br>' : '') + 'Prepared: ' + esc(b.date) + '<br>' + esc(b.firm) + '</div>');
+        H.push('<div class="rule"></div>');
+      } else if (b.type === 'narrative') {
+        H.push('<h2>' + esc(b.label) + '</h2><p>' + esc(b.body) + '</p>');
+      } else if (b.type === 'exhibit_index') {
+        H.push('<h2>Source Exhibit Index</h2><table><tr><th>Exhibit</th><th>Document</th><th>Type</th><th>Pages</th><th>Size</th><th>Added</th></tr>' +
+          b.rows.map(function (r) {
+            return '<tr><td>' + esc(r.letter) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.kind) + '</td><td>' + esc(r.pages) + '</td><td>' + esc(fmtSize(r.chars)) + '</td><td>' + esc(r.added) + '</td></tr>';
+          }).join('') + '</table>');
+      } else if (b.type === 'notes') {
+        H.push('<h2>Pinned Notes</h2>' + b.items.map(function (n) { return '<h3>' + esc(n.title) + '</h3><p>' + esc(n.text) + '</p>'; }).join(''));
+      } else if (b.type === 'citation_appendix') {
+        H.push('<h2>Citation Appendix</h2><ul>' + b.items.map(function (it) { return '<li>' + esc(it.tag) + ': ' + esc(it.doc) + (it.page ? ', page ' + esc(it.page) : '') + '</li>'; }).join('') + '</ul>');
+      }
+    });
+    var banner = (window.ARC_REPORT_HEADER && window.ARC_REPORT_HEADER.html) ? window.ARC_REPORT_HEADER.html('arc-report-banner compact', { portable: true }) : '';
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(current.name) + '</title><style>' + css + '</style></head><body>' + banner + H.join('\n') + '</body></html>';
+  }
+
+  function blocksToDraftV6(blocks) {
+    var rep = nbReports()[currentRepType] || null;
+    var type = repTypeById(currentRepType);
+    var v6blocks = blocks.map(function (b) {
+      if (b.type === 'narrative') {
+        return { type: 'narrative', heading: b.label, bodyMarkdown: b.body, cites: usedTags([b.body]).map(function (n) { return 'S' + n; }) };
+      }
+      return b;
+    });
+    return {
+      formatVersion: 6,
+      generator: 'ARC Notebook',
+      generatedAt: new Date().toISOString(),
+      reportType: currentRepType,
+      reportLabel: type.id === 'custom' ? ((rep && rep.title) || (customDraft.title || '').trim() || 'Custom Report') : type.label,
+      caseFile: { title: current.name, caseNumber: current.caseNo || '' },
+      citationMap: rep ? rep.cites.map(function (c) {
+        return { tag: 'S' + c.n, document: c.docName, page: c.page || null, charStart: c.start, charEnd: c.end };
+      }) : [],
+      blocks: v6blocks
+    };
+  }
+
+  function repExport(kind) {
+    if (!current) return;
+    var blocks = buildReportBlocks();
+    if (!blocks.length) { $('repStatus').textContent = 'Select at least one section.'; return; }
+    if (kind === 'md') {
+      download(fileBase() + '-' + currentRepType + '-report.md', blocksToMd(blocks));
+    } else if (kind === 'docx') {
+      if (!window.htmlDocx) { $('repStatus').textContent = 'The html-docx library did not load. Check the network and reload the page.'; return; }
+      downloadBlob(fileBase() + '-' + currentRepType + '-report.docx', window.htmlDocx.asBlob(blocksToHtml(blocks)));
+    } else if (kind === 'print') {
+      var w = window.open('', '_blank');
+      if (!w) { $('repStatus').textContent = 'Allow pop ups for this page to use Print / PDF.'; return; }
+      w.document.write(blocksToHtml(blocks));
+      w.document.close();
+      w.focus();
+      setTimeout(function () { w.print(); }, 400);
+    } else if (kind === 'json') {
+      downloadBlob(fileBase() + '-draft-v6-' + currentRepType + '.json', new Blob([JSON.stringify(blocksToDraftV6(blocks), null, 2)], { type: 'application/json' }));
+    }
+  }
+
+  function renderReportPreview() {
+    var pv = $('repPreview');
+    if (!pv || !current) return;
+    var rep = nbReports()[currentRepType] || null;
+    var blocks = buildReportBlocks();
+    if (!blocks.length) {
+      pv.innerHTML = '<span class="finemeta">Select sections above to preview the report.</span>';
+      return;
+    }
+    var H = [];
+    blocks.forEach(function (b) {
+      if (b.type === 'cover') {
+        if (window.ARC_REPORT_HEADER && window.ARC_REPORT_HEADER.dataUri) {
+          H.push('<span style="display:block;margin:0 0 14px"><img src="' + window.ARC_REPORT_HEADER.dataUri + '" alt="ARC Investigations and Consulting confidential report header" style="display:block;width:100%;max-width:650px;height:auto"></span>');
+        }
+        H.push('<span class="aihead" style="font-size:19px">' + esc(b.title) + '</span>');
+        H.push('<span class="finemeta">' + (b.reportLabel ? esc(b.reportLabel) + '  |  ' : '') + (b.caseNo ? esc(b.caseNo) + '  |  ' : '') + esc(b.date) + '  |  ' + esc(b.firm) + '</span>\n');
+      } else if (b.type === 'narrative') {
+        H.push('<span class="aihead">' + esc(b.label) + '</span>');
+        H.push(renderCites(mdLite(b.body), rep ? rep.cites : null) + '\n');
+      } else if (b.type === 'exhibit_index') {
+        H.push('<span class="aihead">Source Exhibit Index</span>');
+        H.push(b.rows.map(function (r) {
+          return esc(r.letter) + '. ' + esc(r.name) + ' (' + esc(r.kind) + (r.pages ? ', ' + r.pages + ' pp' : '') + ')';
+        }).join('\n') + '\n');
+      } else if (b.type === 'notes') {
+        H.push('<span class="aihead">Pinned Notes</span>');
+        H.push(b.items.map(function (n) { return '<strong>' + esc(n.title) + '</strong>\n' + esc(n.text); }).join('\n\n') + '\n');
+      } else if (b.type === 'citation_appendix') {
+        H.push('<span class="aihead">Citation Appendix</span>');
+        H.push(b.items.map(function (it) { return esc(it.tag) + ': ' + esc(it.doc) + (it.page ? ', page ' + it.page : ''); }).join('\n'));
+      }
+    });
+    pv.innerHTML = H.join('\n');
+  }
+
+  /* ===================== wiring ===================== */
+  function init() {
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    $('backBtn').addEventListener('click', renderHome);
+    $('settingsBtn').addEventListener('click', openSettings);
+    $('setClose').addEventListener('click', function () { $('setOverlay').classList.remove('show'); });
+    $('srcClose').addEventListener('click', function () { $('srcOverlay').classList.remove('show'); });
+    $('srcOverlay').addEventListener('click', function (e) { if (e.target === $('srcOverlay')) $('srcOverlay').classList.remove('show'); });
+    $('setOverlay').addEventListener('click', function (e) { if (e.target === $('setOverlay')) $('setOverlay').classList.remove('show'); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        ['srcOverlay', 'setOverlay', 'mmOverlay', 'deckOverlay', 'repOverlay'].forEach(function (oid) {
+          $(oid).classList.remove('show');
+        });
+      }
+    });
+    $('keySave').addEventListener('click', function () {
+      var v = $('keyInput').value.trim();
+      if (!v) { $('keyInput').focus(); return; }
+      localStorage.setItem(GEMINI_KEY, v);
+      if (window.ARC_SYSTEM_KEYS) window.ARC_SYSTEM_KEYS.write({ gemini: v, googleApiKey: v });
+      localStorage.removeItem(MODEL_CACHE_KEY);
+      $('setOverlay').classList.remove('show');
+    });
+    $('keyClear').addEventListener('click', function () {
+      localStorage.removeItem(GEMINI_KEY);
+      if (window.ARC_SYSTEM_KEYS) window.ARC_SYSTEM_KEYS.write({ gemini: "", googleApiKey: "" });
+      $('keyInput').value = '';
+    });
+    $('fileInput').addEventListener('change', function () {
+      handleFiles(this.files);
+      this.value = '';
+    });
+    ['mmOverlay', 'deckOverlay', 'repOverlay'].forEach(function (oid) {
+      var ov = $(oid);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.remove('show'); });
+    });
+    var closers = document.querySelectorAll('[data-close]');
+    for (var ci = 0; ci < closers.length; ci++) {
+      (function (btn) {
+        btn.addEventListener('click', function () { $(btn.getAttribute('data-close')).classList.remove('show'); });
+      })(closers[ci]);
+    }
+    $('mmGen').addEventListener('click', mmGenerate);
+    $('mmSvg').addEventListener('click', mmExportSvg);
+    $('mmPng').addEventListener('click', mmExportPng);
+    $('deckGen').addEventListener('click', deckGenerate);
+    $('deckAdd').addEventListener('click', deckAddSlide);
+    $('deckPptx').addEventListener('click', deckExportPptx);
+    $('repGen').addEventListener('click', repGenerate);
+    $('repMd').addEventListener('click', function () { repExport('md'); });
+    $('repDocx').addEventListener('click', function () { repExport('docx'); });
+    $('repPrint').addEventListener('click', function () { repExport('print'); });
+    $('repJson').addEventListener('click', function () { repExport('json'); });
+    $('repType').addEventListener('change', function () {
+      currentRepType = this.value;
+      $('repStatus').textContent = '';
+      renderReportOpts();
+      renderReportPreview();
+    });
+    var tb = $('tabbar');
+    tb.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button') : null;
+      if (b) setTab(b.getAttribute('data-tab'));
+    });
+    renderHome();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+<script src="arc_unified_bridge.js"></script>
+<script>
+(function(){
+  function addSendButton(){
+    var anchor = document.getElementById('repJson') || document.getElementById('repPrint');
+    if (!anchor || document.getElementById('arcSendMain') || !window.ARCUnified) return;
+    var b = document.createElement('button');
+    b.id = 'arcSendMain';
+    b.className = anchor.className;
+    b.textContent = 'Send to Main Report';
+    b.title = 'Save the current report preview to the shared Main Report inbox';
+    b.addEventListener('click', function(){
+      var preview = document.getElementById('repPreview');
+      if (!preview || !preview.innerText.trim()) {
+        alert('Generate or preview a report first.');
+        return;
+      }
+      var type = document.getElementById('repType');
+      window.ARCUnified.saveReport({
+        title: (document.querySelector('.worktitle') || document.querySelector('h1') || {}).textContent || 'ARC Notebook Report',
+        reportType: type ? type.options[type.selectedIndex].text : 'Notebook Report',
+        text: preview.innerText.trim(),
+        html: preview.innerHTML,
+        caseContext: window.ARC_CASE_CONTEXT || {}
+      });
+      var s = document.getElementById('repStatus');
+      if (s) s.textContent = 'Sent to Main Report inbox at ' + new Date().toLocaleTimeString() + '.';
+    });
+    anchor.parentNode.insertBefore(b, anchor.nextSibling);
+  }
+  addSendButton();
+})();
+</script>
+</body>
+</html>

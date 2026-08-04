@@ -1,0 +1,192 @@
+{
+  "_schema": "arc.timeline.discrepancy",
+  "_version": 1,
+  "_notes": "Canonical input for the ARC Timeline Discrepancy Visualizer. Produced by the ARC Report Builder case store via arcTdvAdapter(), or loaded standalone from a .json file. All times are local wall clock strings as they appear on the source document. Do not normalize to UTC: the whole point of this tool is that the sources disagree, so each time must survive exactly as recorded.",
+
+  "case": {
+    "matter": "Commonwealth v. Sample",
+    "docket": "2588CR00000",
+    "court": "Boston Municipal Court, Central Division",
+    "client": "Sample, J.",
+    "preparedFor": "Counsel of record",
+    "preparedBy": "ARC Investigations and Consulting",
+    "prepared": "2026-07-29",
+    "exhibitLetter": "",
+    "workProduct": true,
+    "incidentDate": "2026-03-14"
+  },
+
+  "sources": [
+    {
+      "id": "dash",
+      "label": "Cruiser dashcam",
+      "kind": "machine",
+      "timeOrigin": "Burned in timecode",
+      "clock": {
+        "driftKnown": false,
+        "driftSeconds": 0,
+        "uncertaintySeconds": 120,
+        "uncertaintyBasis": "Device clock never verified against a reference. Band is an assumption, not a measurement.",
+        "syncRecordRequested": true,
+        "syncRecordReceived": false
+      },
+      "document": {
+        "title": "Cruiser 412 dashcam, unit A",
+        "bates": "COMM-000412",
+        "sha256": "",
+        "custodian": "Boston Police District C-11"
+      },
+      "limits": "Clock drift unverified"
+    },
+    {
+      "id": "narrative",
+      "label": "Narrative report",
+      "kind": "recalled",
+      "timeOrigin": "Written after shift",
+      "clock": {
+        "driftKnown": false,
+        "driftSeconds": 0,
+        "uncertaintySeconds": 300,
+        "uncertaintyBasis": "Report uses approximate language and was authored after the shift. No contemporaneous field notes produced.",
+        "syncRecordRequested": false,
+        "syncRecordReceived": false
+      },
+      "document": {
+        "title": "Incident report",
+        "bates": "COMM-000031",
+        "sha256": "",
+        "custodian": "Boston Police District C-11"
+      },
+      "limits": "Times approximate, no field notes produced"
+    }
+  ],
+
+  "events": [
+    {
+      "id": "e_stop_claimed",
+      "sourceId": "narrative",
+      "time": "22:45",
+      "precision": "approximate",
+      "statedAs": "at approximately 2245 hours",
+      "what": "Stopped the vehicle",
+      "quote": "I stopped the vehicle at approximately 2245 hours.",
+      "locator": {
+        "document": "Incident report",
+        "bates": "COMM-000031",
+        "page": 2,
+        "line": "para 4",
+        "mediaOffset": null
+      },
+      "verifiable": false,
+      "tags": ["stop"]
+    },
+    {
+      "id": "e_lights",
+      "sourceId": "dash",
+      "time": "22:52:14",
+      "precision": "exact",
+      "statedAs": "22:52:14",
+      "what": "Blue lights activate",
+      "quote": "",
+      "locator": {
+        "document": "Cruiser 412 dashcam",
+        "bates": "COMM-000412",
+        "page": null,
+        "line": null,
+        "mediaOffset": "00:00:00"
+      },
+      "verifiable": true,
+      "tags": ["stop"]
+    }
+  ],
+
+  "conflicts": [
+    {
+      "id": "A",
+      "label": "Stop time",
+      "plain": "The stop is claimed seven minutes before any device recorded it.",
+      "eventIds": ["e_stop_claimed", "e_lights"],
+      "gap": {
+        "nominalMinutes": 7,
+        "worstCaseMinutes": 0,
+        "bestCaseMinutes": 14,
+        "survivesUncertainty": false,
+        "survivesNote": "At the stated uncertainty bands the gap could close entirely. It only holds if the dashcam clock is shown to be synchronized. This is why the sync record matters more than the arithmetic."
+      },
+      "unrecorded": true
+    }
+  ],
+
+  "intervals": [
+    {
+      "id": "obs",
+      "label": "Observation period",
+      "fromEventId": "e_obs_start",
+      "toEventId": "e_sample",
+      "elapsedMinutes": 11,
+      "requiredMinutes": 15,
+      "requirementNote": "Interval requirement per applicable regulation. Cite in the motion, not on the exhibit.",
+      "interruptedByEventId": "e_officer_exits",
+      "survivesUncertainty": true,
+      "survivesNote": "Both endpoints are the Commonwealth's own figures. The shortfall does not depend on any defense assumption."
+    }
+  ],
+
+  "findings": [
+    {
+      "id": "f1",
+      "n": 1,
+      "title": "Stop time cannot be reconciled with the dashcam",
+      "conflictId": "A",
+      "sourceIds": ["narrative", "dash"],
+      "body": "The narrative places the stop at 22:45. The dashcam records blue light activation at 22:52.",
+      "recorded": "22:52:14 dashcam",
+      "asserted": "22:45 narrative p.2",
+      "whyItMatters": "Seven minutes of observation are described but appear on no recording.",
+      "strength": "contingent",
+      "strengthNote": "Contingent on clock synchronization."
+    }
+  ],
+
+  "motions": [
+    {
+      "id": "m1",
+      "title": "Motion in limine to exclude breath test result",
+      "state": "supported",
+      "restsOn": ["f2", "f3"],
+      "sourceIds": ["narrative", "instr", "bwc"],
+      "beforeFiling": "Calibration and certification records requested, not received. Confirm the instrument clock against a known reference.",
+      "autoGenerated": true
+    }
+  ],
+
+  "motionsRejected": [
+    {
+      "title": "Motion to dismiss for lack of probable cause",
+      "reason": "Nothing in these sources speaks to the grounds for the stop.",
+      "rule": "no event tagged 'grounds' present"
+    }
+  ],
+
+  "crossExam": [
+    {
+      "id": "x1",
+      "topic": "Stop time",
+      "findingId": "f1",
+      "anchorEventId": "e_lights",
+      "sourceIds": ["narrative", "dash"],
+      "questions": [
+        { "q": "You wrote your report after your shift ended.", "note": "" },
+        { "q": "Your cruiser camera activates when you turn on your blue lights.", "note": "Predicate. Establish before the timecode." }
+      ],
+      "hold": ""
+    }
+  ],
+
+  "integrity": {
+    "generatedAt": "",
+    "toolVersion": "1.0",
+    "inputHashes": [],
+    "chainNote": "SHA-256 of each source document, carried forward from the Report Builder chain of custody."
+  }
+}

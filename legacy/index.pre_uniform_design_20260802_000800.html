@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="arc-version" content="11.2.0">
+  <title>ARC Integrated Case System</title>
+  <style>
+    :root{
+      --navy:#081525;--navy2:#112842;--navy3:#1b3858;--gold:#c5a363;--gold2:#ead49e;
+      --line:#314965;--paper:#fff;--ink:#172033;--muted:#667386;--success:#19734c;
+      --warning:#8a5b0b;--danger:#9a2924;--surface:#f3f5f8;--shadow:0 12px 35px rgba(4,14,27,.16)
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--navy);color:#fff}
+    body{display:grid;grid-template-rows:auto auto auto 1fr;overflow:hidden}
+    button,input{font:inherit}
+    .top{background:linear-gradient(135deg,var(--navy),var(--navy2));border-bottom:1px solid rgba(197,163,99,.5);padding:10px 14px}
+    .top-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .brand{font-family:Georgia,serif;font-size:20px;min-width:240px;margin-right:auto}.brand b{color:var(--gold2)}
+    .version{display:inline-flex;margin-left:8px;border:1px solid rgba(234,212,158,.45);border-radius:999px;padding:3px 7px;color:var(--gold2);font:700 10px/1 system-ui;vertical-align:middle}
+    .case-fields{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:7px;flex:1;max-width:760px}
+    .case-fields label{display:grid;gap:3px}.case-fields span{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#aab8c8}
+    .case-fields input{min-width:0;width:100%;background:#06111f;color:#fff;border:1px solid var(--line);padding:7px 9px;border-radius:6px}
+    .case-fields input:focus{outline:2px solid rgba(197,163,99,.55);outline-offset:1px}
+    .btn{border:1px solid var(--gold);background:#172e49;color:#fff;padding:8px 11px;border-radius:7px;cursor:pointer;font-weight:700}
+    .btn:hover{background:#214467}.btn.primary{background:var(--gold);color:#121820}.btn.primary:hover{background:var(--gold2)}
+    .btn.danger{border-color:#c87973;color:#8a2721;background:#fff}.btn.subtle{border-color:#bcc5d1;color:#273448;background:#fff}
+    .case-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:8px;color:#c7d0dc;font-size:11px}
+    .meta-pill{border:1px solid rgba(170,184,200,.3);border-radius:999px;padding:4px 8px;background:rgba(3,12,23,.26)}
+    .meta-pill strong{color:#fff}
+    .workflow{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:1px;background:#31465f;border-bottom:1px solid var(--line)}
+    .workflow-step{position:relative;display:grid;grid-template-columns:27px 1fr;gap:8px;align-items:center;border:0;background:#0d1d30;color:#d8e0e9;padding:9px 11px;text-align:left;cursor:pointer;min-height:57px}
+    .workflow-step:hover{background:#172f4b}.workflow-step .num{display:grid;place-items:center;width:27px;height:27px;border:1px solid #60758e;border-radius:50%;font-weight:800}
+    .workflow-step strong{display:block;font-size:12px}.workflow-step small{display:block;margin-top:2px;color:#94a5b9;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .workflow-step[data-state="complete"]{box-shadow:inset 0 -3px var(--success)}.workflow-step[data-state="complete"] .num{background:var(--success);border-color:var(--success)}
+    .workflow-step[data-state="attention"]{box-shadow:inset 0 -3px #d09b37}.workflow-step[data-state="attention"] .num{border-color:#d09b37;color:#f5d797}
+    .workflow-step[data-state="blocked"]{box-shadow:inset 0 -3px #bd4b45}.workflow-step[data-state="blocked"] .num{border-color:#bd4b45;color:#ffc0bc}
+    .tabs{display:flex;gap:4px;padding:7px 10px;overflow:auto;background:#071321;border-bottom:1px solid var(--line)}
+    .tab{white-space:nowrap;border:0;background:transparent;color:#bac6d3;padding:8px 11px;border-radius:6px;cursor:pointer}.tab.active{background:var(--gold);color:#111;font-weight:800}
+    main{min-height:0;position:relative;background:var(--surface)}
+    .frame{width:100%;height:100%;border:0;background:#fff}
+    .panel{position:absolute;inset:0;background:var(--surface);color:var(--ink);overflow:auto;padding:22px;display:none}.panel.show{display:block}
+    .panel-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:17px}.panel-head h1{margin:0;font:700 28px/1.15 Georgia,serif;color:#0b1726}.panel-head p{margin:6px 0 0;color:var(--muted);max-width:800px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:0 0 16px}
+    .summary-card{background:#fff;border:1px solid #d8dee6;border-radius:10px;padding:15px;box-shadow:0 4px 14px rgba(8,21,37,.05)}
+    .summary-card span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}.summary-card strong{display:block;margin-top:5px;font:700 28px/1 Georgia,serif;color:#0b1726}
+    .summary-card[data-tone="success"]{border-top:4px solid var(--success)}.summary-card[data-tone="warning"]{border-top:4px solid #d09b37}.summary-card[data-tone="danger"]{border-top:4px solid #bd4b45}.summary-card[data-tone="navy"]{border-top:4px solid #244d78}
+    .content-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:14px}
+    .card{background:#fff;border:1px solid #d8dee6;border-radius:10px;box-shadow:0 4px 14px rgba(8,21,37,.05);overflow:hidden}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #e1e5eb;background:#fbfcfd}.card-head h2{margin:0;font:700 18px/1.2 Georgia,serif;color:#0b1726}
+    .card-body{padding:15px}
+    .reports{display:grid;gap:12px}.report{background:#fff;border:1px solid #d8dee6;border-radius:9px;padding:15px;box-shadow:0 4px 14px rgba(8,21,37,.05)}
+    .report-title{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}.report h3{margin:0 0 5px;font:700 18px/1.2 Georgia,serif}
+    .meta{color:var(--muted);font-size:12px}.report pre{white-space:pre-wrap;font-family:Georgia,serif;line-height:1.55;max-height:280px;overflow:auto;border-top:1px solid #eee;padding-top:11px}
+    .status{display:inline-flex;align-items:center;border:1px solid #cbd2dc;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+    .status.approved{border-color:#6aa987;background:#edf8f2;color:#155d3c}.status.pending,.status.revised{border-color:#d4a54e;background:#fff8e8;color:#7b5311}.status.rejected{border-color:#c87973;background:#fff0ef;color:#8a2721}
+    .checklist{display:grid;gap:8px}.check{display:grid;grid-template-columns:21px 1fr;gap:9px;align-items:start;border:1px solid #e0e4e9;border-radius:7px;padding:9px 10px}
+    .check .mark{display:grid;place-items:center;width:21px;height:21px;border-radius:50%;font-weight:900;font-size:12px}.check.ok .mark{background:#e8f6ef;color:var(--success)}.check.fail .mark{background:#fff0ef;color:var(--danger)}
+    .check strong{display:block;font-size:12px}.check small{display:block;margin-top:2px;color:var(--muted);line-height:1.4}
+    .issue-list{display:grid;gap:7px;max-height:420px;overflow:auto}.issue{border-left:4px solid #d09b37;background:#fff8e8;padding:8px 10px;font-size:12px}.issue.hash{border-color:#bd4b45;background:#fff0ef}.issue.citation{border-color:#244d78;background:#eef5fb}
+    .empty{text-align:center;padding:65px 20px;color:#677386}
+    .legend{display:flex;gap:8px;flex-wrap:wrap}
+    dialog{width:min(720px,calc(100vw - 28px));border:1px solid #c8ced8;border-radius:10px;padding:0;color:var(--ink);box-shadow:0 24px 70px rgba(0,0,0,.35)}dialog::backdrop{background:rgba(3,10,19,.72)}
+    .dialog-head{display:flex;align-items:center;gap:12px;padding:17px 19px;border-bottom:1px solid #dce1e8;background:#0b1726;color:#fff}.dialog-head h2{margin:0;font:700 20px/1.2 Georgia,serif}.dialog-head button{margin-left:auto;border:0;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer}
+    .dialog-body{padding:19px}.vault-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.vault-field{display:grid;gap:6px}.vault-field span{font-size:11px;font-weight:800;color:#465369}.vault-field input{width:100%;border:1px solid #bcc5d1;border-radius:6px;padding:9px 10px}.vault-field.full{grid-column:1/-1}
+    .vault-note{margin:15px 0;color:#5b6677;font-size:12px}.vault-status{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.vault-status span{border:1px solid #d1d7df;border-radius:999px;padding:4px 8px;font-size:11px;background:#f5f7f9}.vault-status .on{border-color:#7ab398;color:#155d3c;background:#edf8f2}
+    .dialog-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}
+    .release-summary{border:1px solid #d8dee6;border-radius:8px;padding:12px;margin-bottom:13px;background:#f8fafc}.release-summary.ready{border-color:#6aa987;background:#edf8f2}.release-summary.blocked{border-color:#d4a54e;background:#fff8e8}
+    @media(max-width:1180px){.case-fields{grid-template-columns:repeat(2,minmax(145px,1fr));max-width:560px}.workflow{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:1fr}}
+    @media(max-width:760px){body{grid-template-rows:auto auto auto 1fr}.top{padding:9px}.brand{width:100%;margin:0}.case-fields{grid-template-columns:1fr 1fr;max-width:none;width:100%}.workflow{display:flex;overflow:auto}.workflow-step{min-width:190px}.tabs{padding-inline:6px}.panel{padding:14px}.panel-head{flex-direction:column}.summary-grid{grid-template-columns:1fr 1fr}.vault-grid{grid-template-columns:1fr}.vault-field.full{grid-column:auto}}
+    @media print{.top,.workflow,.tabs{display:none}body{display:block;background:#fff}.panel{position:static;display:block!important}.report{box-shadow:none;break-inside:avoid}.actions{display:none}h1,h2,h3{break-after:avoid-page}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <div class="brand"><b>ARC</b> Integrated Case System <span class="version">v11.2</span></div>
+      <div class="case-fields" aria-label="Active case identity">
+        <label><span>Matter</span><input id="matter" placeholder="Matter / case name"></label>
+        <label><span>Docket</span><input id="docket" placeholder="Docket / case number"></label>
+        <label><span>Client</span><input id="clientName" placeholder="Client name"></label>
+        <label><span>Investigator</span><input id="investigator" placeholder="Assigned investigator"></label>
+      </div>
+      <button class="btn" id="saveCase" type="button">Share Case</button>
+      <button class="btn" id="keyVault" type="button">API Key Vault</button>
+      <button class="btn primary" id="finalReview" type="button">Final Review</button>
+    </div>
+    <div class="case-meta" aria-live="polite">
+      <span class="meta-pill">Active case: <strong id="activeCaseLabel">Not selected</strong></span>
+      <span class="meta-pill">Status: <strong id="activeCaseStatus">Not set</strong></span>
+      <span class="meta-pill">Report revision: <strong id="reportVersion">None</strong></span>
+      <span class="meta-pill">Last saved: <strong id="lastSaved">Not saved</strong></span>
+    </div>
+  </header>
+
+  <section class="workflow" id="workflow" aria-label="Case workflow">
+    <button class="workflow-step" data-stage="case" type="button"><span class="num">1</span><span><strong>Case Setup</strong><small>Open or identify the matter</small></span></button>
+    <button class="workflow-step" data-stage="evidence" type="button"><span class="num">2</span><span><strong>Evidence</strong><small>Import, hash and select exhibits</small></span></button>
+    <button class="workflow-step" data-stage="analysis" type="button"><span class="num">3</span><span><strong>Analysis</strong><small>Build timelines and connections</small></span></button>
+    <button class="workflow-step" data-stage="review" type="button"><span class="num">4</span><span><strong>Investigator Review</strong><small>Approve, reject or return revisions</small></span></button>
+    <button class="workflow-step" data-stage="builder" type="button"><span class="num">5</span><span><strong>Report Builder</strong><small>Assemble the court-ready report</small></span></button>
+    <button class="workflow-step" data-stage="export" type="button"><span class="num">6</span><span><strong>Final Export</strong><small>Run checklist and export</small></span></button>
+  </section>
+
+  <nav class="tabs" id="tabs" aria-label="ARC modules"></nav>
+
+  <main>
+    <iframe class="frame" id="frame" title="ARC module"></iframe>
+
+    <section class="panel" id="inbox">
+      <div class="panel-head">
+        <div><h1>Main Report Inbox</h1><p>Each report remains one revision series per case. Substantive changes reset prior approval.</p></div>
+        <div class="actions"><button class="btn" id="openBuilder" type="button">Open Full Report Builder</button><button class="btn danger" id="clearReports" type="button">Clear Inbox</button></div>
+      </div>
+      <div id="reports" class="reports"></div>
+    </section>
+
+    <section class="panel" id="reviewCenter">
+      <div class="panel-head">
+        <div><h1>Investigator Review Center</h1><p>Nothing marked pending, revised, or rejected should enter the final Edit PDF workspace.</p></div>
+        <div class="actions"><button class="btn" id="refreshReview" type="button">Refresh Review</button><button class="btn primary" id="openRelease" type="button">Run Final Checklist</button></div>
+      </div>
+      <div id="reviewContent"></div>
+    </section>
+  </main>
+
+  <dialog id="vaultDialog" aria-labelledby="vaultTitle">
+    <div class="dialog-head"><h2 id="vaultTitle">API Key Vault</h2><button id="vaultClose" type="button" aria-label="Close">&times;</button></div>
+    <div class="dialog-body">
+      <div class="vault-status" id="vaultStatus" aria-live="polite"></div>
+      <div class="vault-grid">
+        <label class="vault-field"><span>OpenAI API key</span><input id="vaultOpenai" type="password" autocomplete="off" placeholder="Enter a new key"></label>
+        <label class="vault-field"><span>Gemini API key</span><input id="vaultGemini" type="password" autocomplete="off" placeholder="Enter a new key"></label>
+        <label class="vault-field"><span>CourtListener token</span><input id="vaultCourtlistener" type="password" autocomplete="off" placeholder="Enter a new token"></label>
+        <label class="vault-field"><span>Firecrawl API key</span><input id="vaultFirecrawl" type="password" autocomplete="off" placeholder="Enter a new key"></label>
+        <label class="vault-field full"><span>Google Programmable Search engine ID</span><input id="vaultCse" type="text" autocomplete="off"></label>
+      </div>
+      <p class="vault-note">Keys remain in this browser profile and are never included in case exports. Production deployment should move provider credentials to protected server routes.</p>
+      <div class="dialog-actions"><button class="btn danger" id="vaultClear" type="button">Clear API Keys</button><button class="btn subtle" id="vaultCancel" type="button">Cancel</button><button class="btn" id="vaultSave" type="button">Save Vault</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="releaseDialog" aria-labelledby="releaseTitle">
+    <div class="dialog-head"><h2 id="releaseTitle">Final Report Release Checklist</h2><button id="releaseClose" type="button" aria-label="Close">&times;</button></div>
+    <div class="dialog-body">
+      <div id="releaseChecklist"></div>
+      <div class="dialog-actions">
+        <button class="btn subtle" id="releaseReviewCenter" type="button">Open Review Center</button>
+        <button class="btn" id="releaseGenerator" type="button">#4 ARC Generator</button>
+        <button class="btn primary" id="releaseEditor" type="button">#5 Edit PDF</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="arc_report_header.js"></script>
+  <script src="arc_shared_keys.js"></script>
+  <script src="arc_unified_bridge.js"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    const modules = [
+      ["Case Intake", "00_Case_Intake_Dashboard.html"],
+      ["Notebook", "arc-notebook.html"],
+      ["Main Report", "__inbox__"],
+      ["Review Center", "__review__"],
+      ["Full Report Builder", "01_Report_Generator.html"],
+      ["Legal Research", "02_Legal_Research.html"],
+      ["Legal Research Dashboard", "00_Legal_Research_Dashboard.html"],
+      ["Motion Bank", "03_Motion_Bank.html"],
+      ["Discovery Review", "04_Discovery_Review.html"],
+      ["Chain of Custody", "05_Chain_of_Custody_Analyzer.html"],
+      ["Timeline", "06_Timeline_Discrepancy.html"],
+      ["ARC Investigation Rebuilt", "07_Intelligence_Slides_Analysis_Investigator.html"],
+      ["Intelligence Board", "09_Intelligence_Board.html"],
+      ["Investigation Map", "map/index.html"],
+      ["Forensic Video Discovery", "https://forensic-video-discovery-analyzer.ai.studio/"],
+      ["ARC OSINT", "https://arc-investigations-osint.ai.studio/"],
+      ["OUI / Drug Defense", "https://arc-oui-and-drug-defense-analyzer.ai.studio/"]
+    ];
+
+    const tabs = document.getElementById("tabs");
+    const frame = document.getElementById("frame");
+    const inbox = document.getElementById("inbox");
+    const reviewCenter = document.getElementById("reviewCenter");
+    const vaultDialog = document.getElementById("vaultDialog");
+    const releaseDialog = document.getElementById("releaseDialog");
+    let active = 0;
+    let saveTimer = null;
+
+    function safe(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+      });
+    }
+
+    function formatDate(value) {
+      const date = new Date(value || 0);
+      return Number.isNaN(date.getTime()) ? "Not saved" : date.toLocaleString();
+    }
+
+    function status(value) {
+      return window.ARCUnified.normalizeReviewStatus(value);
+    }
+
+    function currentContext() {
+      return window.ARCUnified.getCase();
+    }
+
+    function sendCaseContext() {
+      try {
+        if (!frame.contentWindow) return;
+        const context = currentContext();
+        frame.contentWindow.postMessage({ type: "ARC_CASE_CONTEXT", value: context }, "*");
+        const caseId = context.caseId || context.docket || context.matter || "";
+        if (caseId) {
+          frame.contentWindow.postMessage({
+            type: "ARC_ACTIVE_CASE",
+            caseId: String(caseId),
+            caseName: context.matter || context.caseName || context.subjectName || String(caseId),
+            docket: context.docket || "",
+            court: context.court || ""
+          }, "*");
+        }
+      } catch (error) {}
+    }
+
+    const discoveryTransferIds = {};
+
+    function replyDiscovery(source, payload) {
+      try { source.postMessage(payload, "*"); } catch (error) {}
+    }
+
+    function handleDiscoveryActiveCaseRequest(source) {
+      const context = currentContext();
+      const caseId = context.caseId || context.docket || context.matter || "";
+      if (!caseId) return;
+      replyDiscovery(source, {
+        type: "ARC_ACTIVE_CASE",
+        caseId: String(caseId),
+        caseName: context.matter || context.caseName || context.subjectName || String(caseId),
+        docket: context.docket || "",
+        court: context.court || ""
+      });
+    }
+
+    function handleDiscoveryGapReport(data, source) {
+      function ack(success, message) {
+        replyDiscovery(source, {
+          type: "ARC_DISCOVERY_GAP_REPORT_ACK",
+          transferId: data.transferId,
+          success: success,
+          message: message
+        });
+      }
+      if (data.version !== 1 || data.sourceModule !== "discovery-review" || typeof data.reportHtml !== "string" || !data.transferId) {
+        ack(false, "Transfer blocked: invalid payload.");
+        return;
+      }
+      if (discoveryTransferIds[data.transferId]) {
+        ack(false, "This Discovery Gap Report was already added.");
+        return;
+      }
+      const context = currentContext();
+      const activeId = context.caseId || context.docket || context.matter || "";
+      if (!activeId || String(activeId) !== String(data.caseId)) {
+        ack(false, "Transfer blocked: the Discovery Gap Report and Main Report belong to different cases.");
+        return;
+      }
+      try {
+        window.ARCUnified.saveReport({
+          title: data.title || "Discovery Gap Report",
+          module: "Discovery Review",
+          reportType: "discovery-gap-report",
+          html: data.reportHtml,
+          text: data.reportText || "",
+          caseContext: {
+            caseId: data.caseId,
+            matter: data.caseName || context.matter || "",
+            docket: data.docket || context.docket || "",
+            court: context.court || ""
+          },
+          reviewStatus: "pending"
+        });
+        discoveryTransferIds[data.transferId] = true;
+        renderReports();
+        renderReview();
+        ack(true, "Discovery Gap Report added to Main Report.");
+      } catch (error) {
+        ack(false, "Transfer was not confirmed. Open Main Report and retry.");
+      }
+    }
+
+    function moduleIndex(target) {
+      return modules.findIndex(function (module) { return module[1] === target; });
+    }
+
+    function hidePanels() {
+      inbox.classList.remove("show");
+      reviewCenter.classList.remove("show");
+      frame.style.display = "none";
+    }
+
+    function select(index) {
+      const module = modules[index];
+      if (!module) return;
+      const target = module[1];
+      if (/^https?:\/\//i.test(target)) {
+        window.open(target, "_blank", "noopener");
+        return;
+      }
+
+      active = index;
+      Array.from(tabs.children).forEach(function (button, buttonIndex) {
+        button.classList.toggle("active", buttonIndex === index);
+      });
+      hidePanels();
+
+      if (target === "__inbox__") {
+        inbox.classList.add("show");
+        renderReports();
+        return;
+      }
+      if (target === "__review__") {
+        reviewCenter.classList.add("show");
+        renderReview();
+        return;
+      }
+
+      frame.style.display = "block";
+      if (frame.getAttribute("src") !== target) frame.src = target;
+      else sendCaseContext();
+    }
+
+    function selectTarget(target) {
+      const index = moduleIndex(target);
+      if (index >= 0) select(index);
+    }
+
+    modules.forEach(function (module, index) {
+      const button = document.createElement("button");
+      button.className = "tab";
+      button.type = "button";
+      button.textContent = module[0];
+      button.addEventListener("click", function () { select(index); });
+      tabs.appendChild(button);
+    });
+
+    function latestReport() {
+      return window.ARCUnified.getReports()[0] || null;
+    }
+
+    function renderCaseHeader() {
+      const context = currentContext();
+      document.getElementById("matter").value = context.matter || "";
+      document.getElementById("docket").value = context.docket || "";
+      document.getElementById("clientName").value = context.clientName || "";
+      document.getElementById("investigator").value = context.investigator || "";
+      document.getElementById("activeCaseLabel").textContent = context.matter || context.docket || "Not selected";
+      document.getElementById("activeCaseStatus").textContent = context.status || "Not set";
+      const report = latestReport();
+      document.getElementById("reportVersion").textContent = report ? "Revision " + Number(report.revision || 1) : "None";
+      document.getElementById("lastSaved").textContent = formatDate(context.updatedAt);
+    }
+
+    function saveCaseContext(showConfirmation) {
+      const saved = window.ARCUnified.saveCase({
+        matter: document.getElementById("matter").value,
+        docket: document.getElementById("docket").value,
+        clientName: document.getElementById("clientName").value,
+        investigator: document.getElementById("investigator").value
+      });
+      sendCaseContext();
+      renderCaseHeader();
+      renderWorkflow();
+      if (showConfirmation) alert("The active case context was shared with every ARC module.");
+      return saved;
+    }
+
+    ["matter", "docket", "clientName", "investigator"].forEach(function (id) {
+      document.getElementById(id).addEventListener("input", function () {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(function () { saveCaseContext(false); }, 500);
+      });
+    });
+    document.getElementById("saveCase").addEventListener("click", function () { saveCaseContext(true); });
+
+    function reportCard(report) {
+      const reviewStatus = status(report.reviewStatus);
+      const dateLabel = formatDate(report.updatedAt || report.createdAt);
+      const reviewer = report.reviewedBy ? " · Reviewed by " + safe(report.reviewedBy) : "";
+      return "<article class='report' data-id='" + safe(report.id) + "'>" +
+        "<div class='report-title'><div><h3>" + safe(report.title || "ARC Report") + "</h3>" +
+        "<div class='meta'>" + safe(report.reportType || "Module Report") + " · " + safe(dateLabel) +
+        " · Revision " + safe(report.revision || 1) + reviewer + "</div></div>" +
+        "<span class='status " + reviewStatus + "'>" + safe(reviewStatus) + "</span></div>" +
+        "<pre>" + safe(report.text || "") + "</pre>" +
+        "<div class='actions'>" +
+        "<button class='btn' data-action='export' type='button'>Export Report</button>" +
+        (reviewStatus !== "approved" ? "<button class='btn' data-action='approve' type='button'>Approve</button>" : "") +
+        (reviewStatus !== "rejected" ? "<button class='btn subtle' data-action='reject' type='button'>Reject</button>" : "") +
+        "<button class='btn danger' data-action='delete' type='button'>Delete</button>" +
+        "</div></article>";
+    }
+
+    function renderReports() {
+      const list = window.ARCUnified.getReports();
+      tabs.children[moduleIndex("__inbox__")].textContent = list.length ? "Main Report (" + list.length + ")" : "Main Report";
+      const box = document.getElementById("reports");
+      box.innerHTML = list.length
+        ? list.map(reportCard).join("")
+        : "<div class='empty'><h2>No reports yet</h2><p>Generate a report in an ARC module and send it to Main Report.</p></div>";
+      renderCaseHeader();
+      renderWorkflow();
+    }
+
+    function reviewerName() {
+      const context = currentContext();
+      return context.investigator || prompt("Enter the investigator or reviewer name:", "") || "";
+    }
+
+    function reviewReport(report, nextStatus) {
+      const reviewer = reviewerName();
+      if (!reviewer) {
+        alert("A reviewer name is required.");
+        return;
+      }
+      const notes = prompt("Optional review note:", nextStatus === "approved" ? "Reviewed against the supporting record." : "Return for correction before report use.") || "";
+      window.ARCUnified.updateReportReview(report.id, nextStatus, reviewer, notes);
+      renderReports();
+      renderReview();
+    }
+
+    document.getElementById("reports").addEventListener("click", function (event) {
+      const button = event.target.closest("button");
+      const card = button && button.closest(".report");
+      if (!button || !card) return;
+      const report = window.ARCUnified.getReports().find(function (item) { return item.id === card.dataset.id; });
+      if (!report) return;
+      if (button.dataset.action === "export") window.ARCUnified.openReportExport(report);
+      if (button.dataset.action === "approve") reviewReport(report, "approved");
+      if (button.dataset.action === "reject") reviewReport(report, "rejected");
+      if (button.dataset.action === "delete" && confirm("Delete this report series?")) {
+        window.ARCUnified.deleteReport(report.id);
+        renderReports();
+      }
+    });
+
+    function checkMarkup(checklist) {
+      return checklist.items.map(function (item) {
+        return "<div class='check " + (item.ok ? "ok" : "fail") + "'>" +
+          "<span class='mark'>" + (item.ok ? "✓" : "!") + "</span><span><strong>" +
+          safe(item.label) + "</strong><small>" + safe(item.detail) + "</small></span></div>";
+      }).join("");
+    }
+
+    function renderReview() {
+      const summary = window.ARCUnified.getReviewSummary();
+      const checklist = window.ARCUnified.getReleaseChecklist();
+      const scan = summary.scan;
+      const unresolved = scan.missingCitations + scan.hashProblems + scan.placeholders;
+      const reportRows = summary.reports.length
+        ? summary.reports.map(function (report) {
+            const reviewStatus = status(report.reviewStatus);
+            return "<article class='report' data-review-id='" + safe(report.id) + "'>" +
+              "<div class='report-title'><div><h3>" + safe(report.title) + "</h3><div class='meta'>Revision " +
+              safe(report.revision || 1) + " · " + safe(report.reportType || "Module Report") + "</div></div>" +
+              "<span class='status " + reviewStatus + "'>" + safe(reviewStatus) + "</span></div>" +
+              "<div class='actions' style='margin-top:12px'>" +
+              (reviewStatus !== "approved" ? "<button class='btn' data-review-action='approve' type='button'>Approve</button>" : "") +
+              (reviewStatus !== "rejected" ? "<button class='btn subtle' data-review-action='reject' type='button'>Reject</button>" : "") +
+              "<button class='btn' data-review-action='export' type='button'>Export</button></div></article>";
+          }).join("")
+        : "<div class='empty'><p>No report series are available for review.</p></div>";
+
+      const issues = scan.issues.length
+        ? scan.issues.map(function (item) {
+            return "<div class='issue " + safe(item.type) + "'><strong>" + safe(item.label) + "</strong><br><span class='meta'>" + safe(item.location) + "</span></div>";
+          }).join("")
+        : "<div class='empty' style='padding:30px 10px'><p>No automated workspace issues were detected.</p></div>";
+
+      document.getElementById("reviewContent").innerHTML =
+        "<div class='summary-grid'>" +
+          "<div class='summary-card' data-tone='warning'><span>Pending / revised</span><strong>" + (summary.counts.pending + summary.counts.revised + scan.pending + scan.revised) + "</strong></div>" +
+          "<div class='summary-card' data-tone='success'><span>Approved</span><strong>" + (summary.counts.approved + scan.approved) + "</strong></div>" +
+          "<div class='summary-card' data-tone='danger'><span>Rejected</span><strong>" + (summary.counts.rejected + scan.rejected) + "</strong></div>" +
+          "<div class='summary-card' data-tone='navy'><span>Automated warnings</span><strong>" + unresolved + "</strong></div>" +
+        "</div>" +
+        "<div class='content-grid'>" +
+          "<section class='card'><div class='card-head'><h2>Report Review Queue</h2><div class='legend'><span class='status pending'>Pending</span><span class='status approved'>Approved</span><span class='status rejected'>Rejected</span></div></div><div class='card-body reports'>" + reportRows + "</div></section>" +
+          "<div style='display:grid;gap:14px;align-content:start'>" +
+            "<section class='card'><div class='card-head'><h2>Final Release Checklist</h2><span class='status " + (checklist.ready ? "approved" : "pending") + "'>" + (checklist.ready ? "Ready" : checklist.blockers.length + " blockers") + "</span></div><div class='card-body checklist'>" + checkMarkup(checklist) + "</div></section>" +
+            "<section class='card'><div class='card-head'><h2>Detected Issues</h2></div><div class='card-body issue-list'>" + issues + "</div></section>" +
+          "</div>" +
+        "</div>";
+
+      renderWorkflow();
+    }
+
+    document.getElementById("reviewContent").addEventListener("click", function (event) {
+      const button = event.target.closest("[data-review-action]");
+      const card = button && button.closest("[data-review-id]");
+      if (!button || !card) return;
+      const report = window.ARCUnified.getReports().find(function (item) { return item.id === card.dataset.reviewId; });
+      if (!report) return;
+      if (button.dataset.reviewAction === "approve") reviewReport(report, "approved");
+      if (button.dataset.reviewAction === "reject") reviewReport(report, "rejected");
+      if (button.dataset.reviewAction === "export") window.ARCUnified.openReportExport(report);
+    });
+
+    function renderWorkflow() {
+      const stages = window.ARCUnified.getWorkflowStatus();
+      stages.forEach(function (stage) {
+        const button = document.querySelector("[data-stage='" + stage.id + "']");
+        if (!button) return;
+        button.dataset.state = stage.state;
+        const detail = button.querySelector("small");
+        if (detail) detail.textContent = stage.detail;
+      });
+    }
+
+    document.getElementById("workflow").addEventListener("click", function (event) {
+      const button = event.target.closest("[data-stage]");
+      if (!button) return;
+      const stage = button.dataset.stage;
+      if (stage === "case") selectTarget("00_Case_Intake_Dashboard.html");
+      if (stage === "evidence") selectTarget("arc-notebook.html");
+      if (stage === "analysis") selectTarget("07_Intelligence_Slides_Analysis_Investigator.html");
+      if (stage === "review") selectTarget("__review__");
+      if (stage === "builder") selectTarget("01_Report_Generator.html");
+      if (stage === "export") openReleaseChecklist();
+    });
+
+    function releaseReport(destination) {
+      const reports = window.ARCUnified.getReports();
+      const approved = reports.find(function (report) { return status(report.reviewStatus) === "approved"; });
+      const report = approved || reports[0];
+      if (!report) {
+        alert("No report is available. Build and save a report first.");
+        return;
+      }
+      if (destination === "editor") {
+        const checklist = window.ARCUnified.getReleaseChecklist();
+        if (!checklist.ready) {
+          alert("The final report still has " + checklist.blockers.length + " blocking checklist item(s). Open Review Center for details.");
+          releaseDialog.close();
+          selectTarget("__review__");
+          return;
+        }
+      }
+      window.ARCUnified.routeReport(destination, report);
+      releaseDialog.close();
+    }
+
+    function openReleaseChecklist() {
+      const checklist = window.ARCUnified.getReleaseChecklist();
+      document.getElementById("releaseChecklist").innerHTML =
+        "<div class='release-summary " + (checklist.ready ? "ready" : "blocked") + "'><strong>" +
+        (checklist.ready ? "Ready for final export" : checklist.blockers.length + " blocking item(s) require attention") +
+        "</strong><div class='meta' style='margin-top:4px'>Automated checks assist review but do not replace verification against the source record.</div></div>" +
+        "<div class='checklist'>" + checkMarkup(checklist) + "</div>";
+      document.getElementById("releaseEditor").disabled = !checklist.ready;
+      releaseDialog.showModal();
+    }
+
+    document.getElementById("finalReview").addEventListener("click", openReleaseChecklist);
+    document.getElementById("openRelease").addEventListener("click", openReleaseChecklist);
+    document.getElementById("releaseClose").addEventListener("click", function () { releaseDialog.close(); });
+    document.getElementById("releaseReviewCenter").addEventListener("click", function () { releaseDialog.close(); selectTarget("__review__"); });
+    document.getElementById("releaseGenerator").addEventListener("click", function () { releaseReport("generator"); });
+    document.getElementById("releaseEditor").addEventListener("click", function () { releaseReport("editor"); });
+    document.getElementById("refreshReview").addEventListener("click", renderReview);
+
+    document.getElementById("clearReports").addEventListener("click", function () {
+      if (confirm("Clear all shared reports? This does not delete source evidence stored in individual modules.")) {
+        window.ARCUnified.clearReports();
+        renderReports();
+        renderReview();
+      }
+    });
+    document.getElementById("openBuilder").addEventListener("click", function () { selectTarget("01_Report_Generator.html"); });
+
+    function handleRouteRequest(request) {
+      if (!request || !["generator", "editor"].includes(request.destination)) return;
+      try { sessionStorage.setItem(window.ARCUnified.ROUTE_KEY, JSON.stringify(request)); } catch (error) {}
+      selectTarget("01_Report_Generator.html");
+    }
+
+    document.addEventListener("arc:route-report", function (event) { handleRouteRequest(event.detail); });
+
+    function renderVaultStatus() {
+      const state = window.ARC_SYSTEM_KEYS.status();
+      document.getElementById("vaultStatus").innerHTML = ["openai", "gemini", "courtlistener", "firecrawl"].map(function (name) {
+        const label = { openai: "OpenAI", gemini: "Gemini", courtlistener: "CourtListener", firecrawl: "Firecrawl" }[name];
+        return "<span class='" + (state[name] ? "on" : "") + "'>" + label + ": " + (state[name] ? "configured" : "not configured") + "</span>";
+      }).join("");
+      document.getElementById("vaultCse").value = window.ARC_SYSTEM_KEYS.read().googleCseId || "";
+    }
+
+    function clearVaultInputs() {
+      ["vaultOpenai", "vaultGemini", "vaultCourtlistener", "vaultFirecrawl"].forEach(function (id) {
+        document.getElementById(id).value = "";
+      });
+    }
+
+    document.getElementById("keyVault").addEventListener("click", function () {
+      clearVaultInputs();
+      renderVaultStatus();
+      vaultDialog.showModal();
+    });
+    ["vaultClose", "vaultCancel"].forEach(function (id) {
+      document.getElementById(id).addEventListener("click", function () { vaultDialog.close(); });
+    });
+    document.getElementById("vaultSave").addEventListener("click", function () {
+      const current = window.ARC_SYSTEM_KEYS.read();
+      window.ARC_SYSTEM_KEYS.write({
+        openai: document.getElementById("vaultOpenai").value.trim() || current.openai,
+        gemini: document.getElementById("vaultGemini").value.trim() || current.gemini,
+        courtlistener: document.getElementById("vaultCourtlistener").value.trim() || current.courtlistener,
+        firecrawl: document.getElementById("vaultFirecrawl").value.trim() || current.firecrawl,
+        googleCseId: document.getElementById("vaultCse").value.trim()
+      });
+      clearVaultInputs();
+      renderVaultStatus();
+      vaultDialog.close();
+    });
+    document.getElementById("vaultClear").addEventListener("click", function () {
+      if (!confirm("Clear all API keys from this browser?")) return;
+      window.ARC_SYSTEM_KEYS.clear();
+      clearVaultInputs();
+      renderVaultStatus();
+    });
+
+    frame.addEventListener("load", sendCaseContext);
+    window.addEventListener("message", function (event) {
+      if (event.source !== frame.contentWindow) return;
+      const data = event.data || {};
+      if (data.type === "ARC_REPORT_SAVED") {
+        renderReports();
+        renderReview();
+      }
+      if (data.type === "ARC_MODULE_READY") sendCaseContext();
+      if (data.type === "ARC_ROUTE_REPORT") handleRouteRequest(data);
+      if (data.type === "ARC_REQUEST_ACTIVE_CASE") handleDiscoveryActiveCaseRequest(event.source);
+      if (data.type === "ARC_SEND_DISCOVERY_GAP_REPORT") handleDiscoveryGapReport(data, event.source);
+      if (data.type === "ARC_INTAKE_GENERATED") {
+        renderCaseHeader();
+        renderWorkflow();
+        sendCaseContext();
+      }
+      if (data.type === "ARC_OPEN_MODULE" && data.target) selectTarget(data.target);
+    });
+    window.addEventListener("storage", function (event) {
+      if ([window.ARCUnified.REPORT_KEY, window.ARCUnified.CASE_KEY, window.ARCUnified.AUDIT_KEY].includes(event.key)) {
+        renderCaseHeader();
+        renderWorkflow();
+        if (inbox.classList.contains("show")) renderReports();
+        if (reviewCenter.classList.contains("show")) renderReview();
+        sendCaseContext();
+      }
+    });
+    document.addEventListener("arc:shared-storage", function () {
+      renderCaseHeader();
+      renderWorkflow();
+      if (inbox.classList.contains("show")) renderReports();
+      if (reviewCenter.classList.contains("show")) renderReview();
+    });
+
+    renderCaseHeader();
+    renderWorkflow();
+    renderReports();
+    select(0);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ARC dependency smoke test</title>
+  <script src="../libs/pptxgen.bundle.js"></script>
+  <script src="../libs/html-docx.js"></script>
+</head>
+<body data-smoke="running">
+  <h1>ARC dependency smoke test</h1>
+  <pre id="results">Running...</pre>
+  <script>
+    (async function () {
+      const results = [];
+
+      try {
+        const wordBlob = window.htmlDocx.asBlob("<!doctype html><html><body><p>ARC Word export test</p></body></html>");
+        if (!(wordBlob instanceof Blob) || wordBlob.size < 1) throw new Error("Word export returned an empty file");
+        results.push("Word export: pass (" + wordBlob.size + " bytes)");
+      } catch (error) {
+        results.push("Word export: fail (" + error.message + ")");
+      }
+
+      try {
+        const deck = new window.PptxGenJS();
+        deck.layout = "LAYOUT_WIDE";
+        deck.addSlide().addText("ARC PowerPoint export test", { x: 1, y: 1, w: 8, h: 1 });
+        const deckBlob = await deck.write({ outputType: "blob" });
+        if (!(deckBlob instanceof Blob) || deckBlob.size < 1) throw new Error("PowerPoint export returned an empty file");
+        results.push("PowerPoint export: pass (" + deckBlob.size + " bytes)");
+      } catch (error) {
+        results.push("PowerPoint export: fail (" + error.message + ")");
+      }
+
+      const passed = results.every(function (result) { return result.includes(": pass"); });
+      document.body.dataset.smoke = passed ? "pass" : "fail";
+      document.getElementById("results").textContent = results.join("\n");
+    })();
+  </script>
+</body>
+</html>

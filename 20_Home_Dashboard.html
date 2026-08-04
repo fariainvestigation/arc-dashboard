@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="arc-version" content="11.4.3">
+<title>ARC Home Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0e1c2d;--navy2:#1b2a3b;--gold:#755a22;--gold2:#e6c27e;
+  --line:#dcdfe6;--paper:#fff;--ink:#111c2c;--muted:#5b6270;
+  --success:#1a7a51;--success-soft:#e8f1ec;--warning:#a3701a;--warning-soft:#fbeede;
+  --danger:#ba1a1a;--danger-soft:#fce9e7;--info:#1f5fa9;--info-soft:#e5f2fc;
+  --surface:#f6f7fa;--surface-low:#f0f3f8;--radius:8px;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04)
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--surface);color:var(--ink);
+  font:16px/1.5 "Hanken Grotesk",system-ui,-apple-system,Segoe UI,sans-serif}
+h1,h2,h3{font-family:"Domine",Georgia,serif;margin:0}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 24px 64px}
+
+/* header */
+.head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;
+  background:var(--navy);color:#fff;border-radius:var(--radius);padding:20px 24px}
+.head h1{font-size:22px;color:#fff;line-height:1.25}
+.head .sub{margin-top:6px;font-size:13px;color:#9fb0c2}
+.head .right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pill{display:inline-flex;gap:6px;align-items:baseline;border-radius:999px;padding:4px 12px;
+  font-size:12px;background:rgba(255,255,255,.08);color:#cdd8e4;border:1px solid rgba(255,255,255,.14);white-space:nowrap}
+.pill b{color:#fff;font-weight:600}
+.pill.gold{background:rgba(230,194,126,.14);border-color:rgba(230,194,126,.4);color:var(--gold2)}
+.pill.gold b{color:var(--gold2)}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:6px;
+  cursor:pointer;font:600 13px/1.2 inherit;min-height:36px;white-space:nowrap}
+.btn:hover{background:var(--surface-low)}
+.btn:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+.btn.ghost:hover{background:rgba(255,255,255,.1)}
+
+/* sections */
+section{margin-top:24px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+.sec-head h2{font-size:16px}
+.sec-head .note{font-size:12px;color:var(--muted);margin-left:auto}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.kpi .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:700 28px/1.1 "Domine",Georgia,serif;margin-top:6px}
+.kpi .d{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi.alert{border-color:#e8b4ae;background:var(--danger-soft)}
+.kpi.alert .v{color:var(--danger)}
+.kpi.warn{border-color:#e3c894;background:var(--warning-soft)}
+.kpi.warn .v{color:var(--warning)}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px}
+.stage{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
+  border-radius:var(--radius);padding:12px 14px}
+.stage .n{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stage .s{font-weight:600;margin-top:4px;font-size:14px}
+.stage .t{font-size:12px;color:var(--muted);margin-top:6px}
+.stage.complete{border-left-color:var(--success)}
+.stage.complete .s{color:var(--success)}
+.stage.attention{border-left-color:var(--warning)}
+.stage.attention .s{color:var(--warning)}
+.stage.blocked{border-left-color:var(--danger)}
+.stage.blocked .s{color:var(--danger)}
+.stage.empty{border-left-color:#c8ccd4}
+.stage.empty .s{color:var(--muted)}
+
+/* two column */
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.card h3{font-size:15px;margin-bottom:4px}
+.card .hint{font-size:12px;color:var(--muted);margin:0 0 12px}
+.badge{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600}
+.badge.ok{background:var(--success-soft);color:var(--success)}
+.badge.bad{background:var(--danger-soft);color:var(--danger)}
+.badge.warn{background:var(--warning-soft);color:var(--warning)}
+
+ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ul.list li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;
+  padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-low)}
+ul.list li .mark{font-weight:700;flex:0 0 auto;width:14px;text-align:center}
+ul.list li.ok .mark{color:var(--success)}
+ul.list li.blocker .mark{color:var(--danger)}
+ul.list li.warning .mark{color:var(--warning)}
+ul.list li .lab{font-weight:600}
+ul.list li .det{color:var(--muted);display:block;font-weight:400}
+
+.feed{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.feed li{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.feed li:last-child{border-bottom:0}
+.feed .when{flex:0 0 108px;color:var(--muted);font-size:12px}
+.feed .what{min-width:0}
+.feed .what b{font-weight:600}
+.feed .what span{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+
+/* launcher */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:10px}
+.tool{display:flex;flex-direction:column;gap:4px;text-decoration:none;background:var(--paper);
+  border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;min-height:64px;justify-content:center}
+.tool:hover{border-color:var(--gold);background:#fffdf7}
+.tool:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.tool .tn{font-weight:600;font-size:14px}
+.tool .tg{font-size:12px;line-height:1.35;color:var(--muted)}
+.tool .ext{font-size:11px;color:var(--gold)}
+.group-title{font:700 11px/1 "Hanken Grotesk",sans-serif;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin:18px 0 10px}
+
+.empty-note{font-size:13px;color:var(--muted);background:var(--surface-low);border:1px dashed var(--line);
+  border-radius:6px;padding:12px 14px}
+.bar{height:6px;background:var(--surface-low);border-radius:3px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--info)}
+.bar i.warn{background:var(--warning)}
+.bar i.bad{background:var(--danger)}
+
+@media (max-width:820px){
+  .wrap{padding:16px 16px 48px}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .head .right{margin-left:0;align-items:flex-start}
+  .feed .when{flex-basis:88px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <h1 id="caseTitle">No active case</h1>
+      <div class="sub" id="caseSub">Open Case Dashboard to set the matter and docket.</div>
+      <div class="pillrow" id="casePills"></div>
+    </div>
+    <div class="right">
+      <button class="btn ghost" id="refreshBtn" type="button">Refresh</button>
+      <div class="sub" id="sessionLine">Session: checking&hellip;</div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><h2>Case status</h2><span class="note" id="updatedNote"></span></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Workflow pipeline</h2></div>
+    <div class="pipe" id="pipeline"></div>
+  </section>
+
+  <section class="cols">
+    <div class="card">
+      <h3>Release readiness <span class="badge" id="readyBadge">&mdash;</span></h3>
+      <p class="hint">Live checks from the ARC release checklist. Blockers must clear before final export.</p>
+      <ul class="list" id="checklist"></ul>
+    </div>
+    <div class="card">
+      <h3>Recent activity</h3>
+      <p class="hint">Audit trail for this case, newest first.</p>
+      <ul class="feed" id="auditFeed"></ul>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div class="card">
+      <h3>Server cases</h3>
+      <p class="hint">Cases saved to your ARC account. Click to load one into the workspace.</p>
+      <ul class="list" id="serverCases"></ul>
+    </div>
+    <div class="card">
+      <h3>Browser storage</h3>
+      <p class="hint">ARC keeps working data in this browser profile until it is synced.</p>
+      <div id="storageBox"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Tools</h2><span class="note">Opens in the ARC shell when embedded</span></div>
+    <div id="launcher"></div>
+  </section>
+
+</div>
+
+<script src="arc_auth_session.js"></script>
+<script src="arc_api_client.js"></script>
+<script src="arc_storage_manager.js"></script>
+<script src="arc_shared_keys.js"></script>
+<script src="arc_unified_bridge.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var MODULES = [
+    ["Case Dashboard", "00_Case_Intake_Dashboard.html", "Case", "Intake, parties, and case identity"],
+    ["Notebook", "arc-notebook.html", "Case", "Working notes and prompts"],
+    ["Evidence Dashboard", "17_Evidence_Dashboard.html", "Evidence & Analysis", "Evidence index and exhibits"],
+    ["Discovery Review", "04_Discovery_Review.html", "Evidence & Analysis", "Gap analysis against produced discovery"],
+    ["Chain of Custody", "05_Chain_of_Custody_Analyzer.html", "Evidence & Analysis", "Custody transfers and hash checks"],
+    ["Timeline", "06_Timeline_Discrepancy.html", "Evidence & Analysis", "Sequence events and flag conflicts"],
+    ["ARC Investigation Rebuilt", "07_Intelligence_Slides_Analysis_Investigator.html", "Evidence & Analysis", "Slide-based scene reconstruction"],
+    ["Intelligence Board", "09_Intelligence_Board.html", "Evidence & Analysis", "Link people, places, and facts"],
+    ["Investigation Map", "map/index.html", "Evidence & Analysis", "Geolocate incidents and canvassing"],
+    ["Legal Research Dashboard", "00_Legal_Research_Dashboard.html", "Research", "Research queue and saved authority"],
+    ["Legal Research", "02_Legal_Research.html", "Research", "Case law and statute lookup"],
+    ["Motion Bank", "03_Motion_Bank.html", "Research", "Motion templates and drafting"],
+    ["External Tools Dashboard", "18_External_Tools_Dashboard.html", "External tools", "Launch connected analyzers"],
+    ["Forensic Video Discovery", "https://forensic-video-discovery-analyzer.ai.studio/", "External tools", "Video analysis workspace"],
+    ["ARC OSINT", "https://arc-investigations-osint.ai.studio/", "External tools", "Open-source background research"],
+    ["OUI / Drug Defense", "https://arc-oui-and-drug-defense-analyzer.ai.studio/", "External tools", "OUI and narcotics case analysis"],
+    ["Reports Dashboard", "11_Reports_Dashboard.html", "Reports", "Report inbox and review status"],
+    ["Pictures", "12_Report_Pictures.html", "Reports", "Photo exhibit report"],
+    ["Videos", "13_Report_Videos.html", "Reports", "Video exhibit report"],
+    ["Transcripts", "14_Report_Transcripts.html", "Reports", "Interview and audio transcripts"],
+    ["Translations", "15_Report_Translations.html", "Reports", "Translated statements"],
+    ["Full Motions", "16_Report_Full_Motions.html", "Reports", "Assembled motion packages"],
+    ["Full Report Builder", "01_Report_Generator.html", "Reports", "Build and version the full report"],
+    ["Final Client Report", "19_Final_Client_Report.html", "Reports", "Final deliverable for counsel"]
+  ];
+
+  var embedded = window.parent !== window;
+
+  function el(id) { return document.getElementById(id); }
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function num(value) { return Number(value || 0) || 0; }
+  function when(value) {
+    var date = new Date(value || 0);
+    if (isNaN(date.getTime()) || !value) return "\u2014";
+    return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+  function bridge() { return window.ARCUnified || null; }
+
+  /* ---------- header ---------- */
+  function renderHeader(context) {
+    var title = context.matter || context.subjectName || context.clientName || "";
+    el("caseTitle").textContent = title || "No active case";
+    el("caseSub").textContent = title
+      ? (context.court || "Court not recorded")
+      : "Open Case Dashboard to set the matter and docket.";
+
+    var pills = [];
+    if (context.docket) pills.push(["Docket", context.docket, true]);
+    if (context.caseId) pills.push(["Case ID", context.caseId, false]);
+    if (context.status) pills.push(["Status", context.status, false]);
+    if (context.priority) pills.push(["Priority", context.priority, false]);
+    if (context.investigator) pills.push(["Investigator", context.investigator, false]);
+    if (context.incidentDate) pills.push(["Incident", context.incidentDate, false]);
+    el("casePills").innerHTML = pills.map(function (p) {
+      return '<span class="pill' + (p[2] ? " gold" : "") + '">' + esc(p[0]) + ' <b>' + esc(p[1]) + '</b></span>';
+    }).join("");
+    el("updatedNote").textContent = context.updatedAt ? "Case saved " + when(context.updatedAt) : "Case not saved yet";
+  }
+
+  /* ---------- kpis ---------- */
+  function renderKpis(summary, checklist) {
+    var scan = summary.scan || {};
+    var counts = summary.counts || {};
+    var evidence = num(scan.evidence) + num(scan.exhibits);
+    var pending = num(counts.pending) + num(counts.revised) + num(scan.pending) + num(scan.revised);
+    var issues = num(checklist.blockers && checklist.blockers.length);
+    var cards = [
+      { k: "Evidence records", v: evidence, d: evidence ? "indexed items and exhibits" : "nothing indexed yet", c: "" },
+      { k: "Report series", v: (summary.reports || []).length, d: num(counts.approved) + " approved", c: "" },
+      { k: "Awaiting review", v: pending, d: pending ? "pending or revised items" : "review queue clear", c: pending ? "warn" : "" },
+      { k: "Release blockers", v: issues, d: issues ? "must clear before export" : "ready for final export", c: issues ? "alert" : "" },
+      { k: "Audit events", v: (summary.audit || []).length, d: "recorded for this case", c: "" }
+    ];
+    el("kpis").innerHTML = cards.map(function (card) {
+      return '<div class="kpi ' + card.c + '"><div class="k">' + esc(card.k) + '</div>' +
+        '<div class="v">' + esc(card.v) + '</div><div class="d">' + esc(card.d) + '</div></div>';
+    }).join("");
+  }
+
+  /* ---------- pipeline ---------- */
+  var STATE_LABEL = { complete: "Complete", attention: "Needs attention", blocked: "Blocked", empty: "Not started" };
+  function renderPipeline(stages) {
+    el("pipeline").innerHTML = stages.map(function (stage, index) {
+      var state = stage.state || "empty";
+      return '<div class="stage ' + esc(state) + '"><div class="n">Step ' + (index + 1) + ' &middot; ' +
+        esc(stage.label) + '</div><div class="s">' + esc(STATE_LABEL[state] || state) + '</div>' +
+        '<div class="t">' + esc(stage.detail || "") + '</div></div>';
+    }).join("");
+  }
+
+  /* ---------- checklist ---------- */
+  function renderChecklist(checklist) {
+    var badge = el("readyBadge");
+    var blockers = (checklist.blockers || []).length;
+    var warnings = (checklist.warnings || []).length;
+    badge.className = "badge " + (blockers ? "bad" : warnings ? "warn" : "ok");
+    badge.textContent = blockers ? blockers + " blocker" + (blockers === 1 ? "" : "s")
+      : warnings ? warnings + " warning" + (warnings === 1 ? "" : "s") : "Ready";
+
+    var items = (checklist.items || []).slice().sort(function (a, b) {
+      var rank = function (item) { return item.ok ? 2 : item.severity === "blocker" ? 0 : 1; };
+      return rank(a) - rank(b);
+    });
+    if (!items.length) {
+      el("checklist").innerHTML = '<li class="ok"><span class="mark">&mdash;</span><span>No checks available.</span></li>';
+      return;
+    }
+    el("checklist").innerHTML = items.slice(0, 8).map(function (item) {
+      var cls = item.ok ? "ok" : (item.severity === "blocker" ? "blocker" : "warning");
+      var mark = item.ok ? "\u2713" : (item.severity === "blocker" ? "\u2715" : "!");
+      return '<li class="' + cls + '"><span class="mark">' + mark + '</span><span><span class="lab">' +
+        esc(item.label || item.id || "Check") + '</span><span class="det">' + esc(item.detail || "") + '</span></span></li>';
+    }).join("");
+  }
+
+  /* ---------- audit ---------- */
+  function renderAudit(events) {
+    if (!events.length) {
+      el("auditFeed").innerHTML = '<li><span class="what"><span>No activity recorded for this case yet.</span></span></li>';
+      return;
+    }
+    el("auditFeed").innerHTML = events.slice(0, 8).map(function (event) {
+      return '<li><span class="when">' + esc(when(event.createdAt)) + '</span>' +
+        '<span class="what"><b>' + esc(event.action || "Event") + '</b>' +
+        '<span>' + esc(event.summary || event.destination || event.user || "") + '</span></span></li>';
+    }).join("");
+  }
+
+  /* ---------- server cases ---------- */
+  function loadCaseIntoWorkspace(record) {
+    var current = bridge() ? bridge().getCase() : {};
+    bridge().saveCase(Object.assign({}, current, {
+      caseId: record.id || current.caseId,
+      matter: record.name || current.matter,
+      docket: record.docket || current.docket
+    }));
+    bridge().auditEvent("case-loaded", { summary: "Loaded " + (record.name || record.id) + " from server" });
+    refresh();
+  }
+
+  function renderServerCases(state, cases) {
+    var host = el("serverCases");
+    if (state !== "ok") {
+      host.innerHTML = '<li><span class="mark">&mdash;</span><span><span class="lab">' +
+        (state === "unauthenticated" ? "Not signed in" : "Server unavailable") +
+        '</span><span class="det">' +
+        (state === "unauthenticated"
+          ? "Sign in at login.html to sync cases across devices."
+          : "Working from browser storage only.") +
+        '</span></span></li>';
+      return;
+    }
+    if (!cases.length) {
+      host.innerHTML = '<li><span class="mark">&mdash;</span><span><span class="lab">No cases on the server</span>' +
+        '<span class="det">Save the active case from the Case Dashboard to sync it.</span></span></li>';
+      return;
+    }
+    host.innerHTML = cases.slice(0, 8).map(function (record, index) {
+      return '<li class="ok"><span class="mark">&bull;</span><span><span class="lab">' + esc(record.name || "Untitled") +
+        '</span><span class="det">' + esc(record.docket || "No docket") + ' &middot; updated ' + esc(when(record.updatedAt)) +
+        '</span></span><button class="btn" style="margin-left:auto" type="button" data-case="' + index + '">Load</button></li>';
+    }).join("");
+    Array.prototype.forEach.call(host.querySelectorAll("button[data-case]"), function (button) {
+      button.addEventListener("click", function () {
+        loadCaseIntoWorkspace(cases[Number(button.getAttribute("data-case"))]);
+      });
+    });
+  }
+
+  async function fetchServerCases() {
+    if (!window.arcAuth || location.protocol === "file:") return renderServerCases("offline", []);
+    try {
+      var response = await window.arcAuth.apiCall("GET", "/api/cases");
+      if (!response) return renderServerCases("unauthenticated", []);
+      if (response.status === 401) return renderServerCases("unauthenticated", []);
+      if (!response.ok) return renderServerCases("offline", []);
+      var data = await response.json();
+      renderServerCases("ok", Array.isArray(data) ? data : []);
+    } catch (error) {
+      renderServerCases("offline", []);
+    }
+  }
+
+  /* ---------- storage ---------- */
+  function renderStorage() {
+    var host = el("storageBox");
+    if (!window.arcStorage) {
+      host.innerHTML = '<div class="empty-note">Storage manager not loaded.</div>';
+      return;
+    }
+    var used = window.arcStorage.getUsage();
+    var quota = window.arcStorage.getQuota();
+    var pct = Math.min(100, Number(((used / quota) * 100).toFixed(1)));
+    var cls = pct > 85 ? "bad" : pct > 60 ? "warn" : "";
+    host.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px">' +
+      '<span style="font:700 24px/1.1 Domine,Georgia,serif">' + pct + '%</span>' +
+      '<span style="font-size:12px;color:var(--muted)">' + (used / 1048576).toFixed(1) + ' MB of ' +
+      (quota / 1048576).toFixed(0) + ' MB used</span></div>' +
+      '<div class="bar"><i class="' + cls + '" style="width:' + pct + '%"></i></div>' +
+      '<p class="hint" style="margin:10px 0 0">' +
+      (pct > 85 ? "Sync pending work to the server and clear old browser data."
+                : "Audit logs older than 30 days are evicted automatically.") + '</p>';
+  }
+
+  /* ---------- session ---------- */
+  async function renderSession() {
+    var line = el("sessionLine");
+    if (location.protocol === "file:") { line.textContent = "Local file mode \u00b7 browser storage only"; return; }
+    if (!window.arcAuth) { line.textContent = "Auth module not loaded"; return; }
+    var user = window.arcAuth.getUser();
+    if (!user) {
+      try { user = await window.arcAuth.refresh(); } catch (error) { user = null; }
+    }
+    if (user) {
+      line.textContent = "Signed in as " + (user.email || user.userId || "user");
+    } else {
+      line.innerHTML = 'Not signed in \u00b7 <a href="login.html">Sign in</a>';
+    }
+  }
+
+  /* ---------- launcher ---------- */
+  function renderLauncher() {
+    var groups = [];
+    var byGroup = {};
+    MODULES.forEach(function (entry) {
+      var group = entry[2];
+      if (!byGroup[group]) { byGroup[group] = []; groups.push(group); }
+      byGroup[group].push(entry);
+    });
+    el("launcher").innerHTML = groups.map(function (group) {
+      return '<div class="group-title">' + esc(group) + '</div><div class="grid">' +
+        byGroup[group].map(function (entry) {
+          var external = /^https?:/i.test(entry[1]);
+          return '<a class="tool" href="' + esc(entry[1]) + '"' +
+            (external ? ' target="_blank" rel="noopener noreferrer"' : ' data-module="1"') + '>' +
+            '<span class="tn">' + esc(entry[0]) + '</span>' +
+            '<span class="tg">' + esc(entry[3] || "") + '</span>' +
+            (external ? '<span class="ext">Opens in a new tab &#8599;</span>' : "") +
+            '</a>';
+        }).join("") + '</div>';
+    }).join("");
+
+    if (!embedded) return;
+    Array.prototype.forEach.call(el("launcher").querySelectorAll('a[data-module]'), function (link) {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        try {
+          window.parent.postMessage({ type: "ARC_OPEN_MODULE", target: link.getAttribute("href") }, "*");
+        } catch (error) {
+          window.location.href = link.getAttribute("href");
+        }
+      });
+    });
+  }
+
+  /* ---------- refresh ---------- */
+  function refresh() {
+    var api = bridge();
+    if (!api) {
+      el("caseSub").textContent = "ARC bridge did not load. Open this page from the ARC workspace.";
+      return;
+    }
+    var context = api.getCase();
+    var summary = api.getReviewSummary(context);
+    var checklist = api.getReleaseChecklist({ caseContext: context });
+    renderHeader(context);
+    renderKpis(summary, checklist);
+    renderPipeline(api.getWorkflowStatus(context));
+    renderChecklist(checklist);
+    renderAudit(summary.audit || []);
+    renderStorage();
+  }
+
+  el("refreshBtn").addEventListener("click", function () { refresh(); fetchServerCases(); });
+  window.addEventListener("message", function (event) {
+    if (event.data && (event.data.type === "ARC_CASE_CONTEXT" || event.data.type === "ARC_ACTIVE_CASE")) refresh();
+  });
+  document.addEventListener("arc:case-updated", refresh);
+  window.addEventListener("storage", function (event) {
+    if (event.key && /^arc_unified_/.test(event.key)) refresh();
+  });
+
+  renderLauncher();
+  refresh();
+  renderSession();
+  fetchServerCases();
+  setInterval(refresh, 30000);
+})();
+</script>
+</body>
+</html>
