@@ -7,7 +7,7 @@
     "test": "node scripts/release-check.js && node scripts/final-report-smoke.js",
     "test:api": "node scripts/report-assets-smoke.js",
     "test:vercel": "node scripts/vercel-api-smoke.js",
-    "build": "node scripts/release-check.js",
+   
     "serve": "node scripts/serve.js"
   },
   "engines": {
