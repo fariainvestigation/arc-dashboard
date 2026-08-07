@@ -4,15 +4,15 @@ compatibility_date = "2025-05-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-ACCESS_TEAM_DOMAIN = "REPLACE.cloudflareaccess.com"
-ACCESS_AUD = "REPLACE_WITH_ACCESS_APP_AUD_TAG"
+ACCESS_TEAM_DOMAIN = "old-lake-2c90.cloudflareaccess.com"
+ACCESS_AUD = "165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212"
 ALLOWED_ORIGINS = "https://arcdefensereport.com"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "arc_legal"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "6c04c557-f8de-4590-a235-76fa117ff6d8"
 
 [[r2_buckets]]
 binding = "FILES"
