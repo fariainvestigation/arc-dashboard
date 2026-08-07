@@ -1,6 +1,0 @@
-{
-  "name": "ARC OUI and Drug Defense Analyzer",
-  "description": "Massachusetts OUI and Drug Defense Analysis Platform for defense attorneys and licensed investigators.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

@@ -5,8 +5,8 @@ compatibility_date = "2026-08-01"
 [vars]
 ACCESS_TEAM_DOMAIN = "old-lake-2c90.cloudflareaccess.com"
 ACCESS_AUD = "165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212"
-ALLOWED_ORIGINS = "https://arcdefensereport.com"
-CLAUDE_MODEL = "claude-sonnet-4-6"
+ALLOWED_ORIGINS = "https://arcdefensereport.com,https://www.arcdefensereport.com"
+CLAUDE_MODEL = "claude-sonnet-5"
 
 [[d1_databases]]
 binding = "DB"
@@ -19,4 +19,32 @@ database_id = "6c04c557-f8de-4590-a235-76fa117ff6d8"
 
 [[routes]]
 pattern = "arcdefensereport.com/ai/*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "www.arcdefensereport.com/ai/*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "arcdefensereport.com/api/ai/initial-analysis*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "www.arcdefensereport.com/api/ai/initial-analysis*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "arcdefensereport.com/api/ocr/document-ai*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "www.arcdefensereport.com/api/ocr/document-ai*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "arcdefensereport.com/api/gemini-board-command*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "www.arcdefensereport.com/api/gemini-board-command*"
 zone_name = "arcdefensereport.com"

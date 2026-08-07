@@ -6,8 +6,8 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ACCESS_TEAM_DOMAIN = "old-lake-2c90.cloudflareaccess.com"
 ACCESS_AUD = "165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212"
-ALLOWED_ORIGINS = "https://arcdefensereport.com"
-CLAUDE_MODEL = "claude-sonnet-4-6"
+ALLOWED_ORIGINS = "https://arcdefensereport.com,https://www.arcdefensereport.com"
+CLAUDE_MODEL = "claude-sonnet-5"
 
 [[d1_databases]]
 binding = "DB"
@@ -24,4 +24,8 @@ bucket_name = "arc-legal-files"
 
 [[routes]]
 pattern = "arcdefensereport.com/legal-api/*"
+zone_name = "arcdefensereport.com"
+
+[[routes]]
+pattern = "www.arcdefensereport.com/legal-api/*"
 zone_name = "arcdefensereport.com"

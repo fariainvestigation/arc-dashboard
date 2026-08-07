@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal Sign-In -- ARC Investigations & Consulting</title>
+<meta name="description" content="Sign in to ARC Investigations & Consulting as an investigator, attorney, or client.">
+<meta property="og:title" content="Portal Sign-In -- ARC Investigations & Consulting">
+<meta property="og:description" content="Sign in to ARC Investigations & Consulting as an investigator, attorney, or client.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B162C'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' fill='%23D4AF37' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="../assets/fonts/playfair-display.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="page">
+
+  <header class="site-header">
+    <!-- Placeholder mark, taken from the prototype's own header treatment.
+         To swap in the real logo, replace the <span class="wordmark__mark">
+         with: <img class="wordmark__mark" src="../assets/logo.svg" alt=""> -->
+    <a class="wordmark" href="../index.html">
+      <img class="wordmark__mark" src="../assets/arc-logo.svg" alt="" width="28" height="28">
+      <span class="wordmark__text">ARC</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="services.html">Services</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a class="site-nav__portal" href="portal.html" aria-current="page">Portal</a>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <section class="page-head">
+      <p class="eyebrow"><span class="eyebrow__rule" aria-hidden="true"></span>Secure Access</p>
+      <h1 class="page-head__title">Choose your portal</h1>
+      <p class="page-head__lede">Each portal shows only the case material for your role.</p>
+    </section>
+
+    <section class="section">
+      <nav class="portals portals--page" aria-label="Portal sign-in">
+        <a class="portal" href="../investigator/index.html">
+          <span class="portal__text">
+            <span class="portal__name">Investigator</span>
+            <span class="portal__role">Field Agent Portal</span>
+          </span>
+          <span class="portal__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="portal" href="attorney.html">
+          <span class="portal__text">
+            <span class="portal__name">Attorney</span>
+            <span class="portal__role">Legal Counsel Login</span>
+          </span>
+          <span class="portal__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="portal" href="client.html">
+          <span class="portal__text">
+            <span class="portal__name">Client</span>
+            <span class="portal__role">Case Status &amp; Docs</span>
+          </span>
+          <span class="portal__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="site-footer__mark">ARC Investigations &amp; Consulting</span>
+    <span class="site-footer__legal">&copy; 2026 ARC Investigations &amp; Consulting. All rights reserved.</span>
+  </footer>
+
+</div>
+
+<script src="../script.js" defer></script>
+</body>
+</html>

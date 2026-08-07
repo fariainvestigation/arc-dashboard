@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="../arc_backend.js"></script>
+<script src="../arc_report_header.js"></script>
+<script src="../arc_unified_bridge.js"></script>
+<script src="../arc_report_store.js"></script>
+<title>ARC Case Dashboard · Open and Closed Cases</title>
+<style>
+:root{
+  color-scheme:light;
+  --navy:#071426;--navy2:#0d1f36;--ink:#111827;--muted:#667085;--line:#d8dee8;--soft:#f5f7fb;--paper:#fff;
+  --gold:#d49a1f;--gold2:#f7d172;--red:#c1121f;--red-bg:#fff2f2;--green:#167c3f;--green-bg:#edf9f1;--blue:#0c3768;--blue-bg:#eef6ff;--gray:#6b7280;--gray-bg:#f3f4f6;
+  --shadow:0 14px 34px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box} [hidden]{display:none!important}
+html,body{margin:0;min-height:100%;background:var(--soft);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit} button{cursor:pointer}
+.wrap{padding:22px 28px 28px;max-width:1740px;margin:0 auto}
+.hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:40px;line-height:1.05;margin:0;color:#111827;letter-spacing:-.01em}
+.sub{margin-top:7px;color:#1f2a44;font-size:16px}.dot{display:inline-block;height:5px;width:5px;background:var(--gold);border-radius:50%;margin:0 12px 3px}
+.actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:1px solid #ccd4df;background:#fff;color:#132033;border-radius:6px;padding:10px 14px;font-weight:750;min-height:38px;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:#9aa7b7}.btn.navy{background:#071426;color:#fff;border-color:#071426}.btn.gold{background:linear-gradient(180deg,#f4cc62,#d89b22);color:#111827;border-color:#c88d18}.btn.warn{background:#fff8e7;border-color:#e8b547;color:#7a4a00}.btn.danger{background:#fff;border-color:#f4b4b4;color:#a40f18}.btn:disabled{opacity:.52;cursor:not-allowed}.btn.icon{width:38px;justify-content:center;padding:0}.btn.small{min-height:30px;padding:6px 9px;font-size:12px}
+.active-bar{border:1px solid #b9d8f7;background:var(--blue-bg);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.active-bar.none{border-color:var(--line);background:#fff}
+.layout{display:grid;grid-template-columns:274px minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:var(--shadow)}
+.panel h2,.panel h3{margin:0;color:#111827}.panel h2{font-family:Georgia,"Times New Roman",serif;font-size:31px;letter-spacing:.02em}.panel h3{font-family:Georgia,"Times New Roman",serif;font-size:20px}
+.side{padding:14px}.side h3{font-family:Inter,ui-sans-serif;font-size:16px;margin:0 0 11px}
+.att-list{display:grid;gap:4px}
+.att-list button{border:1px solid transparent;background:transparent;border-radius:6px;padding:9px 10px;text-align:left;display:flex;align-items:center;gap:9px;color:#172033;font-weight:650;width:100%}
+.att-list button:hover{background:#f8fafc}
+.att-list button.active{border-color:#e7bb52;background:#fff8e8}
+.count{margin-left:auto;background:#eef1f5;border-radius:6px;padding:2px 8px;color:#394150;font-size:12px;font-weight:800}
+.att-list button.active .count{background:#f2dfae}
+.main-card{padding:22px 24px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:0 0 18px}
+.metric{border:1px solid var(--line);border-radius:7px;padding:15px 16px}.metric .num{font-size:28px;font-weight:850;line-height:1}.metric span{display:block;font-size:12px;color:#243149;margin-top:6px}
+.metric.alert{border-color:#f2aaa9;background:var(--red-bg)}.metric.alert .num{color:var(--red)}
+.metric.soon{border-color:#efcf81;background:#fff8e5}.metric.soon .num{color:#8a5900}
+.rule{height:1px;background:var(--line);margin:18px 0}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search{flex:1;min-width:240px;position:relative}
+.search input{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:10px 12px;background:#fff}
+.seg{display:inline-flex;border:1px solid var(--line);background:#f8fafc;border-radius:7px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;border-radius:5px;padding:8px 12px;font-weight:800;color:#4b5563}.seg button.active{background:#fff;color:#111827;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:11px 10px}
+th{color:#475467;background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.04em;white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none}th.sortable:hover{color:#111827}
+tr.closed-row td{background:#fcfcfd;color:#667085}
+.matter{font-weight:800;font-size:13.5px;color:#111827}
+.muted{color:var(--muted)}.small-text{font-size:12px;line-height:1.45}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid;padding:3px 8px;font-size:11px;font-weight:850;white-space:nowrap}
+.green{color:var(--green);border-color:#aadbb9;background:var(--green-bg)}.golden{color:#8a5900;border-color:#efcf81;background:#fff8e5}.red{color:var(--red);border-color:#f2aaa9;background:var(--red-bg)}.gray{color:#4b5563;border-color:#d1d5db;background:var(--gray-bg)}.blue{color:#164d81;border-color:#b9d8f7;background:var(--blue-bg)}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}
+.field{grid-column:span 4}.field.half{grid-column:span 6}.field.wide{grid-column:span 12}
+.field span{display:block;font-size:10px;color:#667085;text-transform:uppercase;font-weight:850;letter-spacing:.05em;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:9px 10px;background:#fff}
+.field textarea{min-height:72px;resize:vertical}
+/* Above the case drawer (61) - report viewers are opened FROM the drawer. */
+.modal{position:fixed;inset:0;background:rgba(9,20,34,.64);display:grid;place-items:center;z-index:70;padding:20px}
+.modal-card{background:#fff;border-radius:8px;width:min(960px,96vw);max-height:92vh;overflow:auto}
+.modal-head,.modal-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.modal-foot{border-top:1px solid var(--line);border-bottom:0;justify-content:flex-end}.modal-body{padding:18px}
+.toast{position:fixed;right:22px;bottom:20px;z-index:80;background:#071426;color:#fff;border-radius:7px;padding:12px 14px;box-shadow:var(--shadow);max-width:440px;font-size:13px}
+.empty{border:1px dashed #cbd5e1;border-radius:7px;background:#fbfdff;text-align:center;padding:34px;color:#667085}
+.link-matter{border:0;background:transparent;padding:0;font:inherit;font-weight:800;font-size:13.5px;color:#111827;text-align:left;cursor:pointer}
+.link-matter:hover{color:#0c3768;text-decoration:underline}
+.drawer-scrim{position:fixed;inset:0;background:rgba(9,20,34,.5);z-index:60}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(620px,96vw);background:#fff;z-index:61;box-shadow:-18px 0 48px rgba(15,23,42,.22);display:flex;flex-direction:column}
+.drawer-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.drawer-body{padding:18px 20px;overflow:auto;flex:1}
+.drawer-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.drawer h2{font-family:Georgia,"Times New Roman",serif;font-size:24px;margin:0;line-height:1.15}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13px;margin:12px 0}
+.kv dt{color:#667085;font-size:10px;text-transform:uppercase;font-weight:850;letter-spacing:.05em;padding-top:3px}
+.kv dd{margin:0}
+.rep{border:1px solid var(--line);border-left-width:4px;border-left-color:var(--gold);border-radius:7px;padding:11px 12px;margin:9px 0;background:#fff}
+.rep.final{border-left-color:var(--green)}
+.rep.unfiled{border-left-color:var(--red)}
+.rep-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:4px}
+.rep-title{font-weight:800;font-size:13.5px}
+.rep-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:20px 0 6px}
+.sec-head h3{font-family:Inter,ui-sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:#475467;margin:0}
+@media(max-width:1180px){.metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:850px){.wrap{padding:16px}.hero{display:block}.actions{justify-content:flex-start;margin-top:14px}.layout{display:block}.side{margin-bottom:14px}.metrics{grid-template-columns:1fr}.field,.field.half{grid-column:span 12}h1{font-size:31px}table{font-size:12px}}
+@media print{.actions,.toolbar,.side,.btn,.seg,.modal,.toast,.no-print{display:none!important}body{background:#fff}.wrap{padding:0}.layout{display:block}.panel{border:0;box-shadow:none}}
+</style>
+  <link rel="stylesheet" href="../arc_uniform_design.css">
+</head>
+<body>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Case Dashboard</h1>
+      <div class="sub"><span id="caseTotals">No cases yet</span><span class="dot"></span><span class="muted">ARC Investigations &amp; Consulting</span></div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="../investigator/index.html">Dashboard</a><button class="btn gold" id="newCaseBtn" type="button">New Case</button>
+      <button class="btn danger" id="unfiledBtn" type="button" hidden>Unfiled Reports</button>
+      <button class="btn" id="importBtn" type="button">Import Registry</button>
+      <button class="btn" id="exportBtn" type="button">Export Registry</button>
+    </div>
+  </section>
+
+  <div class="active-bar none" id="activeBar"></div>
+
+  <div class="layout">
+    <aside class="panel side">
+      <h3>Attorneys</h3>
+      <div class="att-list" id="attorneyList"></div>
+    </aside>
+
+    <section class="panel main-card">
+      <div class="metrics" id="metrics"></div>
+
+      <div class="toolbar no-print">
+        <div class="search"><input id="searchInput" type="search" placeholder="Search matter, docket, court, client, attorney, charges, notes..." autocomplete="off"></div>
+        <div class="seg" role="tablist">
+          <button class="active" data-status="open" type="button">Open</button>
+          <button data-status="closed" type="button">Closed</button>
+          <button data-status="all" type="button">All</button>
+        </div>
+        <button class="btn small" id="clearFilters" type="button">Clear Filters</button>
+      </div>
+
+      <div id="resultSummary" class="small-text muted" style="margin-bottom:10px"></div>
+      <div id="caseTable"></div>
+    </section>
+  </div>
+</main>
+
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+<input type="file" id="attachFile" accept=".html,.htm,.txt,text/html,text/plain" hidden>
+<div id="drawerHost"></div>
+<div id="modalHost"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const STORAGE_KEY="arc_case_registry_v1";
+const CONTEXT_KEY="arc_unified_case_context_v1";
+const $=(sel,root=document)=>root.querySelector(sel);
+const $$=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
+const uid=(p)=>p+"_"+Math.random().toString(36).slice(2,8)+"_"+Date.now().toString(36);
+
+const UNASSIGNED="__unassigned__";
+let state=blankState();
+let filter={attorney:"",status:"open",query:""};
+let sort={key:"nextCourtDate",dir:1};
+
+function blankState(){return {version:1,cases:[],activeCaseId:"",updatedAt:new Date().toISOString()}}
+function text(v){return String(v==null?"":v).trim()}
+function esc(v){return text(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function attr(v){return esc(v)}
+function norm(v){return text(v).toLowerCase()}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.hidden=true,3600)}
+
+/* ---------------------------------------------------------------- dates --- */
+function parseDay(v){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(text(v));return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+function daysUntil(v){const d=parseDay(v);return d?Math.round((d-today())/86400000):null}
+function dayLabel(v){
+  const d=parseDay(v); if(!d)return "Not set";
+  return new Intl.DateTimeFormat("en-US",{year:"numeric",month:"short",day:"numeric"}).format(d);
+}
+function courtDateCell(c){
+  if(!text(c.nextCourtDate))return '<span class="muted">Not set</span>';
+  const n=daysUntil(c.nextCourtDate);
+  const label=dayLabel(c.nextCourtDate);
+  const evt=text(c.nextCourtEvent)?`<div class="small-text muted">${esc(c.nextCourtEvent)}</div>`:"";
+  if(c.status==="closed")return `<span class="muted">${esc(label)}</span>${evt}`;
+  let cls="gray",note="";
+  if(n<0){cls="red";note=`${Math.abs(n)} day${Math.abs(n)===1?"":"s"} past`}
+  else if(n===0){cls="red";note="today"}
+  else if(n<=7){cls="golden";note=`in ${n} day${n===1?"":"s"}`}
+  else{cls="blue";note=`in ${n} days`}
+  return `<span class="badge ${cls}">${esc(label)}</span><div class="small-text muted">${esc(note)}</div>${evt}`;
+}
+
+/* -------------------------------------------------------------- storage --- */
+function save(){state.updatedAt=new Date().toISOString();try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){toast("This browser blocked local storage. Changes were not saved.")}}
+function load(){
+  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(x&&typeof x==="object")state=migrate(x)}catch(e){}
+}
+function migrate(x){
+  const b=blankState();
+  return {...b,...x,cases:Array.isArray(x.cases)?x.cases.map(normalizeCase):[],activeCaseId:text(x.activeCaseId),version:1};
+}
+function normalizeCase(x){
+  x=x||{};
+  return {
+    caseId:text(x.caseId)||uid("case"),
+    matter:text(x.matter),docket:text(x.docket),court:text(x.court),
+    clientName:text(x.clientName),subjectName:text(x.subjectName||x.clientName),
+    attorney:text(x.attorney),attorneyFirm:text(x.attorneyFirm),
+    investigator:text(x.investigator),
+    charges:text(x.charges),
+    status:text(x.status)==="closed"?"closed":"open",
+    nextCourtDate:text(x.nextCourtDate),nextCourtEvent:text(x.nextCourtEvent),
+    incidentDate:text(x.incidentDate),notes:text(x.notes),
+    createdAt:text(x.createdAt)||new Date().toISOString(),
+    updatedAt:text(x.updatedAt)||new Date().toISOString(),
+    closedAt:text(x.closedAt),closedBy:text(x.closedBy),closeReason:text(x.closeReason)
+  };
+}
+function caseById(id){return state.cases.find(c=>c.caseId===id)}
+
+/* ------------------------------------------------- shared case context --- */
+function contextFor(c){
+  if(!c)return null;
+  return {caseId:c.caseId,matter:c.matter,docket:c.docket,court:c.court,clientName:c.clientName,
+    subjectName:c.subjectName,investigator:c.investigator,status:c.status,incidentDate:c.incidentDate,notes:c.notes};
+}
+/**
+ * Publish the active case to every ARC module, by every channel available:
+ *  - ARCUnified.setCase() when the bridge is present
+ *  - localStorage write (drives the `storage` event in OTHER tabs)
+ *  - arc:case-context CustomEvent (same document)
+ *  - postMessage to child iframes and to a parent shell
+ */
+function publishActiveCase(c){
+  const ctx=contextFor(c)||{caseId:"",matter:"",docket:"",court:"",clientName:"",subjectName:"",investigator:"",status:"",incidentDate:"",notes:""};
+  try{if(window.ARCUnified&&typeof ARCUnified.setCase==="function")ARCUnified.setCase(ctx)}catch(e){}
+  try{localStorage.setItem(CONTEXT_KEY,JSON.stringify(ctx))}catch(e){}
+  try{document.dispatchEvent(new CustomEvent("arc:case-context",{detail:ctx}))}catch(e){}
+  try{document.dispatchEvent(new CustomEvent("arc:shared-storage",{detail:ctx}))}catch(e){}
+  const msg={type:"ARC_ACTIVE_CASE",version:1,context:ctx};
+  $$("iframe").forEach(f=>{try{f.contentWindow.postMessage(msg, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"))}catch(e){}});
+  if(window.parent!==window){try{window.parent.postMessage(msg, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"))}catch(e){}}
+}
+function openCase(id){
+  const c=caseById(id); if(!c)return;
+  if(c.status!=="open"){toast("Reopen this case before resuming work.");return}
+  state.activeCaseId=id;save();publishActiveCase(c);render();
+  if(window.parent!==window){try{window.parent.postMessage({type:"ARC_OPEN_CASE",caseId:c.caseId,context:contextFor(c)}, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"))}catch(e){}}
+  toast(`${c.matter||"Untitled matter"} is now the active case across ARC modules.`);
+  setTimeout(()=>{
+    location.href="../arc-notebook.html?case="+encodeURIComponent(c.caseId)+"&mode=open&returnTo="+encodeURIComponent("cases/index.html");
+  },180);
+}
+function clearActiveCase(){state.activeCaseId="";save();publishActiveCase(null);render();toast("Active case cleared. Modules will show no active matter.")}
+
+/* =====================================================================
+   REPORT STORAGE
+   Case registry lives in localStorage (small, needs cross-tab `storage`
+   events). Report bodies live in IndexedDB via ARCReportStore, because a
+   single ARC report can exceed the entire localStorage quota.
+   Retention is CURRENT ONLY: a new send for the same logical slot replaces
+   the previous body outright. We keep a revision counter and the first
+   received timestamp so the replacement is still traceable.
+   ===================================================================== */
+const OUTBOX_KEY="arc_unified_report_outbox_v1";
+let reportMeta=[];          // metadata only; bodies fetched on demand
+let storeReady=false;
+let drawerCaseId="";
+
+function reportsFor(caseId){return reportMeta.filter(r=>r.caseId===caseId).sort((a,b)=>String(b.receivedAt).localeCompare(String(a.receivedAt)))}
+function reportCount(caseId){return reportMeta.filter(r=>r.caseId===caseId).length}
+function unfiledReports(){return reportMeta.filter(r=>!r.caseId||!caseById(r.caseId))}
+function bytesLabel(n){const b=Number(n)||0;return b<1024?b+" B":b<1048576?Math.round(b/1024)+" KB":(b/1048576).toFixed(1)+" MB"}
+function stamp(iso){const d=new Date(iso);return isNaN(d)?"Not recorded":new Intl.DateTimeFormat("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(d)}
+
+/** Accept both the ARCUnified.saveReport shape and a raw transferPayload. */
+function normalizeReportPayload(p){
+  p=p||{};
+  const inner=p.transferPayload||{};
+  const ctx=p.caseContext||p.context||inner.caseContext||{};
+  const typeText=[p.reportType,p.reportStatus,inner.reportStatus,p.type,inner.type].map(text).join(" ");
+  return {
+    logicalKey:text(p.logicalKey||inner.logicalKey||p.id||inner.transferId)||uid("report"),
+    transferId:text(p.id||p.transferId||inner.transferId),
+    title:text(p.title)||"Untitled report",
+    reportType:text(p.reportType)||text(inner.reportStatus==="approved"?"Final":"Draft"),
+    source:text(p.source||inner.sourceModule)||"unknown module",
+    html:text(p.html||p.reportHtml||inner.reportHtml),
+    plain:text(p.text||inner.text),
+    contentVersion:text(p.contentVersion||inner.contentVersion),
+    status:/final|approved/i.test(typeText)?"final":"draft",
+    caseContext:{
+      caseId:text(ctx.caseId||p.caseId||inner.caseId),
+      matter:text(ctx.matter),docket:text(ctx.docket),court:text(ctx.court),
+      clientName:text(ctx.clientName),subjectName:text(ctx.subjectName)
+    }
+  };
+}
+/** caseId, then docket, then matter. Never guesses beyond that. */
+function resolveCaseFor(ctx){
+  if(!ctx)return null;
+  if(text(ctx.caseId)){const hit=caseById(text(ctx.caseId));if(hit)return hit}
+  if(text(ctx.docket)){const hit=state.cases.find(c=>c.docket&&norm(c.docket)===norm(ctx.docket));if(hit)return hit}
+  if(text(ctx.matter)){const hit=state.cases.find(c=>c.matter&&norm(c.matter)===norm(ctx.matter));if(hit)return hit}
+  return null;
+}
+function saveReport(rawPayload,opts){
+  const p=normalizeReportPayload(rawPayload);
+  if(!p.html&&!p.plain){toast("A report arrived with no content. Nothing was stored.");return Promise.resolve(null)}
+  const target=(opts&&opts.forceCaseId?caseById(opts.forceCaseId):null)||resolveCaseFor(p.caseContext);
+  const caseId=target?target.caseId:"";
+  const reportId=(caseId||"unfiled")+"::"+p.logicalKey;
+  const existing=reportMeta.find(r=>r.reportId===reportId);
+
+  if(existing&&existing.contentVersion&&existing.contentVersion===p.contentVersion){
+    toast(`${p.title} is already stored at this revision. Nothing changed.`);
+    return Promise.resolve(existing);
+  }
+  const now=new Date().toISOString();
+  const meta={
+    reportId,caseId,logicalKey:p.logicalKey,transferId:p.transferId,
+    title:p.title,reportType:p.reportType,source:p.source,status:p.status,
+    contentVersion:p.contentVersion,
+    bytes:(p.html||p.plain).length,
+    caseLabel:target?(target.matter||target.docket||"Untitled matter"):[p.caseContext.matter,p.caseContext.docket].filter(Boolean).join(" - "),
+    firstReceivedAt:existing?existing.firstReceivedAt:now,
+    receivedAt:now,
+    revisions:existing?(Number(existing.revisions)||1)+1:1
+  };
+  return ARCReportStore.put(meta,{html:p.html,text:p.plain}).then(()=>{
+    reportMeta=reportMeta.filter(r=>r.reportId!==reportId).concat([meta]);
+    render();
+    toast(caseId
+      ?`${meta.title} stored on ${meta.caseLabel}${meta.revisions>1?` (revision ${meta.revisions}, previous replaced)`:""}.`
+      :`${meta.title} stored but NOT matched to a case. Open Unfiled Reports to assign it.`);
+    return meta;
+  }).catch(error=>{toast(error.message);return null});
+}
+function refreshReportMeta(){
+  if(!window.ARCReportStore)return Promise.resolve([]);
+  return ARCReportStore.allMeta().then(list=>{storeReady=true;reportMeta=list||[];return reportMeta})
+    .catch(error=>{storeReady=false;toast(error.message);return []});
+}
+/* Cross-tab handoff: a module in another tab appends to the outbox, we drain it. */
+function drainOutbox(){
+  let queue=[];
+  try{queue=JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]")}catch(e){queue=[]}
+  if(!Array.isArray(queue)||!queue.length)return;
+  try{localStorage.setItem(OUTBOX_KEY,"[]")}catch(e){}
+  queue.reduce((chain,item)=>chain.then(()=>saveReport(item)),Promise.resolve());
+}
+function reassignReport(reportId,caseId){
+  const meta=reportMeta.find(r=>r.reportId===reportId); if(!meta)return;
+  const target=caseById(caseId); if(!target){toast("Choose a case first.");return}
+  ARCReportStore.getBody(reportId).then(body=>{
+    const next={...meta,reportId:caseId+"::"+meta.logicalKey,caseId,caseLabel:target.matter||target.docket||"Untitled matter"};
+    return ARCReportStore.put(next,body||{}).then(()=>ARCReportStore.remove(reportId)).then(()=>{
+      reportMeta=reportMeta.filter(r=>r.reportId!==reportId).concat([next]);
+      render();toast(`Report filed under ${next.caseLabel}.`);
+    });
+  }).catch(e=>toast(e.message));
+}
+function deleteReport(reportId){
+  const meta=reportMeta.find(r=>r.reportId===reportId); if(!meta)return;
+  if(!confirm(`Delete "${meta.title}"?\n\nThe stored copy is removed permanently. The module that produced it keeps its own working data.`))return;
+  ARCReportStore.remove(reportId).then(()=>{
+    reportMeta=reportMeta.filter(r=>r.reportId!==reportId);render();toast("Report deleted.");
+  }).catch(e=>toast(e.message));
+}
+
+/* ------------------------------------------------------- report viewing --- */
+const REPORT_SHELL=(inner,title)=>`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+body{margin:0;background:#f5f7fb;font-family:Georgia,"Times New Roman",serif;color:#111827;padding:24px}
+.report-paper{background:#fff;border:1px solid #cbd5e1;padding:.65in;max-width:8.5in;margin:0 auto}
+.report-paper h1{font-size:22px;text-transform:uppercase;letter-spacing:.04em}
+.report-paper h2{font-size:16px;margin:22px 0 8px;text-transform:uppercase}
+.report-paper p,.report-paper li{font-size:12.5pt;line-height:1.55}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d8dee8;padding:8px;text-align:left;vertical-align:top;font-size:10.5pt}
+th{background:#f8fafc}.muted,.small-text{color:#475467;font-size:10pt}
+.graph-wrap{border:1px solid #d8dee8;padding:12px;overflow:auto}
+.graph{display:flex;align-items:center;min-width:max-content}
+.graph-node{width:132px;min-height:92px;border:2px solid #6b7280;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9px;font-size:11px;gap:4px}
+.connector{width:60px;height:2px;background:#111827;flex:0 0 60px}
+.report-note{font-size:10pt;color:#475467;border-top:1px solid #98a2b3;margin-top:18px;padding-top:8px}
+@media print{body{background:#fff;padding:0}.report-paper{border:0;max-width:none;padding:0}}
+</style></head><body>${inner}</body></html>`;
+
+function withBody(reportId,fn){
+  ARCReportStore.getBody(reportId).then(body=>{
+    if(!body||(!body.html&&!body.text)){toast("That report's stored contents are missing.");return}
+    fn(body);
+  }).catch(e=>toast(e.message));
+}
+function viewReport(reportId){
+  const meta=reportMeta.find(r=>r.reportId===reportId); if(!meta)return;
+  withBody(reportId,body=>{
+    const doc=REPORT_SHELL(body.html||`<pre>${esc(body.text)}</pre>`,meta.title);
+    // Sandboxed with no allow-scripts: stored report HTML renders, never executes.
+    $("#modalHost").innerHTML=`<div class="modal"><div class="modal-card" style="width:min(1100px,96vw)"><div class="modal-head"><h3>${esc(meta.title)}</h3><button class="btn icon" data-close-modal type="button">x</button></div><div class="modal-body" style="padding:0"><iframe sandbox title="${attr(meta.title)}" style="width:100%;height:74vh;border:0;display:block" srcdoc="${attr(doc)}"></iframe></div><div class="modal-foot"><button class="btn" data-close-modal type="button">Close</button><button class="btn" data-print-report="${attr(reportId)}" type="button">Print</button><button class="btn gold" data-download-report="${attr(reportId)}" type="button">Download</button></div></div></div>`;
+    $$("[data-close-modal]").forEach(b=>b.onclick=()=>$("#modalHost").innerHTML="");
+  });
+}
+function downloadReport(reportId){
+  const meta=reportMeta.find(r=>r.reportId===reportId); if(!meta)return;
+  withBody(reportId,body=>{
+    const safe=(meta.caseLabel+" - "+meta.title).replace(/[^a-z0-9 _.-]/gi,"").replace(/\s+/g," ").trim()||"ARC Report";
+    const blob=new Blob([REPORT_SHELL(body.html||`<pre>${esc(body.text)}</pre>`,meta.title)],{type:"text/html"});
+    const url=URL.createObjectURL(blob);const a=document.createElement("a");
+    a.href=url;a.download=safe+".html";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);toast("Report downloaded.");
+  });
+}
+function printReport(reportId){
+  const meta=reportMeta.find(r=>r.reportId===reportId); if(!meta)return;
+  withBody(reportId,body=>{
+    const w=window.open("","_blank");
+    if(!w){toast("The browser blocked the print window. Allow pop-ups for this page.");return}
+    w.document.write(REPORT_SHELL(body.html||`<pre>${esc(body.text)}</pre>`,meta.title));
+    w.document.close();
+    w.onload=()=>{try{w.focus();w.print()}catch(e){}};
+  });
+}
+function attachReportFile(file,caseId){
+  const r=new FileReader();
+  r.onload=()=>{
+    const raw=String(r.result||"");
+    const isHtml=/\.html?$/i.test(file.name)||/<[a-z]/i.test(raw);
+    saveReport({
+      logicalKey:"attachment::"+file.name.toLowerCase().replace(/[^a-z0-9]+/g,"-"),
+      title:file.name.replace(/\.[^.]+$/,""),
+      reportType:"Attached Document",source:"manual attachment",
+      html:isHtml?raw:"",text:isHtml?"":raw,
+      contentVersion:String(raw.length)
+    },{forceCaseId:caseId});
+  };
+  r.readAsText(file);
+}
+
+/* ------------------------------------------------------------ filtering --- */
+function attorneyKey(c){return text(c.attorney)||UNASSIGNED}
+function attorneyLabel(key){return key===UNASSIGNED?"Unassigned":key}
+function attorneyBuckets(){
+  const map=new Map();
+  state.cases.forEach(c=>{
+    const k=attorneyKey(c);
+    if(!map.has(k))map.set(k,{key:k,open:0,closed:0,total:0});
+    const b=map.get(k);b.total++;c.status==="closed"?b.closed++:b.open++;
+  });
+  return [...map.values()].sort((a,b)=>{
+    if(a.key===UNASSIGNED)return 1; if(b.key===UNASSIGNED)return -1;
+    return a.key.localeCompare(b.key);
+  });
+}
+function matchesQuery(c,q){
+  if(!q)return true;
+  const hay=norm([c.matter,c.docket,c.court,c.clientName,c.subjectName,c.attorney,c.attorneyFirm,c.investigator,c.charges,c.notes,c.nextCourtEvent].join("  "));
+  // every whitespace-separated term must appear somewhere
+  return norm(q).split(/\s+/).filter(Boolean).every(term=>hay.indexOf(term)!==-1);
+}
+function visibleCases(){
+  let list=state.cases.filter(c=>{
+    if(filter.status!=="all"&&c.status!==filter.status)return false;
+    if(filter.attorney&&attorneyKey(c)!==filter.attorney)return false;
+    return matchesQuery(c,filter.query);
+  });
+  const dir=sort.dir;
+  list.sort((a,b)=>{
+    if(sort.key==="nextCourtDate"){
+      const x=parseDay(a.nextCourtDate),y=parseDay(b.nextCourtDate);
+      if(!x&&!y)return norm(a.matter).localeCompare(norm(b.matter));
+      if(!x)return 1;   // undated always sinks, regardless of direction
+      if(!y)return -1;
+      return (x-y)*dir;
+    }
+    if(sort.key==="status")return (norm(a.status).localeCompare(norm(b.status))||norm(a.matter).localeCompare(norm(b.matter)))*dir;
+    if(sort.key==="attorney")return (norm(attorneyLabel(attorneyKey(a))).localeCompare(norm(attorneyLabel(attorneyKey(b))))||norm(a.matter).localeCompare(norm(b.matter)))*dir;
+    return norm(a[sort.key]||"").localeCompare(norm(b[sort.key]||""))*dir;
+  });
+  return list;
+}
+
+/* ------------------------------------------------------------- rendering -- */
+function render(){renderActiveBar();renderAttorneys();renderMetrics();renderTable();renderTotals();renderDrawer()}
+function renderTotals(){
+  const open=state.cases.filter(c=>c.status==="open").length;
+  const closed=state.cases.length-open;
+  const stored=reportMeta.length;
+  $("#caseTotals").textContent=(state.cases.length?`${open} open - ${closed} closed`:"No cases yet")+(stored?` - ${stored} report${stored===1?"":"s"} stored`:"");
+  const unfiled=unfiledReports().length;
+  const btn=$("#unfiledBtn");
+  btn.hidden=!unfiled;
+  btn.textContent=`${unfiled} Unfiled Report${unfiled===1?"":"s"}`;
+}
+function renderActiveBar(){
+  const bar=$("#activeBar");const c=caseById(state.activeCaseId);
+  if(!c){bar.className="active-bar none";bar.innerHTML='<span class="muted small-text">No active case. Open a case below to load it into Chain of Custody, Motion Bank, and the other ARC modules.</span>';return}
+  bar.className="active-bar";
+  bar.innerHTML=`<span><b>Active case:</b> ${esc(c.matter||"Untitled matter")}${c.docket?" - "+esc(c.docket):""}${c.attorney?' <span class="muted">for '+esc(c.attorney)+"</span>":""}${c.status==="closed"?' <span class="badge gray">closed</span>':""}</span><span style="display:flex;gap:8px"><button class="btn small" data-edit-case="${attr(c.caseId)}" type="button">Edit</button><button class="btn small" id="clearActiveBtn" type="button">Clear</button></span>`;
+  $("#clearActiveBtn").onclick=clearActiveCase;
+}
+function renderAttorneys(){
+  const buckets=attorneyBuckets();
+  const totalOpen=state.cases.filter(c=>c.status==="open").length;
+  const rows=[`<button class="${filter.attorney===""?"active":""}" data-attorney="" type="button">All attorneys<span class="count">${totalOpen}</span></button>`];
+  buckets.forEach(b=>{
+    rows.push(`<button class="${filter.attorney===b.key?"active":""}" data-attorney="${attr(b.key)}" type="button"><span style="overflow:hidden;text-overflow:ellipsis">${esc(attorneyLabel(b.key))}</span><span class="count" title="${b.open} open, ${b.closed} closed">${b.open}</span></button>`);
+  });
+  $("#attorneyList").innerHTML=rows.join("")+
+    (buckets.length?"":'<div class="small-text muted" style="padding:8px 4px">No attorneys yet. They appear here as soon as a case names one.</div>');
+}
+function renderMetrics(){
+  const open=state.cases.filter(c=>c.status==="open");
+  const attorneys=new Set(open.map(c=>attorneyKey(c)).filter(k=>k!==UNASSIGNED)).size;
+  let soon=0,overdue=0;
+  open.forEach(c=>{const n=daysUntil(c.nextCourtDate);if(n===null)return;if(n<0)overdue++;else if(n<=14)soon++});
+  $("#metrics").innerHTML=[
+    {n:open.length,l:"Open Cases",cls:""},
+    {n:attorneys,l:"Attorneys with Open Cases",cls:""},
+    {n:soon,l:"Court Dates in 14 Days",cls:soon?"soon":""},
+    {n:overdue,l:"Court Dates Past Due",cls:overdue?"alert":""}
+  ].map(m=>`<div class="metric ${m.cls}"><div class="num">${m.n}</div><span>${esc(m.l)}</span></div>`).join("");
+}
+function sortHead(key,label){
+  const on=sort.key===key;
+  return `<th class="sortable" data-sort="${attr(key)}">${esc(label)}${on?(sort.dir>0?" ▲":" ▼"):""}</th>`;
+}
+function renderTable(){
+  const list=visibleCases();
+  const bits=[];
+  if(filter.attorney)bits.push(`attorney: ${attorneyLabel(filter.attorney)}`);
+  if(filter.query)bits.push(`search: "${filter.query}"`);
+  if(filter.status!=="all")bits.push(filter.status);
+  $("#resultSummary").textContent=`${list.length} case${list.length===1?"":"s"}${bits.length?" - "+bits.join(", "):""}`;
+
+  if(!state.cases.length){
+    $("#caseTable").innerHTML='<div class="empty"><b>No cases in the registry</b><br>Create the first case, or import a registry export from another machine.</div>';
+    return;
+  }
+  if(!list.length){
+    $("#caseTable").innerHTML='<div class="empty"><b>No case matches these filters</b><br>Clear the search or choose a different attorney.</div>';
+    return;
+  }
+  $("#caseTable").innerHTML=`<table><thead><tr>
+    ${sortHead("matter","Matter / Client")}
+    ${sortHead("docket","Docket / Court")}
+    ${sortHead("attorney","Attorney")}
+    ${sortHead("nextCourtDate","Next Court Date")}
+    ${sortHead("status","Status")}
+    <th></th></tr></thead><tbody>${list.map(c=>{
+    const isActive=c.caseId===state.activeCaseId;
+    return `<tr class="${c.status==="closed"?"closed-row":""}">
+      <td><div><button class="link-matter" data-detail-case="${attr(c.caseId)}" type="button">${esc(c.matter||"Untitled matter")}</button>${isActive?' <span class="badge blue">active</span>':""}</div>
+          <div class="small-text muted">${esc(c.clientName||c.subjectName||"Client not listed")}${reportCount(c.caseId)?` &middot; <b>${reportCount(c.caseId)} report${reportCount(c.caseId)===1?"":"s"}</b>`:""}</div></td>
+      <td><div class="mono small-text">${esc(c.docket||"No docket")}</div><div class="small-text muted">${esc(c.court||"Court not listed")}</div></td>
+      <td>${esc(c.attorney||"Unassigned")}${c.attorneyFirm?`<div class="small-text muted">${esc(c.attorneyFirm)}</div>`:""}</td>
+      <td>${courtDateCell(c)}</td>
+      <td><span class="badge ${c.status==="closed"?"gray":"green"}">${esc(c.status)}</span>${c.status==="closed"&&c.closedAt?`<div class="small-text muted">${esc(dayLabel(c.closedAt.slice(0,10)))}</div>`:""}</td>
+      <td><div class="row-actions">
+        ${c.status==="open"?`<button class="btn small ${isActive?"":"navy"}" data-open-case="${attr(c.caseId)}" type="button">${isActive?"Active":"Open"}</button>`:""}
+        <button class="btn small" data-edit-case="${attr(c.caseId)}" type="button">Edit</button>
+        ${c.status==="open"
+          ?`<button class="btn small warn" data-close-case="${attr(c.caseId)}" type="button">Close</button>`
+          :`<button class="btn small" data-reopen-case="${attr(c.caseId)}" type="button">Reopen</button><button class="btn small danger" data-delete-case="${attr(c.caseId)}" type="button">Delete</button>`}
+      </div></td></tr>`;
+  }).join("")}</tbody></table>`;
+}
+
+/* ---------------------------------------------------------------- drawer -- */
+function openDrawer(id){drawerCaseId=id;renderDrawer()}
+function closeDrawer(){drawerCaseId="";$("#drawerHost").innerHTML=""}
+function reportCard(r,showAssign){
+  const cls=!r.caseId?"unfiled":(r.status==="final"?"final":"");
+  const assign=showAssign?`<select data-assign-report="${attr(r.reportId)}"><option value="">File under...</option>${state.cases.map(c=>`<option value="${attr(c.caseId)}">${esc(c.matter||c.docket||"Untitled")}</option>`).join("")}</select>`:"";
+  return `<article class="rep ${cls}">
+    <div class="rep-head"><div class="rep-title">${esc(r.title)}</div><span class="badge ${r.status==="final"?"green":"golden"}">${esc(r.status)}</span></div>
+    <div class="small-text muted">${esc(r.reportType)} &middot; from ${esc(r.source)} &middot; ${esc(bytesLabel(r.bytes))}</div>
+    <div class="small-text muted">Stored ${esc(stamp(r.receivedAt))}${r.revisions>1?` &middot; revision ${r.revisions}, earlier revisions replaced`:""}</div>
+    <div class="rep-actions">
+      <button class="btn small navy" data-view-report="${attr(r.reportId)}" type="button">View</button>
+      <button class="btn small" data-download-report="${attr(r.reportId)}" type="button">Download</button>
+      <button class="btn small" data-print-report="${attr(r.reportId)}" type="button">Print</button>
+      <button class="btn small danger" data-delete-report="${attr(r.reportId)}" type="button">Delete</button>
+      ${assign}
+    </div></article>`;
+}
+function renderDrawer(){
+  const host=$("#drawerHost"); if(!host)return;
+  if(!drawerCaseId){host.innerHTML="";return}
+  const c=caseById(drawerCaseId);
+  if(!c){host.innerHTML="";drawerCaseId="";return}
+  const reports=reportsFor(c.caseId);
+  const row=(l,v)=>`<dt>${esc(l)}</dt><dd>${v}</dd>`;
+  host.innerHTML=`<div class="drawer-scrim" data-close-drawer></div><aside class="drawer" role="dialog" aria-label="Case detail">
+    <div class="drawer-head">
+      <div><h2>${esc(c.matter||"Untitled matter")}</h2>
+        <div class="small-text muted" style="margin-top:5px">${esc(c.docket||"No docket")} &middot; ${esc(c.court||"Court not listed")}</div></div>
+      <button class="btn icon" data-close-drawer type="button">x</button>
+    </div>
+    <div class="drawer-body">
+      <dl class="kv">
+        ${row("Status",`<span class="badge ${c.status==="closed"?"gray":"green"}">${esc(c.status)}</span>`)}
+        ${row("Client",esc(c.clientName||"Not listed"))}
+        ${row("Subject",esc(c.subjectName||"Not listed"))}
+        ${row("Attorney",esc(c.attorney||"Unassigned")+(c.attorneyFirm?` <span class="muted">(${esc(c.attorneyFirm)})</span>`:""))}
+        ${row("Investigator",esc(c.investigator||"Not listed"))}
+        ${row("Charges",esc(c.charges||"Not listed"))}
+        ${row("Next court date",courtDateCell(c))}
+        ${row("Incident date",esc(c.incidentDate?dayLabel(c.incidentDate):"Not listed"))}
+        ${c.status==="closed"?row("Closed",`${esc(stamp(c.closedAt))} by ${esc(c.closedBy||"not recorded")}<div class="small-text muted">${esc(c.closeReason||"No reason recorded")}</div>`):""}
+        ${c.notes?row("Notes",`<span class="small-text">${esc(c.notes)}</span>`):""}
+      </dl>
+      <div class="sec-head"><h3>Stored Reports (${reports.length})</h3><button class="btn small" data-attach-to="${attr(c.caseId)}" type="button">Attach File</button></div>
+      ${storeReady?"":'<div class="small-text" style="color:#c1121f">Report storage is unavailable in this browser session.</div>'}
+      ${reports.length?reports.map(r=>reportCard(r,false)).join(""):'<div class="empty" style="padding:20px"><b>No reports filed yet</b><br>Reports sent from Chain of Custody, Motion Bank, and the Report Builder land here automatically.</div>'}
+    </div>
+    <div class="drawer-foot">
+      ${c.status==="open"?`<button class="btn navy" data-open-case="${attr(c.caseId)}" type="button">Make Active</button>`:""}
+      <button class="btn" data-edit-case="${attr(c.caseId)}" type="button">Edit Case</button>
+      ${c.status==="open"
+        ?`<button class="btn warn" data-close-case="${attr(c.caseId)}" type="button">Close Case</button>`
+        :`<button class="btn" data-reopen-case="${attr(c.caseId)}" type="button">Reopen Case</button>`}
+    </div></aside>`;
+}
+function openUnfiled(){
+  const list=unfiledReports();
+  modal("Unfiled Reports",list.length
+    ?`<p class="small-text muted">These reports arrived without a case ARC could match by case ID, docket, or matter name. Assign each one, or delete it.</p>${list.map(r=>reportCard(r,true)).join("")}`
+    :'<div class="empty">Every stored report is matched to a case.</div>',
+  "Done",()=>{});
+}
+
+/* ----------------------------------------------------------------- forms -- */
+function modal(title,body,saveLabel,onSave){
+  $("#modalHost").innerHTML=`<div class="modal"><div class="modal-card"><div class="modal-head"><h3>${esc(title)}</h3><button class="btn icon" data-close-modal type="button">x</button></div><div class="modal-body">${body}</div><div class="modal-foot"><button class="btn" data-close-modal type="button">Cancel</button><button class="btn gold" id="modalSave" type="button">${esc(saveLabel||"Save")}</button></div></div></div>`;
+  $$("[data-close-modal]").forEach(b=>b.onclick=()=>$("#modalHost").innerHTML="");
+  $("#modalSave").onclick=()=>{if(onSave()===false)return;$("#modalHost").innerHTML="";save();render()};
+}
+function formData(sel){return Object.fromEntries(new FormData($(sel)).entries())}
+function field(name,label,value,cls="",type="text",listId){return `<label class="field ${cls}"><span>${esc(label)}</span><input name="${attr(name)}" type="${type}" value="${attr(value||"")}" ${listId?`list="${attr(listId)}"`:""} autocomplete="off"></label>`}
+function textarea(name,label,value,cls=""){return `<label class="field ${cls}"><span>${esc(label)}</span><textarea name="${attr(name)}">${esc(value||"")}</textarea></label>`}
+function attorneyDatalist(){
+  const names=[...new Set(state.cases.map(c=>text(c.attorney)).filter(Boolean))].sort();
+  return `<datalist id="attorneyNames">${names.map(n=>`<option value="${attr(n)}"></option>`).join("")}</datalist>`;
+}
+function openCaseForm(id){
+  const c=id?caseById(id):{};
+  if(id&&!c){toast("That case is no longer in the registry.");return}
+  modal(id?"Edit Case":"New Case",`${attorneyDatalist()}<form id="caseForm" class="form-grid">
+    ${field("matter","Matter (e.g. Commonwealth v. Doe)",c.matter,"wide")}
+    ${field("docket","Docket Number",c.docket)}
+    ${field("court","Court",c.court)}
+    ${field("incidentDate","Incident Date",c.incidentDate,"","date")}
+    ${field("clientName","Client Name",c.clientName)}
+    ${field("subjectName","Subject / Defendant",c.subjectName)}
+    ${field("charges","Charges",c.charges)}
+    ${field("attorney","Attorney",c.attorney,"","text","attorneyNames")}
+    ${field("attorneyFirm","Attorney Firm",c.attorneyFirm)}
+    ${field("investigator","Assigned Investigator",c.investigator)}
+    ${field("nextCourtDate","Next Court Date",c.nextCourtDate,"","date")}
+    ${field("nextCourtEvent","Court Event",c.nextCourtEvent,"half")}
+    ${textarea("notes","Notes",c.notes,"wide")}
+  </form>`,id?"Save Case":"Create Case",()=>{
+    const o=formData("#caseForm");
+    if(!text(o.matter)&&!text(o.docket)){toast("A case needs at least a matter name or a docket number.");return false}
+    if(id){Object.assign(c,normalizeCase({...c,...o,caseId:id,status:c.status}),{updatedAt:new Date().toISOString()});toast("Case updated.")}
+    else{
+      const created=normalizeCase({...o,caseId:uid("case"),status:"open"});
+      state.cases.push(created);toast(`${created.matter||created.docket} added to the registry.`);
+    }
+    if(id&&state.activeCaseId===id)publishActiveCase(caseById(id));
+  });
+}
+function openCloseForm(id){
+  const c=caseById(id); if(!c)return;
+  const stamp=new Date();const iso=`${stamp.getFullYear()}-${String(stamp.getMonth()+1).padStart(2,"0")}-${String(stamp.getDate()).padStart(2,"0")}`;
+  modal(`Close: ${c.matter||c.docket||"Untitled matter"}`,`<form id="closeForm" class="form-grid">
+    ${field("closedBy","Closed By",c.investigator,"half")}
+    ${field("closedOn","Closed On",iso,"half","date")}
+    ${textarea("closeReason","Disposition / Reason for Closing",null,"wide")}
+  </form><p class="small-text muted">Closing removes the case from the open list and from the active-case selection. Nothing is deleted; module work stays attached and the case can be reopened at any time.</p>`,
+  "Close Case",()=>{
+    const o=formData("#closeForm");
+    if(!text(o.closedBy)){toast("Record who closed the case.");return false}
+    c.status="closed";c.closedBy=text(o.closedBy);
+    c.closedAt=text(o.closedOn)?new Date(text(o.closedOn)+"T12:00:00").toISOString():new Date().toISOString();
+    c.closeReason=text(o.closeReason);c.updatedAt=new Date().toISOString();
+    if(state.activeCaseId===c.caseId){state.activeCaseId="";publishActiveCase(null)}
+    toast(`${c.matter||"Case"} closed.`);
+  });
+}
+function reopenCase(id){
+  const c=caseById(id); if(!c)return;
+  if(!confirm(`Reopen ${c.matter||c.docket||"this case"}? It returns to the open list with its prior work intact.`))return;
+  c.status="open";c.closedAt="";c.closedBy="";c.closeReason="";c.updatedAt=new Date().toISOString();
+  save();render();toast("Case reopened.");
+}
+function deleteCase(id){
+  const c=caseById(id); if(!c)return;
+  if(c.status!=="closed"){toast("Close the case before deleting it.");return}
+  const n=reportCount(id);
+  if(!confirm(`Permanently delete ${c.matter||c.docket||"this case"} from the registry?\n\n${n?`Its ${n} stored report(s) will be deleted too.\n\n`:""}This cannot be undone. Working data held by other ARC modules under this case ID is NOT removed.`))return;
+  state.cases=state.cases.filter(x=>x.caseId!==id);
+  if(state.activeCaseId===id){state.activeCaseId="";publishActiveCase(null)}
+  if(drawerCaseId===id)drawerCaseId="";
+  const done=()=>{save();render();toast("Case deleted from the registry.")};
+  if(n&&window.ARCReportStore){
+    ARCReportStore.removeByCase(id).then(()=>{reportMeta=reportMeta.filter(r=>r.caseId!==id);done()}).catch(e=>{toast(e.message);done()});
+  }else done();
+}
+
+/* --------------------------------------------------------- import/export -- */
+function exportRegistry(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const stamp=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=`ARC_Case_Registry_${stamp}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast(`${state.cases.length} case(s) exported.`);
+}
+function importRegistry(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(String(r.result||""));
+      const incoming=(Array.isArray(data)?data:data.cases||[]).map(normalizeCase);
+      if(!incoming.length){toast("That file contained no cases.");return}
+      let added=0,updated=0;
+      incoming.forEach(inc=>{
+        const existing=state.cases.find(c=>c.caseId===inc.caseId)||
+          (inc.docket?state.cases.find(c=>c.docket&&norm(c.docket)===norm(inc.docket)):null);
+        if(existing){Object.assign(existing,inc,{caseId:existing.caseId});updated++}
+        else{state.cases.push(inc);added++}
+      });
+      save();render();
+      toast(`Import complete: ${added} added, ${updated} matched and updated.`);
+    }catch(e){toast("Import failed: "+e.message)}
+  };
+  r.readAsText(file);
+}
+
+/* ------------------------------------------------------------------ bind -- */
+function bind(){
+  $("#newCaseBtn").onclick=()=>{ location.href="./intake/index.html?mode=new"; };
+  $("#exportBtn").onclick=exportRegistry;
+  $("#importBtn").onclick=()=>$("#importFile").click();
+  $("#importFile").onchange=e=>{if(e.target.files[0])importRegistry(e.target.files[0]);e.target.value=""};
+
+  $("#attorneyList").addEventListener("click",e=>{
+    const b=e.target.closest("[data-attorney]"); if(!b)return;
+    filter.attorney=b.dataset.attorney;render();
+  });
+  $(".seg").addEventListener("click",e=>{
+    const b=e.target.closest("[data-status]"); if(!b)return;
+    filter.status=b.dataset.status;
+    $$(".seg button").forEach(x=>x.classList.toggle("active",x===b));
+    render();
+  });
+  let debounce;
+  $("#searchInput").addEventListener("input",e=>{
+    const v=e.target.value;
+    clearTimeout(debounce);
+    debounce=setTimeout(()=>{filter.query=v;renderTable()},140);
+  });
+  $("#clearFilters").onclick=()=>{
+    filter={attorney:"",status:"open",query:""};
+    $("#searchInput").value="";
+    $$(".seg button").forEach(x=>x.classList.toggle("active",x.dataset.status==="open"));
+    render();
+  };
+  $("#caseTable").addEventListener("click",e=>{
+    const s=e.target.closest("[data-sort]");
+    if(s){const k=s.dataset.sort;sort.dir=sort.key===k?-sort.dir:1;sort.key=k;renderTable();return}
+    const open=e.target.closest("[data-open-case]");if(open){openCase(open.dataset.openCase);return}
+    const edit=e.target.closest("[data-edit-case]");if(edit){openCaseForm(edit.dataset.editCase);return}
+    const close=e.target.closest("[data-close-case]");if(close){openCloseForm(close.dataset.closeCase);return}
+    const re=e.target.closest("[data-reopen-case]");if(re){reopenCase(re.dataset.reopenCase);return}
+    const del=e.target.closest("[data-delete-case]");if(del){deleteCase(del.dataset.deleteCase)}
+  });
+  $("#activeBar").addEventListener("click",e=>{
+    const edit=e.target.closest("[data-edit-case]");if(edit)openCaseForm(edit.dataset.editCase);
+  });
+  $("#unfiledBtn").onclick=openUnfiled;
+  $("#attachFile").onchange=e=>{
+    const target=e.target.dataset.caseId;
+    if(e.target.files[0]&&target)attachReportFile(e.target.files[0],target);
+    e.target.value="";
+  };
+  // Report cards render inside the drawer AND inside the unfiled modal, so
+  // delegate from the document rather than binding each host separately.
+  document.addEventListener("click",e=>{
+    if(e.target.closest("[data-close-drawer]")){closeDrawer();return}
+    const detail=e.target.closest("[data-detail-case]");if(detail){openDrawer(detail.dataset.detailCase);return}
+    const v=e.target.closest("[data-view-report]");if(v){viewReport(v.dataset.viewReport);return}
+    const d=e.target.closest("[data-download-report]");if(d){downloadReport(d.dataset.downloadReport);return}
+    const pr=e.target.closest("[data-print-report]");if(pr){printReport(pr.dataset.printReport);return}
+    const del=e.target.closest("[data-delete-report]");if(del){deleteReport(del.dataset.deleteReport);return}
+    const at=e.target.closest("[data-attach-to]");if(at){const inp=$("#attachFile");inp.dataset.caseId=at.dataset.attachTo;inp.click()}
+  });
+  document.addEventListener("change",e=>{
+    const a=e.target.closest("[data-assign-report]");
+    if(a&&e.target.value)reassignReport(a.dataset.assignReport,e.target.value);
+  });
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&drawerCaseId&&!$(".modal"))closeDrawer()});
+
+  // Inbound reports from module iframes or a parent shell.
+  window.addEventListener("message",e=>{
+    const d=e.data;
+    if(!d||typeof d!=="object")return;
+    if(d.type==="ARC_SAVE_REPORT"||d.type==="ARC_SEND_CHAIN_REPORT_TO_FINAL"||d.type==="ARC_SEND_CHAIN_REPORT_TO_EDIT"){
+      saveReport(d.payload||d);
+    }
+  });
+  document.addEventListener("arc:report-saved",e=>saveReport(e.detail||{}));
+
+  window.addEventListener("storage",e=>{
+    if(e.key===STORAGE_KEY){load();render()}          // registry changed in another tab
+    if(e.key===OUTBOX_KEY)drainOutbox();              // a module in another tab handed off a report
+  });
+}
+/**
+ * Public entry point. A module in the same document, or arc_unified_bridge.js,
+ * can call ARCCaseRegistry.saveReport(payload) directly with either the
+ * ARCUnified.saveReport shape or a raw transferPayload.
+ */
+window.ARCCaseRegistry={
+  saveReport:(payload)=>saveReport(payload),
+  listReports:(caseId)=>caseId?reportsFor(caseId):reportMeta.slice(),
+  getReportBody:(reportId)=>window.ARCReportStore?ARCReportStore.getBody(reportId):Promise.resolve(null),
+  resolveCase:(ctx)=>resolveCaseFor(ctx),
+  listCases:()=>state.cases.map(c=>({...c})),
+  getActiveCase:()=>contextFor(caseById(state.activeCaseId)),
+  refresh:()=>refreshReportMeta().then(render)
+};
+function mergeSharedCaseIntoRegistry(){
+  if(!window.ARCUnified||typeof window.ARCUnified.getCase!=="function")return;
+  const shared=window.ARCUnified.getCase()||{};
+  const caseId=text(shared.caseId||shared.id);
+  if(!caseId)return;
+  let current=caseById(caseId);
+  if(!current&&shared.docket){current=state.cases.find(c=>c.docket&&norm(c.docket)===norm(shared.docket))}
+  if(!current&&shared.matter){current=state.cases.find(c=>c.matter&&norm(c.matter)===norm(shared.matter))}
+  const incoming=normalizeCase({
+    caseId:caseId,
+    matter:shared.matter||shared.caseName,
+    docket:shared.docket,
+    court:shared.court,
+    clientName:shared.clientName,
+    subjectName:shared.subjectName,
+    attorney:shared.clientName,
+    investigator:shared.investigator,
+    incidentDate:shared.incidentDate,
+    notes:shared.notes,
+    status:shared.status==="closed"?"closed":"open",
+    updatedAt:shared.updatedAt||new Date().toISOString()
+  });
+  if(current){
+    const preserved={status:current.status,closedAt:current.closedAt,closedBy:current.closedBy,closeReason:current.closeReason,
+      attorney:current.attorney||incoming.attorney,attorneyFirm:current.attorneyFirm,charges:current.charges,
+      nextCourtDate:current.nextCourtDate,nextCourtEvent:current.nextCourtEvent};
+    Object.assign(current,incoming,preserved,{caseId:current.caseId});
+  }else{
+    state.cases.push(incoming);
+  }
+  if(!state.activeCaseId)state.activeCaseId=current?current.caseId:incoming.caseId;
+  save();
+}
+
+function init(){
+  load();mergeSharedCaseIntoRegistry();bind();render();
+  const active=caseById(state.activeCaseId);
+  if(active)publishActiveCase(active);
+  if(window.ARCReportStore){
+    refreshReportMeta().then(()=>{render();drainOutbox()});
+  }else{
+    toast("arc_report_store.js did not load. Reports cannot be stored or listed.");
+  }
+  if(window.parent!==window){try{window.parent.postMessage({type:"ARC_MODULE_READY",title:document.title}, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"))}catch(e){}}
+}
+window.addEventListener("DOMContentLoaded",init);
+})();
+</script>
+</body>
+</html>

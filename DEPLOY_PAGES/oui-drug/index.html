@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARC OUI & Drug Defense Analyzer</title>
+    <link rel="stylesheet" crossorigin href="./assets/index-B-u81GDM.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      (async function () {
+        "use strict";
+        function readJson(key) {
+          try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (_) { return null; }
+        }
+        function activeCaseId() {
+          var params = new URLSearchParams(location.search);
+          var fromUrl = params.get("caseId") || params.get("case") || "";
+          if (fromUrl) return fromUrl;
+          try {
+            var fromSession = sessionStorage.getItem("arcActiveCaseId") || "";
+            if (fromSession) return fromSession;
+          } catch (_) {}
+          var registry = readJson("arc_case_registry_v1");
+          return registry && registry.activeCaseId ? String(registry.activeCaseId) : "";
+        }
+        function registryCase(id) {
+          var registry = readJson("arc_case_registry_v1");
+          var rows = registry && Array.isArray(registry.cases) ? registry.cases : [];
+          return rows.find(function (row) { return String(row.caseId || row.id || "") === id; }) || {};
+        }
+        function ouiCaseFromArc(id) {
+          var row = registryCase(id);
+          return {
+            id: id,
+            clientName: row.subjectName || row.clientName || row.matter || row.caseName || "Active ARC Case",
+            caseNumber: row.docket || row.docketNumber || "",
+            court: row.court || "",
+            charge: row.charge || "OUI / Drug specialty analysis",
+            incidentDate: row.incidentDate || "",
+            arrestingAgency: row.agency || row.arrestingAgency || "",
+            documents: [],
+            lastUpdated: new Date().toISOString(),
+            arcCaseId: id
+          };
+        }
+        function remoteEnabled() { return location.protocol === "https:" || location.protocol === "http:"; }
+        var remoteRev = 0;
+        var syncConflict = false;
+        function showSyncConflict(currentRev) {
+          if (document.getElementById("arc-oui-sync-conflict")) return;
+          var notice = document.createElement("div");
+          notice.id = "arc-oui-sync-conflict";
+          notice.setAttribute("role", "alert");
+          notice.style.cssText = "position:fixed;z-index:2147483000;left:16px;right:16px;top:16px;padding:12px 16px;border:1px solid #b45309;border-radius:8px;background:#fff7ed;color:#7c2d12;font:600 13px/1.45 system-ui;box-shadow:0 10px 30px rgba(0,0,0,.18)";
+          notice.textContent = "This OUI / Drug record changed in another ARC session (server revision " + String(currentRev || "newer") + "). Saving has stopped to prevent overwriting newer work. Reload this page before continuing.";
+          document.body.appendChild(notice);
+        }
+        async function loadRemoteState(caseId) {
+          if (!remoteEnabled()) return { payload: null, rev: 0 };
+          try {
+            var res = await fetch("/sync/module-state?caseId=" + encodeURIComponent(caseId) + "&module=oui-drug", { credentials: "include" });
+            if (!res.ok) return { payload: null, rev: 0 };
+            var body = await res.json();
+            return {
+              payload: body && body.payload && typeof body.payload === "object" ? body.payload : null,
+              rev: Math.max(0, Number(body && body.rev || 0))
+            };
+          } catch (_) { return { payload: null, rev: 0 }; }
+        }
+        async function saveRemoteState(caseId, payload, keepalive) {
+          if (!remoteEnabled() || syncConflict || !payload || typeof payload !== "object") return false;
+          try {
+            var headers = { "Content-Type": "application/json" };
+            if (remoteRev > 0) headers["If-Match"] = String(remoteRev);
+            var res = await fetch("/sync/module-state?caseId=" + encodeURIComponent(caseId) + "&module=oui-drug", {
+              method: "PUT",
+              credentials: "include",
+              keepalive: !!keepalive,
+              headers: headers,
+              body: JSON.stringify({ payload: payload, expectedRev: remoteRev })
+            });
+            var body = await res.json().catch(function () { return {}; });
+            if (res.status === 409 || res.status === 428) {
+              syncConflict = true;
+              showSyncConflict(body && body.conflict && body.conflict.currentRev);
+              return false;
+            }
+            if (!res.ok) return false;
+            if (Number(body && body.rev) > 0) remoteRev = Number(body.rev);
+            return true;
+          } catch (_) { return false; }
+        }
+
+        var id = activeCaseId();
+        if (!id) {
+          document.getElementById("root").innerHTML =
+            '<main style="font:16px system-ui;max-width:760px;margin:12vh auto;padding:32px;border:1px solid #cbd5e1;border-radius:8px;color:#0f172a">' +
+            '<h1 style="margin:0 0 12px;font-size:24px">Open an ARC case first</h1>' +
+            '<p style="line-height:1.5">The OUI / Drug analyzer runs only inside the active ARC case. Return to the Case Dashboard, select a case, then open this specialty tool again.</p>' +
+            '</main>';
+          return;
+        }
+
+        var active = ouiCaseFromArc(id);
+        var activeKey = "arc_oui_v1::" + id + "::case_data";
+
+        // The bundled Google SDK talks only to the ARC AI gateway. Inject the
+        // authoritative active case header before the bundle is loaded so every
+        // Gemini SDK call is case-authorized server-side.
+        var nativeFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+          var rawUrl = typeof input === "string" ? input : (input && input.url) || "";
+          var resolved = rawUrl;
+          try { resolved = new URL(rawUrl, location.href).pathname; } catch (_) {}
+          if (String(resolved).indexOf("/ai/google") === 0) {
+            var next = Object.assign({}, init || {});
+            var headers = new Headers((init && init.headers) || (input instanceof Request ? input.headers : undefined) || {});
+            headers.set("X-ARC-Case-ID", id);
+            next.headers = headers;
+            next.credentials = "include";
+            if (input instanceof Request) return nativeFetch(new Request(input, next));
+            return nativeFetch(input, next);
+          }
+          return nativeFetch(input, init);
+        };
+        var remoteState = await loadRemoteState(id);
+        remoteRev = Number(remoteState && remoteState.rev || 0);
+        if (remoteState && remoteState.payload) active = Object.assign({}, active, remoteState.payload, { id: id, arcCaseId: id });
+
+        var storageGet = Storage.prototype.getItem;
+        var storageSet = Storage.prototype.setItem;
+        var storageRemove = Storage.prototype.removeItem;
+        var pendingPayload = null;
+        var saveTimer = 0;
+        var saveQueue = Promise.resolve();
+
+        function scheduleRemoteSave(value) {
+          if (!remoteEnabled()) return;
+          try { pendingPayload = JSON.parse(String(value || "null")); } catch (_) { return; }
+          if (!pendingPayload || typeof pendingPayload !== "object") return;
+          pendingPayload.id = id;
+          pendingPayload.arcCaseId = id;
+          clearTimeout(saveTimer);
+          saveTimer = setTimeout(function () {
+            var payload = pendingPayload;
+            pendingPayload = null;
+            saveQueue = saveQueue.then(function () { return saveRemoteState(id, payload, false); });
+          }, 700);
+        }
+
+        Storage.prototype.getItem = function (key) {
+          if (key === "arc_oui_v1::case_list") return JSON.stringify([active]);
+          if (String(key).indexOf("arc_oui_v1::") === 0 && String(key).endsWith("::case_data") && key !== activeKey) return null;
+          var value = storageGet.call(this, key);
+          if (key === activeKey && !value) return JSON.stringify(active);
+          return value;
+        };
+        Storage.prototype.setItem = function (key, value) {
+          if (key === "arc_oui_v1::case_list") return storageSet.call(this, key, JSON.stringify([active]));
+          if (String(key).indexOf("arc_oui_v1::") === 0 && String(key).endsWith("::case_data") && key !== activeKey) return;
+          var result = storageSet.call(this, key, value);
+          if (this === localStorage && key === activeKey) scheduleRemoteSave(value);
+          return result;
+        };
+        Storage.prototype.removeItem = function (key) {
+          if (key === "arc_oui_v1::case_list" || key === activeKey) return;
+          return storageRemove.call(this, key);
+        };
+
+        storageSet.call(localStorage, "arc_oui_v1::case_list", JSON.stringify([active]));
+        storageSet.call(localStorage, activeKey, JSON.stringify(active));
+        window.ARC_OUI_ACTIVE_CASE_ID = id;
+        window.ARC_OUI_PERSISTENCE = remoteEnabled() ? "d1-authoritative" : "local-preview";
+
+        // Production interlocks: ARC owns the case record and Motion & Legal owns filing-ready motion drafting.
+        function installSafetyInterlocks() {
+          var blockedText = /^(?:New Case|Create New Case Profile|Create Case File|DOCX Motion|Yes, Delete Active Case)$/i;
+          function scan() {
+            document.querySelectorAll("button").forEach(function (button) {
+              var label = String(button.textContent || "").trim().replace(/\s+/g, " ");
+              var title = String(button.getAttribute("title") || "").trim();
+              if (blockedText.test(label) || /^(?:Create New Case Profile|Delete Current Active Case)$/i.test(title)) {
+                button.disabled = true;
+                button.setAttribute("aria-disabled", "true");
+                button.title = /motion/i.test(label)
+                  ? "Use ARC Motion & Legal with verified CourtListener authorities for filing-ready motions."
+                  : "Cases are created and deleted only from the ARC Case Dashboard.";
+              }
+            });
+          }
+          new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+          scan();
+        }
+        installSafetyInterlocks();
+
+        window.addEventListener("pagehide", function () {
+          if (pendingPayload && !syncConflict) {
+            var payload = pendingPayload;
+            pendingPayload = null;
+            saveRemoteState(id, payload, true);
+          }
+        });
+
+        var script = document.createElement("script");
+        script.type = "module";
+        script.crossOrigin = "";
+        script.src = "./assets/index-57xkLe7O.js";
+        document.body.appendChild(script);
+      })();
+    </script>
+  </body>
+</html>

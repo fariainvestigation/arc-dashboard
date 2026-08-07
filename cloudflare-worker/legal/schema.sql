@@ -3,6 +3,27 @@
 -- Cases themselves live in the ARC shared case system; this module stores only
 -- legal-work records keyed by the shared ARC case_id. No competing case table.
 
+-- ARC shared production case authority. All modules use these same case/member tables.
+CREATE TABLE IF NOT EXISTS cases (
+  id TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
+  rev INTEGER NOT NULL DEFAULT 1,
+  deleted INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL,
+  updated_by TEXT NOT NULL,
+  owner_user_id TEXT
+);
+
+CREATE TABLE IF NOT EXISTS case_members (
+  case_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  role TEXT NOT NULL CHECK(role IN ('owner','editor','reviewer','reader')),
+  granted_by TEXT,
+  granted_at TEXT,
+  PRIMARY KEY (case_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_case_members_user ON case_members(user_id, case_id);
+
 CREATE TABLE IF NOT EXISTS legal_users (
   email TEXT PRIMARY KEY,
   name TEXT DEFAULT '',

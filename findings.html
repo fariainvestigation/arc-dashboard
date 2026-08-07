@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="arc-version" content="11.6.2"><title>ARC Final Analysis & Findings</title>
+<link rel="stylesheet" href="arc_uniform_design.css"><style>
+:root{--navy:#0b1726;--navy2:#18304d;--gold:#b59461;--paper:#fff;--ink:#172033;--muted:#657184;--line:#d9e0e8;--bg:#f4f6f9;--ok:#19734a;--warn:#9b6414;--bad:#a52a2a}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:#fff;padding:18px 24px;border-bottom:3px solid var(--gold)}header h1{margin:0;font-size:22px}header p{margin:5px 0 0;color:#d8e1ec}
+main{max-width:1280px;margin:auto;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:16px;box-shadow:0 2px 8px rgba(13,31,52,.04)}h2,h3{margin:0 0 12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button,.btn{border:1px solid #aeb9c7;border-radius:6px;background:#fff;padding:9px 12px;font-weight:700;cursor:pointer}
+.tabs button[aria-selected=true],.btn.primary{background:var(--navy2);color:#fff;border-color:var(--navy2)}.btn.danger{color:var(--bad)}
+.panel{display:none}.panel.active{display:block}.field{display:grid;gap:5px;margin-bottom:11px}.field input,.field textarea,.field select{width:100%;padding:9px;border:1px solid #b9c4d1;border-radius:6px;background:#fff}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.item{border-top:1px solid var(--line);padding:12px 0}.item:first-child{border-top:0}
+.muted{color:var(--muted)}.notice{padding:10px 12px;border-left:4px solid var(--gold);background:#fff8e9;margin:10px 0}.error{color:var(--bad)}.ok{color:var(--ok)}
+.badge{display:inline-block;border:1px solid #c5ced9;border-radius:999px;padding:3px 8px;font-size:12px;background:#f7f9fc}.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+iframe{width:100%;min-height:680px;border:1px solid var(--line);border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+@media(max-width:720px){main{padding:12px}header{padding:15px}.grid{grid-template-columns:1fr}}
+</style>
+<script src="arc_provider_client.js"></script><script src="arc_report_header.js"></script><script src="arc_unified_bridge.js"></script>
+</head><body>
+<header><h1>Stage 6 · Final Analysis & Findings</h1><p>Separate verified facts, allegations, witness statements, observations, and investigator analysis.</p></header>
+<main><div class="toolbar"><div id="caseLabel" class="badge"></div><a class="btn primary" href="22_Report_Package_Builder.html">Open Report Production</a></div>
+<div class="grid"><form id="findingForm" class="card"><h2>New finding statement</h2>
+<label class="field">Classification<select name="classification"><option value="verified_fact">Verified Fact</option><option value="allegation">Allegation</option><option value="witness_statement">Witness Statement</option><option value="observation">Investigator Observation</option><option value="investigator_analysis">Investigator Analysis</option></select></label>
+<label class="field">Statement<textarea name="statement" rows="5" required maxlength="10000"></textarea></label>
+<label class="field">Significance<textarea name="significance" rows="3" maxlength="5000"></textarea></label>
+<label class="field">Source ID<input name="sourceId" required></label>
+<label class="field">SHA-256<input name="sha256" maxlength="64" placeholder="64 hexadecimal characters"></label>
+<label class="field">Interview ID<input name="interviewId" placeholder="Use instead of SHA-256 for logged interview"></label>
+<label class="field">Page / time / locator<input name="locator" required></label>
+<button class="btn primary">Save as needs review</button><div id="message"></div></form>
+<section class="card"><h2>Release validation</h2><div id="release"></div><p class="muted">Every finding must have valid source linkage and investigator approval.</p></section></div>
+<section class="card" style="margin-top:16px"><h2>Findings</h2><div id="list"></div></section></main>
+<script>
+(function(){"use strict";var form=document.getElementById("findingForm"),msg=document.getElementById("message");
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])})}
+function render(){var c=ARCUnified.getCase();document.getElementById("caseLabel").textContent=c.matter||"No active case";var fs=ARCUnified.getFindings(),r=ARCUnified.findingsReleaseCheck();
+document.getElementById("release").innerHTML='<p class="'+(r.ready?'ok':'error')+'"><strong>'+(r.ready?'Ready for report production':'Report production blocked')+'</strong></p><ul>'+r.blockers.map(function(b){return '<li>'+esc(b)+'</li>'}).join("")+'</ul>';
+document.getElementById("list").innerHTML=fs.length?fs.map(function(x){return '<div class=item><strong>'+esc(x.classification.replace(/_/g," "))+'</strong> <span class=badge>'+esc(x.status)+'</span><p>'+esc(x.statement)+'</p><div class=muted>'+(x.validation&&x.validation.valid?'Source linkage valid':esc((x.validation&&x.validation.errors||[]).join(" ")))+'</div><div class=row><input data-reviewer="'+esc(x.id)+'" placeholder="Reviewer name"><button class="btn primary" data-approve="'+esc(x.id)+'">Approve</button><button class=btn data-reject="'+esc(x.id)+'">Reject</button></div></div>'}).join(""):'<p class=muted>No findings.</p>'}
+form.onsubmit=function(e){e.preventDefault();try{var d=Object.fromEntries(new FormData(form).entries()),link={sourceId:d.sourceId,sha256:d.sha256,interviewId:d.interviewId,locator:d.locator};ARCUnified.saveFinding({classification:d.classification,statement:d.statement,significance:d.significance,sourceLinks:[link]});form.reset();msg.className="notice ok";msg.textContent="Finding saved as needs_review.";render()}catch(err){msg.className="notice error";msg.textContent=err.message}};
+document.getElementById("list").onclick=function(e){var id=e.target.dataset.approve||e.target.dataset.reject;if(!id)return;var reviewer=document.querySelector('[data-reviewer="'+id+'"]').value;try{if(!reviewer)throw new Error("Reviewer name is required.");ARCUnified.reviewFinding(id,e.target.dataset.approve?"approved":"rejected",reviewer,"");render()}catch(err){alert(err.message)}};
+document.addEventListener("DOMContentLoaded",render);
+})();
+</script></body></html>

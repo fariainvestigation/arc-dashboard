@@ -1,0 +1,11 @@
+PROCESS ORDER
+1. Send each processed uploaded report separately through 01_people_extraction_prompt.txt.
+2. Validate each response against people-extraction.schema.json.
+3. Combine the validated person extractions for the active case.
+4. Run 02_cross_document_matching_prompt.txt.
+5. Attach possibleMatches to each extraction.
+6. Place all results in the Extracted People Review queue with status pending_review.
+7. Do not create permanent person profiles until the investigator approves, edits, or merges the extraction.
+8. On approval, use 03_profile_enrichment_prompt.txt and then 04_recommended_questions_prompt.txt.
+9. Preserve source document IDs and pages in every permanent profile field.
+10. Never expose or store the API key in frontend HTML, localStorage, exports, or logs.

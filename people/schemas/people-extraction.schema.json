@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ARC People Extraction",
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentName",
+    "people"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string"
+    },
+    "documentName": {
+      "type": "string"
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "extractionId",
+          "nameAsWritten",
+          "identity",
+          "roles",
+          "sourceReferences",
+          "confidence"
+        ],
+        "properties": {
+          "extractionId": {
+            "type": "string"
+          },
+          "nameAsWritten": {
+            "type": "string"
+          },
+          "identity": {
+            "type": "object",
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "middleName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "suffix": {
+                "type": "string"
+              },
+              "fullName": {
+                "type": "string"
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dateOfBirth": {
+                "type": "string"
+              },
+              "age": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              },
+              "gender": {
+                "type": "string"
+              }
+            }
+          },
+          "roles": {
+            "type": "object",
+            "properties": {
+              "primarySuggestedRole": {
+                "type": "string"
+              },
+              "secondarySuggestedRoles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "phones": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "professional": {
+            "type": "object"
+          },
+          "attorney": {
+            "type": "object"
+          },
+          "caseRelationship": {
+            "type": "object"
+          },
+          "statements": {
+            "type": "array"
+          },
+          "evidenceLinks": {
+            "type": "array"
+          },
+          "timelineEvents": {
+            "type": "array"
+          },
+          "interviewReferences": {
+            "type": "array"
+          },
+          "sourceReferences": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "documentId": {
+                  "type": "string"
+                },
+                "documentName": {
+                  "type": "string"
+                },
+                "page": {
+                  "type": "string"
+                },
+                "supportingText": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "possibleMatchKey": {
+            "type": "object"
+          },
+          "confidence": {
+            "type": "object",
+            "properties": {
+              "overall": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "name": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "role": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "contact": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

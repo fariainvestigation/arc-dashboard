@@ -1,30 +1,18 @@
-# Environment secrets
+# ARC Legal Worker — Production secrets and bindings
 
-All provider credentials are Cloudflare Worker secrets. None appears in browser
-code, HTML exports, filing ZIPs, logs, or any downloadable file. A test asserts
-this on every frontend file and on the generated filing ZIP.
+Provider secrets are Cloudflare Worker secrets only:
 
-    wrangler secret put COURTLISTENER_API_KEY
-    wrangler secret put ANTHROPIC_API_KEY
+```powershell
+npx wrangler secret put COURTLISTENER_API_KEY --config=cloudflare-worker/legal/wrangler.toml
+npx wrangler secret put ANTHROPIC_API_KEY --config=cloudflare-worker/legal/wrangler.toml
+```
 
-## Non-secret vars (wrangler.toml [vars])
+Production non-secret configuration is already set:
 
-    ACCESS_TEAM_DOMAIN   your-team.cloudflareaccess.com
-    ACCESS_AUD           Access application AUD tag
-    ALLOWED_ORIGINS      https://arcdefensereport.com   (comma-separated allowlist)
-    CLAUDE_MODEL         claude-sonnet-4-6
+- Access team domain: `old-lake-2c90.cloudflareaccess.com`
+- Access AUD: `165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212`
+- D1: `arc_legal` / `6c04c557-f8de-4590-a235-76fa117ff6d8`
+- R2: `arc-legal-files`
+- Allowed origins: `https://arcdefensereport.com`, `https://www.arcdefensereport.com`
 
-## Bindings
-
-    DB      D1 database  arc_legal
-    FILES   R2 bucket    arc-legal-files
-
-## Rules
-- CourtListener is called only as `Authorization: Token <COURTLISTENER_API_KEY>`
-  from inside the Worker.
-- Anthropic is called only with `x-api-key: <ANTHROPIC_API_KEY>` from inside the
-  Worker.
-- `provider_log` records route, actor, case, and character counts only. It never
-  stores keys, query text, or raw prompts.
-- Rotate a key with `wrangler secret put` again; no redeploy is required.
-- Never place a secret in wrangler.toml, the repository, or a client file.
+CourtListener and Anthropic keys never belong in browser code, exports, logs, or D1 records.

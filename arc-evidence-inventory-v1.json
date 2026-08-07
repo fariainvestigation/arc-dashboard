@@ -1,0 +1,135 @@
+{
+  "_schema": "arc.evidence.inventory",
+  "_version": 1,
+  "_purpose": "Canonical inventory of what should exist for a given evidence type, against which actual production is checked. Read by the Discovery Gap Map and by the Timeline Discrepancy Visualizer, which emits gap signals of its own. One source of truth so the two tools cannot disagree about what is missing.",
+
+  "_citationWarning": "Every item carrying verifyCitation true has a regulatory or case hook stated from practice knowledge and NOT yet verified against current authority. Verify before any of this text reaches a filing. The tool must render unverified hooks visibly as unverified rather than printing them as settled law.",
+
+  "_statusValues": {
+    "received": "Produced and reviewed",
+    "partial": "Produced but incomplete on its face",
+    "not_produced": "Requested and not produced",
+    "not_requested": "Not yet demanded",
+    "refused": "Demand refused, objection served",
+    "na": "Does not apply to this matter"
+  },
+
+  "_tiers": {
+    "core": "Demand in every matter of this type. Absence is itself a finding.",
+    "supporting": "Strengthens the challenge. Demand as a matter of course.",
+    "reach": "Rarely produced without a fight. Demand anyway, because the refusal is on the record."
+  },
+
+  "evidenceTypes": [
+    {
+      "id": "breath_draeger_9510",
+      "label": "Breath test, Draeger Alcotest 9510",
+      "jurisdiction": "MA",
+      "note": "Massachusetts breath test discovery. The device, the solution, the operator, and the software are four separate attack surfaces and each has its own paper trail. Litigation history in the Commonwealth around this instrument makes agency level records unusually productive.",
+      "categories": [
+        {
+          "id": "identity",
+          "label": "Device identity and deployment",
+          "items": [
+            { "id": "d_serial", "title": "Device make, model, and serial number confirmation", "tier": "core", "whyItMatters": "Every other record is keyed to the serial. Without it you cannot tell whether a produced calibration record belongs to this device.", "ifMissing": "No record produced can be tied to the instrument that tested the client.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "d_assign", "title": "Deployment and assignment records placing the device at the station on the test date", "tier": "supporting", "whyItMatters": "Establishes the device was in service and where. Occasionally reveals the device was swapped or out of service.", "ifMissing": "Chain between the instrument and the location is unproven.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "d_history", "title": "Full service history for the device since deployment", "tier": "supporting", "whyItMatters": "Patterns of repair or repeated failures across the life of the device bear on reliability generally, not just on the test date.", "ifMissing": "Reliability can only be assessed from a snapshot.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        },
+        {
+          "id": "certification",
+          "label": "Annual certification and calibration",
+          "items": [
+            { "id": "c_annual", "title": "Annual certification record covering the test date", "tier": "core", "whyItMatters": "Certification current on the date of the test is a precondition to admissibility. This is the first document to demand and the most common one to arrive incomplete.", "ifMissing": "Admissibility precondition is unsupported on the record.", "motionHook": "limine", "verifyCitation": true, "basisNote": "Certification requirement per applicable state regulation. Confirm current subsection and current annual interval before citing." },
+            { "id": "c_bracket", "title": "Certification records immediately preceding and following the test date", "tier": "core", "whyItMatters": "The bracketing records show whether the device drifted between certifications. A device that failed at the next certification was likely already failing on the test date.", "ifMissing": "No way to assess drift across the certification interval.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "c_worksheets", "title": "Underlying calibration worksheets and technician notes, not just the certificate", "tier": "supporting", "whyItMatters": "The certificate is a conclusion. The worksheets are the data, and they sometimes show adjustments or repeat attempts the certificate does not mention.", "ifMissing": "Only the conclusion is available, not the basis for it.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "c_tech", "title": "Identity and certification of the technician who performed the calibration", "tier": "supporting", "whyItMatters": "A calibration performed by an uncertified technician is not a calibration.", "ifMissing": "Cannot establish the calibration itself was validly performed.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        },
+        {
+          "id": "solution",
+          "label": "Simulator solution",
+          "items": [
+            { "id": "s_cert", "title": "Certificate of analysis for the simulator solution lot in use on the test date", "tier": "core", "whyItMatters": "The solution is the reference standard. If the standard is wrong, every reading taken against it is wrong by the same amount.", "ifMissing": "The reference the result was measured against is undocumented.", "motionHook": "limine", "verifyCitation": true, "basisNote": "Confirm whether the governing regulation specifies solution tolerance and documentation." },
+            { "id": "s_log", "title": "Solution change log showing when the lot was installed and replaced", "tier": "core", "whyItMatters": "Ties the certificate to the actual test. A certificate for a lot that was already swapped out proves nothing.", "ifMissing": "Cannot connect the certified lot to this test.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "s_sim", "title": "Wet bath simulator calibration and thermometer certification", "tier": "supporting", "whyItMatters": "Solution temperature drives vapor concentration. An uncalibrated simulator invalidates the reference regardless of the solution certificate.", "ifMissing": "Temperature control of the reference standard is undocumented.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        },
+        {
+          "id": "accuracy",
+          "label": "Periodic accuracy testing",
+          "items": [
+            { "id": "a_before", "title": "Periodic accuracy test records for the interval before the test date", "tier": "core", "whyItMatters": "Establishes the device was reading true going into the test.", "ifMissing": "No evidence the device was accurate before it tested the client.", "motionHook": "limine", "verifyCitation": true, "basisNote": "Confirm the required periodic interval under current regulation." },
+            { "id": "a_after", "title": "Periodic accuracy test records for the interval after the test date", "tier": "core", "whyItMatters": "A failure on the next periodic test casts doubt backward across the entire interval, including this test.", "ifMissing": "Cannot assess whether the device was still accurate after the test.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "a_failures", "title": "All failed or out of tolerance accuracy tests for this device, any date", "tier": "reach", "whyItMatters": "Agencies produce the passing tests readily. The failures are where the case is. Demand them explicitly rather than relying on a general request.", "ifMissing": "A history of failures may exist and remain undisclosed.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "a_oat", "title": "Office of Alcohol Testing records and correspondence concerning this device", "tier": "supporting", "whyItMatters": "Agency level records have historically surfaced problems not visible in the device file.", "ifMissing": "Systemic issues affecting this device stay hidden.", "motionHook": "compel", "verifyCitation": true, "basisNote": "Confirm the current name and scope of the state testing office." }
+          ]
+        },
+        {
+          "id": "maintenance",
+          "label": "Maintenance, repair, and firmware",
+          "items": [
+            { "id": "m_repairs", "title": "All repair and service records for the device", "tier": "core", "whyItMatters": "A repair shortly before the test date, particularly to the sensor or sampling system, is a direct challenge.", "ifMissing": "Cannot rule out an unrepaired or recently repaired defect.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "m_oos", "title": "Out of service periods and the reason for each", "tier": "supporting", "whyItMatters": "Shows whether the device had known problems and how the agency handled them.", "ifMissing": "Known defect history is unavailable.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "m_firmware", "title": "Firmware version installed on the test date and the full update history", "tier": "core", "whyItMatters": "The instrument is software. A version change alters behavior, and validation attaches to a specific version, not to the model generally.", "ifMissing": "Cannot determine which software actually produced the result.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        },
+        {
+          "id": "thetest",
+          "label": "The test itself",
+          "items": [
+            { "id": "t_printout", "title": "Complete instrument printout, all channels and all sequence entries", "tier": "core", "whyItMatters": "Partial printouts omit aborted attempts, invalid samples, and single channel results. What was left off the printout is often the case.", "ifMissing": "The produced result may be one selected entry from a longer sequence.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "t_log", "title": "Device event log or full data download for the test date", "tier": "reach", "whyItMatters": "The internal log records everything the printout summarizes, including errors and operator actions. Rarely produced without a specific demand.", "ifMissing": "Only the summary is available, not the underlying record of the session.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "t_sequence", "title": "All tests run on the device on the same date, including other subjects", "tier": "supporting", "whyItMatters": "Same day anomalies across subjects point to the device rather than the client.", "ifMissing": "Cannot distinguish a device problem from a subject specific result.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "t_blank", "title": "Ambient air blank and purge results for the test sequence", "tier": "supporting", "whyItMatters": "A failed or absent blank indicates contamination in the sampling path.", "ifMissing": "Cannot rule out ambient contamination.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "t_refusal", "title": "Records supporting any refusal designation, including which channel or sample triggered it", "tier": "core", "whyItMatters": "A refusal recorded from a single channel or an incomplete sample is a device or procedure event, not a choice by the client.", "ifMissing": "A consequential designation rests on an undocumented basis.", "motionHook": "limine", "verifyCitation": true, "basisNote": "Confirm the regulatory basis governing refusal recording and sample adequacy." },
+            { "id": "t_obs", "title": "Documentation of the observation period, including who observed and where", "tier": "core", "whyItMatters": "Feeds directly into the Timeline Discrepancy Visualizer. Compare the stated period against video and instrument times.", "ifMissing": "The observation precondition rests on the narrative alone.", "motionHook": "limine", "verifyCitation": true, "basisNote": "Confirm the current required interval and its regulatory source." }
+          ]
+        },
+        {
+          "id": "operator",
+          "label": "Operator",
+          "items": [
+            { "id": "o_cert", "title": "Operator certification current on the test date", "tier": "core", "whyItMatters": "An expired or absent certification is a clean, documentary challenge that requires no expert.", "ifMissing": "Cannot establish the test was administered by a qualified operator.", "motionHook": "limine", "verifyCitation": true, "basisNote": "Confirm certification interval and issuing authority." },
+            { "id": "o_train", "title": "Operator training file and recertification history", "tier": "supporting", "whyItMatters": "Gaps, remedial training, or failed recertification are cross examination material.", "ifMissing": "Operator competence cannot be assessed beyond the certificate.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "o_discipline", "title": "Any disciplinary or performance records bearing on breath test administration", "tier": "reach", "whyItMatters": "Ordinarily resisted, but the demand and the refusal both belong on the record.", "ifMissing": "Impeachment material may exist and remain undisclosed.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        },
+        {
+          "id": "software",
+          "label": "Software and validation",
+          "items": [
+            { "id": "w_source", "title": "Source code for the firmware version in use", "tier": "reach", "whyItMatters": "Almost never produced, frequently litigated. The demand and the resulting objection preserve the issue and can support a limine motion on the ground that the result is untestable.", "ifMissing": "The instrument's decision logic cannot be examined by the defense.", "motionHook": "limine", "verifyCitation": false },
+            { "id": "w_validation", "title": "Validation and reliability studies for the specific firmware version", "tier": "supporting", "whyItMatters": "Validation of an earlier version does not validate the one that ran the test.", "ifMissing": "No showing that the software producing the result was ever validated.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "w_defects", "title": "Manufacturer notices, service bulletins, and known defect advisories", "tier": "supporting", "whyItMatters": "Manufacturer acknowledged defects are the strongest available basis and are rarely volunteered.", "ifMissing": "Known defects affecting the model remain unexamined.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        },
+        {
+          "id": "systemic",
+          "label": "Agency and systemic",
+          "items": [
+            { "id": "y_audit", "title": "State testing office annual reports and audits covering the test period", "tier": "supporting", "whyItMatters": "Systemic findings apply to every device in the program, including this one.", "ifMissing": "Program level problems stay outside the record.", "motionHook": "compel", "verifyCitation": false },
+            { "id": "y_orders", "title": "Discovery orders and consolidated production from related breath test litigation", "tier": "reach", "whyItMatters": "Material already ordered produced elsewhere is difficult to withhold here.", "ifMissing": "Available leverage from prior litigation goes unused.", "motionHook": "compel", "verifyCitation": true, "basisNote": "Identify the current controlling consolidated litigation and its production orders before citing." },
+            { "id": "y_notice", "title": "Any notice of discovered error or corrective action affecting devices in this program", "tier": "core", "whyItMatters": "If the agency knew of a problem, disclosure obligations attach.", "ifMissing": "Potential disclosure violation cannot be assessed.", "motionHook": "compel", "verifyCitation": false }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "vehicle_berla_ive",
+      "label": "Vehicle forensics, Berla iVe extraction",
+      "jurisdiction": "MA",
+      "note": "Stub. Populate from vehicle infotainment forensics work product.",
+      "categories": []
+    },
+
+    {
+      "id": "recon_faro_zone_3d",
+      "label": "Crash reconstruction, FARO Zone 3D",
+      "jurisdiction": "MA",
+      "note": "Stub. Import the existing 40 item disclosure audit from the ARC Reconstruction Audit Engine rather than rewriting it.",
+      "categories": []
+    }
+  ]
+}

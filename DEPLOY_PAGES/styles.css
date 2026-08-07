@@ -1,0 +1,823 @@
+/* ARC front page -- from the Claude Design prototype "ARC Front Page.dc.html" (option 1c) */
+
+/* Self-hosted so the page has no third-party dependency and renders the same
+   offline. These are the variable builds: one file covers every weight. */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('assets/fonts/inter.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('assets/fonts/playfair-display.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('assets/fonts/playfair-display-italic.woff2') format('woff2');
+}
+
+:root {
+  --navy:        #0B162C;
+  --navy-deep:   #08122a;
+  --navy-ink:    #0A1930;
+  --navy-stripe: #152a4a;
+  --gold:        #D4AF37;
+  --gold-soft:   #C9B36B;
+  --gold-dark:   #8a6d1f;
+  --slate:       #5c6472;
+  --slate-light: #8a94ab;
+  --paper:       #FAFAFA;
+  --rule:        #EAEAEA;
+
+  --sans:  Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Playfair Display", Georgia, serif;
+
+  --gutter: 44px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--navy);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--navy-ink); text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* Leftover height on a tall screen falls below the footer and reads as
+     part of it, rather than as an empty band. */
+  background: var(--navy);
+}
+
+.main {
+  flex: none;   /* leftover viewport height belongs to the footer, not here */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+
+.site-header {
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 16px var(--gutter);
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 700 12px/1 var(--sans);
+  letter-spacing: .2em;
+  color: var(--navy-ink);
+}
+
+/* Placeholder until the real logo lands -- sized so an <img> can drop straight in. */
+.wordmark__mark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 11px/1 var(--sans);
+  letter-spacing: 0;
+  color: var(--navy-ink);
+  object-fit: contain;
+}
+
+.site-nav {
+  display: flex;
+  gap: 26px;
+}
+
+.site-nav a {
+  font: 500 11px/1 var(--sans);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--slate);
+  transition: color .18s ease;
+}
+
+.site-nav a:hover { color: var(--gold-dark); }
+
+.site-nav__portal { color: var(--gold-dark); }
+.site-nav__portal:hover { color: var(--navy-ink); }
+
+/* ---------- Hero ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  background: var(--navy);
+  /* Bounded rather than filling the viewport: on a tall monitor a 100vh hero
+     left the headline stranded in empty navy. */
+  height: clamp(540px, 58vh, 680px);
+}
+
+.hero__copy {
+  padding: 76px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 30px;
+  font: 400 11px/1 var(--sans);
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+
+.eyebrow__rule {
+  width: 38px;
+  height: 1px;
+  background: var(--gold);
+  flex: none;
+}
+
+.hero__headline {
+  margin: 0;
+  font: 500 58px/1.1 var(--serif);
+  color: #fff;
+  text-wrap: pretty;
+}
+
+.hero__headline em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.hero__tagline {
+  margin: 34px 0 0;
+  font: 400 11px/1 var(--sans);
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--slate-light);
+}
+
+.hero__media {
+  position: relative;
+  background: var(--navy-deep);
+  overflow: hidden;
+}
+
+.hero__stripes {
+  position: absolute;
+  inset: 0;
+}
+
+.hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---------- Portal bar ---------- */
+
+.portals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  background: var(--paper);
+  border-top: 3px solid var(--gold);
+  padding: 32px var(--gutter);
+}
+
+.portal {
+  background: var(--navy);
+  border: 2px solid var(--navy);
+  border-radius: 6px;
+  padding: 24px 28px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.portal__name {
+  display: block;
+  font: 700 20px/1.2 var(--sans);
+  letter-spacing: .01em;
+  color: #fff;
+  transition: color .18s ease;
+}
+
+.portal__role {
+  display: block;
+  margin-top: 5px;
+  font: 400 11px/1.2 var(--sans);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  transition: color .18s ease;
+}
+
+.portal__arrow {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, .7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 400 16px/1 var(--sans);
+  color: var(--gold);
+  transition: color .18s ease, border-color .18s ease;
+}
+
+.portal:hover,
+.portal:focus-visible {
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: translateY(-3px);
+}
+
+/* Foreground flips to navy on the gold fill so the labels stay legible. */
+.portal:hover .portal__name,
+.portal:focus-visible .portal__name,
+.portal:hover .portal__arrow,
+.portal:focus-visible .portal__arrow { color: var(--navy); }
+
+.portal:hover .portal__role,
+.portal:focus-visible .portal__role { color: rgba(11, 22, 44, .75); }
+
+.portal:hover .portal__arrow,
+.portal:focus-visible .portal__arrow { border-color: rgba(11, 22, 44, .55); }
+
+/* ---------- Subpage head ---------- */
+
+.page-head {
+  background: var(--navy);
+  padding: 72px var(--gutter) 64px;
+}
+
+.page-head__title {
+  margin: 0;
+  font: 500 44px/1.15 var(--serif);
+  color: #fff;
+}
+
+.page-head__lede {
+  margin: 18px 0 0;
+  max-width: 56ch;
+  font: 400 16px/1.6 var(--sans);
+  color: var(--slate-light);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  flex: 1;
+  background: var(--paper);
+  border-top: 3px solid var(--gold);
+  padding: 48px var(--gutter) 64px;
+}
+
+.section--prose {
+  font: 400 16px/1.7 var(--sans);
+  color: #2b3242;
+}
+
+.section--prose p { max-width: 68ch; margin: 0 0 20px; }
+
+.section--split {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.section__note {
+  margin: 0 0 28px;
+  font: 400 13px/1.5 var(--sans);
+}
+
+.placeholder {
+  display: inline-block;
+  padding: 6px 10px;
+  border-left: 3px solid var(--gold);
+  background: rgba(212, 175, 55, .1);
+  color: #6b5a1f;
+}
+
+/* ---------- Service cards ---------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #ECECEC;
+  border-top: 2px solid var(--navy);
+  border-radius: 6px;
+  padding: 26px 24px;
+}
+
+.card__title {
+  margin: 0 0 10px;
+  font: 700 17px/1.3 var(--sans);
+  color: var(--navy-ink);
+}
+
+.card__body {
+  margin: 0;
+  font: 400 14px/1.6 var(--sans);
+  color: #5c6472;
+}
+
+/* The portal bar reused as a page body rather than a footer strip. */
+.portals--page {
+  border-top: 0;
+  padding: 0;
+  background: none;
+}
+
+/* ---------- Dashboard ---------- */
+
+/* A subpage hero this tall would push the actual work below the fold. */
+.page-head--dash { padding: 48px var(--gutter) 40px; }
+
+.dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+/* Doubled class: the base .btn (width:100%) is declared later in the file
+   and would win at equal specificity. */
+.btn.btn--inline { width: auto; padding: 12px 24px; }
+
+/* The prototype's own button pair from the hero: solid gold primary,
+   thin outline secondary, both on navy. */
+.btn.btn--gold {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+
+.btn.btn--gold:hover,
+.btn.btn--gold:focus-visible {
+  background: #FBF5B7;
+  border-color: #FBF5B7;
+  color: var(--navy);
+}
+
+.btn.btn--outline {
+  background: transparent;
+  border-color: rgba(255, 255, 255, .3);
+  color: #fff;
+}
+
+.btn.btn--outline:hover,
+.btn.btn--outline:focus-visible {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: transparent;
+}
+
+.case-link {
+  color: var(--navy-ink);
+  border-bottom: 1px solid var(--gold);
+}
+
+.case-link:hover { color: var(--gold-dark); }
+
+/* A badge or word in a tile's value slot: same rhythm, saner scale. */
+.tile__value--text { font-size: 22px; line-height: 1.3; }
+.tile__value--badge { margin-top: 12px; }
+
+.dash__heading {
+  margin: 44px 0 16px;
+  font: 500 24px/1.2 var(--serif);
+  color: var(--navy-ink);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #ECECEC;
+  border-top: 2px solid var(--navy);
+  border-radius: 6px;
+  padding: 20px 22px;
+}
+
+.tile__label {
+  font: 500 11px/1 var(--sans);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a919d;
+}
+
+/* The number wears ink, not the accent -- gold is for identity, not data. */
+.tile__value {
+  margin-top: 10px;
+  font: 500 36px/1 var(--serif);
+  font-variant-numeric: tabular-nums;
+  color: var(--navy-ink);
+}
+
+.tile__hint {
+  margin-top: 8px;
+  font: 400 12px/1.4 var(--sans);
+  color: #8a919d;
+}
+
+/* Wide content scrolls inside its own container; the page never scrolls
+   sideways on a phone. */
+.table-scroll {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #ECECEC;
+  border-radius: 6px;
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font: 400 14px/1.5 var(--sans);
+  color: #2b3242;
+}
+
+.table th,
+.table td {
+  padding: 13px 18px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  font: 500 11px/1 var(--sans);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #8a919d;
+  border-bottom: 2px solid var(--navy);
+  white-space: nowrap;
+}
+
+.table tbody th {
+  font-weight: 600;
+  color: var(--navy-ink);
+  white-space: nowrap;
+}
+
+.table tbody tr + tr th,
+.table tbody tr + tr td { border-top: 1px solid #F0F0F0; }
+
+.table tbody tr:hover { background: #FAFAF7; }
+
+/* Status badges: the word carries the state; color only reinforces it. */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font: 600 11px/1.4 var(--sans);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge--good     { background: #E4F0E6; color: #1F5C31; }
+.badge--serious  { background: #F7EED3; color: #77551A; }
+.badge--critical { background: #F9E7E5; color: #99231D; }
+.badge--neutral  { background: #E8EBF1; color: #3D4A63; }
+
+.activity {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ECECEC;
+  border-radius: 6px;
+}
+
+.activity__item {
+  display: flex;
+  gap: 20px;
+  padding: 14px 18px;
+  font: 400 14px/1.5 var(--sans);
+  color: #2b3242;
+}
+
+.activity__item + .activity__item { border-top: 1px solid #F0F0F0; }
+
+.activity__when {
+  flex: none;
+  width: 52px;
+  font: 500 12px/1.7 var(--sans);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #8a919d;
+}
+
+.activity__what strong { color: var(--navy-ink); }
+
+/* ---------- Contact details ---------- */
+
+.details {
+  margin: 0;
+  font: 400 15px/1.6 var(--sans);
+  color: #2b3242;
+}
+
+.details dt {
+  margin-top: 20px;
+  font: 500 11px/1 var(--sans);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a919d;
+}
+
+.details dd { margin: 6px 0 0; }
+.details a { color: var(--navy-ink); border-bottom: 1px solid var(--gold); }
+.details a:hover { color: var(--gold-dark); }
+
+/* ---------- Forms ---------- */
+
+.signin {
+  flex: 1;
+  background: var(--paper);
+  border-top: 3px solid var(--gold);
+  padding: 56px var(--gutter) 72px;
+  display: flex;
+  justify-content: center;
+}
+
+.signin__card,
+.contact-form {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid #ECECEC;
+  border-radius: 8px;
+  padding: 32px 30px;
+  box-shadow: 0 4px 18px rgba(11, 22, 44, .06);
+}
+
+.contact-form { max-width: none; }
+
+.signin__title {
+  margin: 0 0 6px;
+  font: 500 26px/1.2 var(--serif);
+  color: var(--navy-ink);
+}
+
+.signin__sub {
+  margin: 0 0 26px;
+  font: 400 13px/1.5 var(--sans);
+  color: #6b7280;
+}
+
+.field { display: block; margin-bottom: 20px; }
+
+.field__label {
+  display: block;
+  margin-bottom: 7px;
+  font: 500 11px/1 var(--sans);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #5c6472;
+}
+
+.field__input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #DCDCDC;
+  border-radius: 4px;
+  background: #fff;
+  font: 400 15px/1.4 var(--sans);
+  color: var(--navy-ink);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, .18);
+}
+
+textarea.field__input { resize: vertical; }
+
+.field__error {
+  display: none;
+  margin-top: 6px;
+  font: 400 12px/1.4 var(--sans);
+  color: #a3241f;
+}
+
+.field--invalid .field__input { border-color: #a3241f; }
+.field--invalid .field__error { display: block; }
+
+.signin__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  font: 400 13px/1.4 var(--sans);
+  color: #5c6472;
+}
+
+.checkbox { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.checkbox input { accent-color: var(--navy); }
+
+.signin__link { color: var(--gold-dark); }
+.signin__link:hover { color: var(--navy-ink); }
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 14px 22px;
+  border: 2px solid var(--navy);
+  border-radius: 6px;
+  font: 700 14px/1 var(--sans);
+  letter-spacing: .04em;
+  text-align: center;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.btn--primary { background: var(--navy); color: #fff; }
+
+.btn--primary:hover,
+.btn--primary:focus-visible {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+
+/* Deliberately neutral: these forms have no server behind them yet, so the
+   message must never read as a completed sign-in or a sent enquiry. */
+.signin__notice {
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--gold);
+  background: rgba(212, 175, 55, .1);
+  font: 400 13px/1.5 var(--sans);
+  color: #6b5a1f;
+}
+
+.signin__foot {
+  margin: 22px 0 0;
+  font: 400 13px/1.5 var(--sans);
+  color: #6b7280;
+  text-align: center;
+}
+
+.signin__foot a { color: var(--gold-dark); }
+.signin__foot a:hover { color: var(--navy-ink); }
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  /* Takes the leftover viewport height so the navy reads as one footer block
+     starting at the gold rule, instead of a stray band above it. */
+  flex: 1;
+  background: var(--navy);
+  border-top: 1px solid rgba(212, 175, 55, .25);
+  padding: 26px var(--gutter);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  font: 400 11px/1.5 var(--sans);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.site-footer__mark { color: var(--gold-soft); }
+.site-footer__legal { color: var(--slate-light); letter-spacing: .08em; }
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1200px) {
+  .hero__headline { font-size: clamp(2.25rem, 4.6vw, 3.625rem); }
+  .hero__copy { padding: 64px 44px; }
+}
+
+@media (max-width: 900px) {
+  :root { --gutter: 28px; }
+
+  .hero {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .hero__copy { padding: 56px 32px; }
+
+  .hero__headline { font-size: clamp(2rem, 6.4vw, 3rem); }
+
+  .hero__media {
+    min-height: 320px;
+    aspect-ratio: 16 / 10;
+  }
+
+  .portals {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 24px var(--gutter);
+  }
+
+  .portals--page { padding: 0; }
+
+  .page-head { padding: 52px var(--gutter) 44px; }
+  .page-head__title { font-size: clamp(2rem, 5.6vw, 2.75rem); }
+
+  .section,
+  .signin { padding: 36px var(--gutter) 48px; }
+
+  .section--split {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px var(--gutter);
+  }
+
+  .site-nav { gap: 18px; }
+
+  .hero__copy { padding: 44px 24px; }
+  .hero__headline { font-size: clamp(1.75rem, 8vw, 2.25rem); }
+  .eyebrow { letter-spacing: .18em; }
+
+  .hero__media {
+    min-height: 240px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .portal { padding: 20px 22px; }
+  .portal__name { font-size: 18px; }
+
+  .site-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal,
+  .portal__name,
+  .portal__role,
+  .portal__arrow,
+  .site-nav a { transition: none; }
+
+  .portal:hover,
+  .portal:focus-visible { transform: none; }
+}

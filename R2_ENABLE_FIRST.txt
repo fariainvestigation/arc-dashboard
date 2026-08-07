@@ -1,0 +1,16 @@
+R2 IS THE ONLY KNOWN EXTERNAL ACCOUNT-SIDE BLOCKER
+==================================================
+
+The production code expects this bucket:
+  arc-legal-files
+
+Your Cloudflare account does not have R2 enabled yet.
+
+Before deploying the Workers:
+1. Enable R2 in Cloudflare.
+2. Create the bucket exactly as: arc-legal-files
+
+CLI after R2 is enabled:
+  npx wrangler r2 bucket create arc-legal-files
+
+Do not put live evidence into ARC until /arc_preflight.html reports that R2 is bound.

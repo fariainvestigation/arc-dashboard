@@ -1,0 +1,23 @@
+ARC GO-LIVE CHECKLIST — 2026-08-07
+=================================
+
+1. Enable Cloudflare R2.
+2. Create R2 bucket exactly: arc-legal-files
+3. Apply cloudflare-worker/production_schema.sql to D1 arc_legal.
+4. Seed your Access email as the first active administrator (see PRODUCTION_DEPLOYMENT.md).
+5. Set Worker secrets (never in Pages or this ZIP):
+   AI: GOOGLE_API_KEY, ANTHROPIC_API_KEY
+   Legal: COURTLISTENER_API_KEY, ANTHROPIC_API_KEY
+   Research: FIRECRAWL_API_KEY
+6. Deploy arc-sync-backend, AI, Legal, and Research Workers.
+7. Protect private pages and API routes with the configured Cloudflare Access app.
+8. Deploy ONLY the contents of DEPLOY_PAGES/ to Cloudflare Pages.
+9. Sign in and run /arc_preflight.html. Do not use live case data if any check is red.
+10. Run a closed case end-to-end, including final report and motion export, before first live matter.
+
+Production configuration embedded in this release:
+Access team: old-lake-2c90.cloudflareaccess.com
+Access AUD: 165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212
+D1: arc_legal / 6c04c557-f8de-4590-a235-76fa117ff6d8
+R2 expected: arc-legal-files
+Origins: https://arcdefensereport.com and https://www.arcdefensereport.com

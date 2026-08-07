@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARC Preflight</title>
+<style>
+:root{--charcoal:#14181c;--panel:#1b2127;--gold:#C9A84C;--ink:#e8ecef;--muted:#94a2ad;
+  --line:#2e3841;--pass:#4f9d73;--warn:#C9A84C;--fail:#b4544a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--charcoal);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:820px;margin:0 auto;padding:32px 18px 72px}
+h1{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:30px;margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 24px;font-size:15px;max-width:60ch}
+button{background:var(--gold);color:#14181c;border:0;border-radius:8px;padding:11px 20px;
+  font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
+  margin:30px 0 10px;font-family:"DM Mono",monospace;font-weight:500}
+.check{display:grid;grid-template-columns:74px 1fr;gap:12px;padding:12px 14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}
+.badge{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  border-radius:20px;padding:3px 0;text-align:center;height:22px}
+.pass{color:var(--pass);border:1px solid #2f5c46;background:#152119}
+.warn{color:var(--warn);border:1px solid #6b5a2e;background:#1f1c12}
+.fail{color:var(--fail);border:1px solid #5e2f2b;background:#1f1413}
+.run{color:var(--muted);border:1px solid var(--line)}
+.check b{display:block;font-size:14px;margin-bottom:3px}
+.check p{margin:0;color:var(--muted);font-size:13px}
+code{font-family:"DM Mono",monospace;font-size:12px;color:var(--gold);
+  background:#0f1418;padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+#summary{margin:24px 0 0;padding:16px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);font-size:14px}
+#summary.ready{border-color:#2f5c46}
+#summary.blocked{border-color:#5e2f2b}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ARC preflight</h1>
+  <p class="lede">Run this on the deployed site, signed in through Cloudflare Access. It checks the things that fail silently: a missing bridge method, a gateway that is not routed, a provider key that never reached the Worker.</p>
+  <button id="run" type="button">Run checks</button>
+  <div id="out"></div>
+  <div id="summary" hidden></div>
+</div>
+
+<script src="arc_unified_bridge.js" onerror="window.__bridgeMissing=true"></script>
+<script src="arc_case_link.js"></script>
+<script src="arc_ai_client.js"></script>
+<script src="arc_final_report_writer.js"></script>
+<script>
+(function(){
+  "use strict";
+  var out = document.getElementById("out");
+  var summary = document.getElementById("summary");
+
+  function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+  function group(title){var h=document.createElement("h2");h.textContent=title;out.appendChild(h);}
+  function row(name){
+    var d=document.createElement("div");d.className="check";
+    d.innerHTML='<span class="badge run">running</span><div><b>'+esc(name)+'</b><p></p></div>';
+    out.appendChild(d);
+    return function(state,detail){
+      d.querySelector(".badge").className="badge "+state;
+      d.querySelector(".badge").textContent=state;
+      d.querySelector("p").innerHTML=detail||"";
+      return state;
+    };
+  }
+
+  var results=[];
+  function record(state){results.push(state);return state;}
+
+  async function run(){
+    document.getElementById("run").disabled=true;
+    out.innerHTML=""; summary.hidden=true; results=[];
+
+    /* ---- shared dependencies ---- */
+    group("Shared dependencies");
+
+    var r=row("arc_unified_bridge.js loaded");
+    if(window.__bridgeMissing||!window.ARCUnified){
+      record(r("fail","Not found. Every module that reads case records depends on it. Deploy it to the site root before anything else."));
+    } else {
+      record(r("pass","<code>window.ARCUnified</code> is present."));
+    }
+
+    r=row("ARCUnified method contract");
+    if(window.ARCLink&&window.ARCLink.selfCheck){
+      var c=window.ARCLink.selfCheck();
+      record(r(c.ok&&!c.missing.length?"pass":(c.blocking&&c.blocking.length?"fail":"warn"),esc(c.message)));
+    } else { record(r("fail","arc_case_link.js did not load, so the contract cannot be checked.")); }
+
+    r=row("ARCBridge installed");
+    record(r(window.ARCBridge&&window.ARCBridge.getApprovedFacts?"pass":"fail",
+      window.ARCBridge?"Motion &amp; Legal and the report writer can read approved material.":"Missing. Motion drafting will refuse."));
+
+    r=row("ARCAI client loaded");
+    record(r(window.ARCAI?"pass":"fail",window.ARCAI?"Gateway client ready at <code>"+esc(window.ARCAI.gateway)+"</code>.":"Missing."));
+
+    /* ---- active case ---- */
+    group("Active case");
+
+    r=row("A case is selected");
+    var caseId=window.ARCLink?window.ARCLink.activeCaseId():"";
+    record(r(caseId?"pass":"warn",caseId?"Active case <code>"+esc(caseId)+"</code>.":"No active case. Open one in the Case Dashboard, then rerun."));
+
+    r=row("Case fields reaching modules");
+    if(caseId){
+      var m=window.ARCLink.get(caseId);
+      var missing=window.ARCLink.missing(caseId);
+      var key=["clientName","docket","court","attorney"].filter(function(k){return !m[k];});
+      record(r(key.length?"warn":"pass",
+        key.length?"Blank: <code>"+esc(key.join(", "))+"</code>. If the Case Dashboard has these values, its <code>contextFor()</code> patch was not applied."
+                 :"Client, docket, court, and attorney all arrived. "+missing.length+" optional field(s) still empty."));
+    } else { record(r("warn","Skipped; no active case.")); }
+
+    r=row("Unresolved field conflicts");
+    if(caseId){
+      var conf=window.ARCLink.conflicts(caseId);
+      record(r(conf.length?"warn":"pass",
+        conf.length?conf.length+" unresolved conflict(s), including <code>"+esc(conf[0].field)+"</code>. Resolve before filing."
+                   :"No conflicting values recorded."));
+    } else { record(r("warn","Skipped; no active case.")); }
+
+    /* ---- core Cloudflare backend ---- */
+    group("Cloudflare core backend");
+
+    r=row("Case Sync Worker, D1 and R2 are reachable");
+    try{
+      var sh=await fetch("/sync/health",{credentials:"include"});
+      if(sh.ok){var sj=await sh.json();
+        record(r(sj.d1&&sj.r2&&sj.accessVerified?"pass":"fail",
+          "Backend <code>"+esc(sj.backend||"")+"</code>, D1 <code>"+(sj.d1?"bound":"missing")+"</code>, R2 <code>"+(sj.r2?"bound":"missing")+"</code>, Access <code>"+(sj.accessVerified?"verified":"not verified")+"</code>."));
+      }else record(r("fail","HTTP "+sh.status+" from <code>/sync/health</code>. Check the sync Worker route, D1/R2 bindings, and Cloudflare Access."));
+    }catch(e){record(r("fail","Could not reach Case Sync Worker: "+esc(e.message)));}
+
+    r=row("Cloudflare Access identity reaches ARC");
+    try{
+      var wi=await fetch("/sync/whoami",{credentials:"include"});
+      if(wi.ok){var wj=await wi.json();record(r(wj.email?"pass":"fail",wj.email?"Signed in as <code>"+esc(wj.email)+"</code>.":"No verified email returned."));}
+      else record(r("fail","HTTP "+wi.status+" from <code>/sync/whoami</code>."));
+    }catch(e){record(r("fail","Could not verify Access identity: "+esc(e.message)));}
+
+    /* ---- gateway ---- */
+    group("AI gateway");
+
+    r=row("Gateway is routed and reachable");
+    var policy=null;
+    try{
+      var res=await fetch("/ai/policy",{credentials:"include"});
+      if(res.ok){ policy=await res.json();
+        record(r("pass","Policy served. Claude model <code>"+esc(policy.claudeModel)+"</code>, Gemini ladder <code>"+esc((policy.geminiLadder||[]).join(" -> "))+"</code>."));
+      } else if(res.status===404){
+        record(r("fail","404. The <code>/ai/*</code> route is not pointed at the gateway Worker."));
+      } else {
+        record(r("fail","HTTP "+res.status+". The route exists but the Worker rejected it."));
+      }
+    }catch(e){ record(r("fail","Could not reach <code>/ai/policy</code>: "+esc(e.message))); }
+
+    r=row("Routing rule is correct");
+    if(policy&&policy.policy){
+      var claude=Object.keys(policy.policy).filter(function(t){return policy.policy[t]==="claude";}).sort();
+      var expected=["motion.draft","motion.revise","report.final.draft","report.final.revise"];
+      var ok=claude.join(",")===expected.join(",");
+      record(r(ok?"pass":"fail",ok?"Claude writes motions and the final report. Everything else runs on Gemini."
+        :"Claude is bound to: <code>"+esc(claude.join(", "))+"</code>. Expected the four motion and report tasks only."));
+    } else { record(r("fail","Policy unavailable, so routing cannot be confirmed.")); }
+
+    r=row("Gemini path works end to end");
+    try{
+      var g=await window.ARCAI.runDetailed("evidence.extract",{prompt:"Reply with the single word READY and nothing else."});
+      record(r(/READY/i.test(g.text)?"pass":"warn","Provider <code>"+esc(g.provider)+"</code>, model <code>"+esc(g.model)+"</code>. Response: "+esc(String(g.text).slice(0,60))));
+    }catch(e){ record(r("fail",esc(e.message)+" Check <code>GOOGLE_API_KEY</code> is set as a Worker secret.")); }
+
+    r=row("Claude path works end to end");
+    try{
+      var cl=await window.ARCAI.runDetailed("report.final.draft",{system:"Reply with one word.",prompt:"Reply with the single word READY and nothing else.",maxTokens:32});
+      record(r(/READY/i.test(cl.text)?"pass":"warn","Provider <code>"+esc(cl.provider)+"</code>, model <code>"+esc(cl.model)+"</code>. Response: "+esc(String(cl.text).slice(0,60))));
+    }catch(e){
+      var m=String(e.message);
+      record(r(/role may not/i.test(m)?"warn":"fail",esc(m)+(/role may not/i.test(m)?" This is expected if your role cannot draft reports."
+        :" Check <code>ANTHROPIC_API_KEY</code> is set as a Worker secret.")));
+    }
+
+    r=row("No provider key reaches the browser");
+    var leaked=[];
+    try{ if(localStorage.getItem("ARC_GEMINI_KEY_V1")) leaked.push("ARC_GEMINI_KEY_V1 in localStorage"); }catch(e){}
+    record(r(leaked.length?"warn":"pass",
+      leaked.length?"Found "+esc(leaked.join(", "))+". Now that the gateway is live, clear it and remove the key-entry UI."
+                   :"No stored provider key found in this browser."));
+
+    /* ---- legal worker ---- */
+    group("Legal & research services");
+
+    r=row("Legal Worker identity and D1/R2 bindings");
+    try{
+      var ls=await fetch("/legal-api/provider-status",{credentials:"include"});
+      if(ls.ok){var lj=await ls.json();
+        var lOk=lj.d1&&lj.r2;
+        record(r(lOk?"pass":"fail",
+          "D1 <code>"+(lj.d1?"bound":"missing")+"</code>, R2 <code>"+(lj.r2?"bound":"missing")+"</code>, CourtListener secret <code>"+(lj.courtlistenerConfigured?"set":"missing")+"</code>, Claude secret <code>"+(lj.claudeConfigured?"set":"missing")+"</code>."));
+      }else record(r("fail","HTTP "+ls.status+" from <code>/legal-api/provider-status</code>. Check the legal Worker route and Access identity."));
+    }catch(e){record(r("fail","Could not reach Legal Worker: "+esc(e.message)));}
+
+    r=row("Active case is authorized for Legal Worker");
+    if(caseId){
+      try{var ar=await fetch("/legal-api/authorities/"+encodeURIComponent(caseId),{credentials:"include"});
+        record(r(ar.ok?"pass":"fail",ar.ok?"Case assignment accepted by Legal Worker.":"HTTP "+ar.status+". Confirm this Access user is assigned to the active case."));
+      }catch(e){record(r("fail",esc(e.message)));}
+    }else record(r("warn","Skipped; no active case."));
+
+    r=row("Public Web Research Worker and Firecrawl secret");
+    try{var rr=await fetch("/research-api/status",{credentials:"include"});
+      if(rr.ok){var rj=await rr.json();record(r(rj.configured?"pass":"fail",rj.configured?"Research Worker is routed and Firecrawl is configured.":"Research Worker is routed but <code>FIRECRAWL_API_KEY</code> is missing."));}
+      else record(r("fail","HTTP "+rr.status+" from <code>/research-api/status</code>. Check the research Worker route."));
+    }catch(e){record(r("fail","Could not reach Public Web Research Worker: "+esc(e.message)));}
+
+    /* ---- report writer ---- */
+    group("Final report writer");
+
+    r=row("Approved material available");
+    if(caseId&&window.ARCBridge){
+      var facts=window.ARCBridge.getApprovedFacts(caseId)||[];
+      var finds=window.ARCBridge.getApprovedFindings(caseId)||[];
+      record(r((facts.length+finds.length)?"pass":"warn",
+        (facts.length+finds.length)?facts.length+" approved fact(s), "+finds.length+" approved finding(s)."
+          :"Nothing approved on this case. The writer will refuse, which is correct, but you cannot test drafting until something is approved."));
+    } else { record(r("warn","Skipped; no active case or bridge.")); }
+
+    /* ---- summary ---- */
+    var fails=results.filter(function(x){return x==="fail";}).length;
+    var warns=results.filter(function(x){return x==="warn";}).length;
+    summary.hidden=false;
+    summary.className=fails?"blocked":"ready";
+    summary.innerHTML=fails
+      ? "<b>"+fails+" blocking failure"+(fails===1?"":"s")+".</b> Do not put live case work through ARC until these are cleared."+(warns?" "+warns+" item(s) also need attention.":"")
+      : (warns? "<b>No blocking failures.</b> "+warns+" item(s) need attention before live case work."
+              : "<b>All checks passed.</b> This deployment is wired correctly. Provider quality still needs your own review on closed cases.");
+    document.getElementById("run").disabled=false;
+  }
+
+  document.getElementById("run").addEventListener("click",run);
+})();
+</script>
+</body>
+</html>
