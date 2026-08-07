@@ -1,2 +1,0 @@
-/* Shared header compatibility. Pages keep their own headers; this exposes one common helper. */
-(function(g){'use strict';function active(){try{return g.ARCUnified&&g.ARCUnified.getCase?g.ARCUnified.getCase():{}}catch(e){return{}}}function label(){var c=active();return c.matter||c.caseName||c.clientName||'No active case'}g.ARCReportHeader={activeCase:active,label:label,version:'11.6.3'};})(window);
