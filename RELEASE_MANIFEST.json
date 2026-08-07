@@ -1,7 +1,7 @@
 {
   "product": "ARC Integrated Case System",
-  "release": "11.7.0-production",
-  "builtUtc": "2026-08-07T19:55:06+00:00",
+  "release": "11.7.4-production",
+  "builtUtc": "2026-08-07T23:30:00+00:00",
   "productionOrigins": [
     "https://arcdefensereport.com",
     "https://www.arcdefensereport.com"
@@ -16,7 +16,7 @@
   },
   "r2": {
     "bucket": "arc-legal-files",
-    "externalPrerequisite": "R2 must be enabled and the bucket created before Worker deployment"
+    "externalPrerequisite": "Production bucket arc-legal-files exists; keep it private and bound to Workers as configured."
   },
   "requiredSecrets": [
     "GOOGLE_API_KEY",
@@ -27,15 +27,5 @@
   "pagesPayload": "DEPLOY_PAGES/",
   "backend": "Cloudflare Pages + Access + Workers + D1 + R2",
   "legacyVercelIncluded": false,
-  "validation": {
-    "npmTest": "passed",
-    "primaryAutomatedTests": "69/69 passed (47 core + 22 Motion & Legal)",
-    "apiFocusedTests": "31/31 passed",
-    "pagesLinkCheck": "136 references, 0 broken/root-absolute paths",
-    "localNavigationCheck": "272 references, 0 broken/root-absolute paths",
-    "javascriptSyntax": "125/125 JS/MJS files passed",
-    "inlineScriptSyntax": "62/62 inline scripts passed",
-    "productionSchema": "parsed successfully (24 tables)",
-    "liveProviderKeyPatterns": "none detected"
-  }
+  "upgrade": "11.7.4 GO LIVE: 409 rebase with same-field conflict resolution, save-status honesty, unresolved-conflict filing gate. Retains 11.7.3 sync queue/SSRF/origin hardening and 11.7.1 Notebook handoff."
 }

@@ -32,6 +32,10 @@ const sync = checkToml('arc-sync-backend/wrangler.toml', true);
 const ai = checkToml('cloudflare-worker/ai/wrangler.toml');
 const legal = checkToml('cloudflare-worker/legal/wrangler.toml', true);
 const research = checkToml('cloudflare-worker/research/wrangler.toml');
+const legalMirrorFiles = ['legal_worker.mjs','providers.mjs','arc_courtlistener_client.mjs','arc_motion_render.mjs','lib.mjs','schema.sql'];
+for (const f of legalMirrorFiles) {
+  must(read('cloudflare-worker/legal/' + f) === read('modules/motion-legal-integrated/worker/' + f), `legal worker mirror drift: ${f}`);
+}
 for (const route of ['/sync/*','/api/cases','/api/health','/api/audit-log','/api/report-approvals','/api/report-assets']) must(sync.includes(route), `sync Worker route missing ${route}`);
 must(!sync.includes('pattern = \"arcdefensereport.com/api/*\"'), 'sync Worker must not own the broad /api/* route');
 for (const route of ['/ai/*','/api/ai/initial-analysis','/api/ocr/document-ai','/api/gemini-board-command']) must(ai.includes(route), `AI Worker route missing ${route}`);

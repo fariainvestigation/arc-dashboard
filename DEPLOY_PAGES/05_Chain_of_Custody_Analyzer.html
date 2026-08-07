@@ -61,7 +61,7 @@ table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{text-align:left
 @media print{.arc-top,.actions,.side,.assistant-panel,.notice,.btn,.seg,.modal,.toast,.no-print{display:none!important}body{background:#fff}.wrap{padding:0}.layout{display:block}.panel{border:0;box-shadow:none}.main-card{padding:0}.view{display:block}.view:not(#view-report){display:none}.report-paper{border:0;box-shadow:none;max-width:none;padding:0}.graph-wrap{overflow:visible}}
 </style>
   <link rel="stylesheet" href="arc_uniform_design.css">
-</head>
+<script src="libs/purify.min.js"></script><script src="arc_security.js"></script></head>
 <body>
 <header class="arc-top">
   <div class="brand">ARC</div>
@@ -460,7 +460,7 @@ function renderFindings(a){
 function renderAssistant(a){
   $("#assistantSummary").textContent=state.items.length?`This report contains ${a.potential} potential chain breaks, ${a.conflicts} identifier conflicts, and ${a.missing} missing-record or integrity issues.`:"The uploaded evidence records do not establish this yet.";
   $("#pendingMini").innerHTML=a.active.filter(f=>!f.review.status||f.review.status==="pending"||f.review.status==="saved").slice(0,3).map(f=>`<div class="finding red"><b>${esc(itemLabel(itemById(f.itemId)))}</b><br><span class="small-text">${esc(f.title)}</span><div>${(f.citations||[]).slice(0,1).map(citeChip).join("")}</div></div>`).join("")||'<div class="small-text muted">No pending findings.</div>';
-  $("#chatLog").innerHTML=state.assistant.map(m=>`<div class="chatbox ${m.role==="assistant"?"assistant-msg":""}"><b>${m.role==="assistant"?"ARC": "You"}</b><br>${m.html||esc(m.text)}</div>`).join("");
+  $("#chatLog").innerHTML=(window.ARC&&ARC.safeHtml)?ARC.safeHtml(state.assistant.map(m=>`<div class="chatbox ${m.role==="assistant"?"assistant-msg":""}"><b>${m.role==="assistant"?"ARC": "You"}</b><br>${m.html||esc(m.text)}</div>`).join("")):state.assistant.map(m=>`<div class="chatbox ${m.role==="assistant"?"assistant-msg":""}"><b>${m.role==="assistant"?"ARC": "You"}</b><br>${esc(m.text)}</div>`).join("");
 }
 function custodianList(){return [...new Set(state.events.flatMap(e=>[e.fromCustodian,e.toCustodian]).map(text).filter(Boolean))].sort()}
 function reportHtml(a,final=false){

@@ -3,7 +3,9 @@
 
   const STORAGE_KEY = "arc_report_assets_v1";
   const CHANNEL_NAME = "arc-report-assets";
-  const TYPES = ["picture", "video", "transcript", "translation", "motion"];
+  const SOURCE_TYPES = ["source-document"];
+  const EXHIBIT_TYPES = ["picture", "video", "transcript", "translation", "motion"];
+  const TYPES = SOURCE_TYPES.concat(EXHIBIT_TYPES);
   const STATUSES = ["draft", "selected", "approved", "rejected", "included"];
   let channel = null;
   try { if ("BroadcastChannel" in window) channel = new BroadcastChannel(CHANNEL_NAME); } catch (error) {}
@@ -177,6 +179,18 @@
     return "/api/report-assets/files/" + encodeURIComponent(record.id) + "?caseId=" + encodeURIComponent(record.caseId);
   }
 
+
+  async function fetchFile(record) {
+    const url = fileUrl(record);
+    if (!url) throw new Error("Stored file is not available for this record");
+    const response = await fetch(url, { credentials: "include", cache: "no-store" });
+    if (!response.ok) {
+      const payload = await response.json().catch(function () { return {}; });
+      throw new Error(payload.error || "Stored file could not be loaded");
+    }
+    return response.blob();
+  }
+
   function download(name, type, content) {
     const blob = new Blob([content], { type: type });
     const link = document.createElement("a");
@@ -214,6 +228,7 @@
     archive: archive,
     manifest: manifest,
     fileUrl: fileUrl,
+    fetchFile: fetchFile,
     download: download,
     downloadManifest: downloadManifest,
     serverReady: serverReady

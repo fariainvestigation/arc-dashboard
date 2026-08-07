@@ -172,13 +172,13 @@ code{font-family:"DM Mono",monospace;font-size:12px;color:var(--gold);
 
     r=row("Gemini path works end to end");
     try{
-      var g=await window.ARCAI.runDetailed("evidence.extract",{prompt:"Reply with the single word READY and nothing else."});
+      var g=await window.ARCAI.runDetailed("evidence.extract",{prompt:"Reply with the single word READY and nothing else.",caseId:caseId},{caseId:caseId});
       record(r(/READY/i.test(g.text)?"pass":"warn","Provider <code>"+esc(g.provider)+"</code>, model <code>"+esc(g.model)+"</code>. Response: "+esc(String(g.text).slice(0,60))));
     }catch(e){ record(r("fail",esc(e.message)+" Check <code>GOOGLE_API_KEY</code> is set as a Worker secret.")); }
 
     r=row("Claude path works end to end");
     try{
-      var cl=await window.ARCAI.runDetailed("report.final.draft",{system:"Reply with one word.",prompt:"Reply with the single word READY and nothing else.",maxTokens:32});
+      var cl=await window.ARCAI.runDetailed("report.final.draft",{system:"Reply with one word.",prompt:"Reply with the single word READY and nothing else.",maxTokens:32,caseId:caseId},{caseId:caseId});
       record(r(/READY/i.test(cl.text)?"pass":"warn","Provider <code>"+esc(cl.provider)+"</code>, model <code>"+esc(cl.model)+"</code>. Response: "+esc(String(cl.text).slice(0,60))));
     }catch(e){
       var m=String(e.message);

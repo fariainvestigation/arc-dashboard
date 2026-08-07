@@ -19,3 +19,12 @@ test('sync worker rejects spoofed Access email header without JWT', async () => 
   }), env);
   assert.equal(response.status, 401);
 });
+
+test('sync worker rejects disallowed Origin before authentication', async () => {
+  const response = await worker.fetch(new Request('https://arcdefensereport.com/sync/whoami', {
+    headers: { Origin: 'https://evil.example' },
+  }), env);
+  assert.equal(response.status, 403);
+  const body = await response.json();
+  assert.match(body.error || '', /Origin not allowed/);
+});

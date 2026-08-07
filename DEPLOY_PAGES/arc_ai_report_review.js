@@ -29,7 +29,7 @@
         if((result.citations||[]).length)html+="<h3>External citations</h3><ul>"+result.citations.map(function(c){return"<li><a target='_blank' rel='noopener' href='"+esc(c.url)+"'>"+esc(c.title||c.url)+"</a></li>";}).join("")+"</ul>";
         html+="<p><strong>Status:</strong> needs review · Preview tool combination</p>";
         html+="<p><strong>AI retention:</strong> "+esc(result.retention||"not reported")+". ARC requests deletion after each completed review unless an administrator explicitly enables continued interaction state.</p>";
-        body.innerHTML=html;
+        body.innerHTML=(window.ARC&&ARC.safeHtml)?ARC.safeHtml(html):html;
         try{localStorage.setItem("arc_report_review_"+location.pathname,JSON.stringify(result));}catch(_){}
       }catch(e){body.innerHTML="<p style='color:#a33a35'>"+esc(e.message||e)+"</p>";}
     };
@@ -89,7 +89,7 @@
         }
         if((result.citations||[]).length)html+="<h4>File citations</h4><ul>"+result.citations.map(function(c){return"<li>"+esc(c.fileName||file.name)+(c.pageNumber?" · page "+esc(c.pageNumber):"")+"</li>";}).join("")+"</ul>";
         html+="<p><strong>Status:</strong> needs review. OCR output and Gemini temporary file references require human verification; Gemini file references expire after approximately 48 hours.</p>";
-        body.innerHTML=html;
+        body.innerHTML=(window.ARC&&ARC.safeHtml)?ARC.safeHtml(html):html;
         try{localStorage.setItem("arc_pdf_review_"+location.pathname+"_"+file.name,JSON.stringify(result));}catch(_){}
         status.textContent="PDF review completed.";
       }catch(e){status.textContent=e.message||String(e);}

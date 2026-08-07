@@ -67,8 +67,8 @@
 
   function authFetch(method, path, body) {
     if (typeof fetch !== "function") return Promise.resolve(null);
-    // Cloudflare Access is the only authentication layer, and its cookie is
-    // sent automatically with credentials: "include". There is no token to
+    // Cloudflare Access is the only authentication layer. Same-origin requests
+    // carry the Access session cookie automatically. There is no token to
     // attach and no session client to delegate to.
     return fetch(path, {
       method: method,
@@ -135,6 +135,9 @@
       type: text(source.type, 160),
       category: text(source.category, 160),
       uploadedAt: text(source.uploadedAt, 80),
+      serverAssetId: text(source.serverAssetId || source.assetId, 180),
+      sha256: text(source.sha256, 128),
+      origin: text(source.origin, 160),
       extraction: {
         status: text(extraction.status, 80),
         textChars: Number(extraction.textChars || 0) || 0,
@@ -215,6 +218,12 @@
       court: text(source.court, 240),
       clientName: text(source.clientName || source.client, 240),
       subjectName: text(source.subjectName || source.defendant, 240),
+      attorney: text(source.attorney || source.counsel, 240),
+      attorneyFirm: text(source.attorneyFirm || source.firm, 240),
+      charges: text(source.charges, 2000),
+      nextCourtDate: text(source.nextCourtDate, 80),
+      nextCourtEvent: text(source.nextCourtEvent, 240),
+      scope: text(source.scope, 4000),
       incidentDate: text(source.incidentDate, 40),
       priority: text(source.priority, 80),
       status: text(source.status, 80),
@@ -223,7 +232,10 @@
       source: text(source.source, 160),
       intake: normalizeIntake(source.intake),
       uploadedFiles: Array.isArray(source.uploadedFiles) ? source.uploadedFiles.map(fileMeta).filter(function (file) { return file.id || file.name; }) : [],
-      updatedAt: source.updatedAt || null
+      __rev: Number(source.__rev || source.rev || 0) || 0,
+      __updatedAt: source.__updatedAt || source.updatedAt || null,
+      __updatedBy: text(source.__updatedBy || source.updatedBy, 240),
+      updatedAt: source.updatedAt || source.__updatedAt || null
     };
   }
 
@@ -441,6 +453,10 @@
 
   function updateReportReview(id, status, reviewer, notes) {
     const nextStatus = normalizeReviewStatus(status);
+    if (nextStatus === "approved" && hasUnresolvedCaseConflicts()) {
+      alert("Unresolved case sync conflict. Choose Server Version or Your Version for each conflicting field before approving a report for filing.");
+      return null;
+    }
     const list = reportList();
     const activeKey = caseIdentity(window.ARC_CASE_CONTEXT || read(CASE_KEY, {}));
     const item = list.find(function (report) {
@@ -672,6 +688,15 @@
         detail: context.matter && context.docket ? "Matter and docket are present." : "Enter the matter name and docket or case number."
       },
       {
+        id: "sync-conflicts-resolved",
+        label: "Case sync conflicts resolved",
+        ok: !hasUnresolvedCaseConflicts(canonicalCaseId(context)),
+        severity: "blocker",
+        detail: hasUnresolvedCaseConflicts(canonicalCaseId(context))
+          ? "Unresolved case sync conflict. Choose Server Version or Your Version before filing or final-report approval."
+          : "No unresolved case sync conflicts."
+      },
+      {
         id: "findings-approved",
         label: "All included reports and findings approved",
         ok: draftPresent && pendingReports.length === 0 && scan.pending === 0 && scan.revised === 0,
@@ -814,8 +839,11 @@
       ".arc-status-chip[data-status='approved']{border-color:#6aa987;background:#edf8f2;color:#155d3c}",
       ".arc-status-chip[data-status='pending'],.arc-status-chip[data-status='revised']{border-color:#d4a54e;background:#fff8e8;color:#7b5311}",
       ".arc-status-chip[data-status='rejected']{border-color:#c87973;background:#fff0ef;color:#8a2721}",
+      "#arc-case-save-status[data-state='saving']{color:#ead49e}",
+      "#arc-case-save-status[data-state='saved']{color:#9dceb3}",
+      "#arc-case-save-status[data-state='error'],#arc-case-save-status[data-state='conflict']{color:#ffb4ae}",
       ".arc-report-canvas,.report-paper,.rb-print-doc,.rpt-preview,article.report{--arc-report-navy:#0b1726;--arc-report-gold:#b59461}",
-      "@media print{.arc-product-standalone{display:none!important}.report-paper,.rb-print-doc,.rpt-preview,article.report{box-shadow:none!important}h1,h2,h3{break-after:avoid-page;page-break-after:avoid}figure,tr,img{break-inside:avoid;page-break-inside:avoid}}"
+      "@media print{.arc-product-standalone,#arc-sync-conflict-banner{display:none!important}.report-paper,.rb-print-doc,.rpt-preview,article.report{box-shadow:none!important}h1,h2,h3{break-after:avoid-page;page-break-after:avoid}figure,tr,img{break-inside:avoid;page-break-inside:avoid}}"
     ].join("");
     document.head.appendChild(style);
 
@@ -827,9 +855,11 @@
       bar.style.cssText = "position:fixed;left:14px;bottom:14px;z-index:2147482999;max-width:min(520px,calc(100vw - 160px));border:1px solid #b59461;border-radius:8px;padding:8px 11px;background:#0b1726;color:#fff;box-shadow:0 10px 28px rgba(7,17,31,.28);font:600 12px/1.35 system-ui,-apple-system,Segoe UI,sans-serif";
       bar.innerHTML = "<strong style='color:#ead49e'>Active case:</strong> " +
         text(context.matter || "No matter selected", 120).replace(/[<>&]/g, "") +
-        (context.docket ? " · " + text(context.docket, 80).replace(/[<>&]/g, "") : "");
+        (context.docket ? " · " + text(context.docket, 80).replace(/[<>&]/g, "") : "") +
+        " <span id='arc-case-save-status' data-state='idle'></span>";
       document.body.appendChild(bar);
     }
+    renderSyncConflictBanner();
   }
 
   function injectPageTools() {
@@ -876,6 +906,7 @@
       }
     });
     document.body.appendChild(tools);
+    if (!document.body.dataset.arcFloatingPadding) { document.body.dataset.arcFloatingPadding = "1"; document.body.style.paddingBottom = Math.max(parseFloat(getComputedStyle(document.body).paddingBottom) || 0, 84) + "px"; }
     layoutFloatingActions();
   }
 
@@ -1073,6 +1104,11 @@
 
   function routeReport(destination, report) {
     if (!["generator", "editor"].includes(destination)) return null;
+    if (destination === "editor" && hasUnresolvedCaseConflicts()) {
+      alert("Unresolved case sync conflict. Resolve every conflicting field before final-report approval or Edit PDF.");
+      closeExportDialog();
+      return null;
+    }
     const saved = saveReport(report || reportCandidate());
     if (destination === "editor" && normalizeReviewStatus(saved.reviewStatus) !== "approved") {
       alert("Investigator approval is required before this report can enter Edit PDF. Open the Review Center, approve the report, and export again.");
@@ -1174,6 +1210,381 @@
     requestAnimationFrame(layoutFloatingActions);
   }
 
+  const caseSyncPromises = new Map();
+  const caseSyncBases = new Map();
+  const caseFieldConflicts = new Map();
+  const CONFLICT_STORE_KEY = "arc_case_sync_conflicts_v1";
+  let caseSaveStatus = { state: "idle", message: "", caseId: "", at: null };
+
+  const CASE_SYNC_FIELDS = [
+    "matter", "docket", "court", "clientName", "subjectName", "attorney", "attorneyFirm",
+    "charges", "nextCourtDate", "nextCourtEvent", "scope", "incidentDate", "priority",
+    "status", "investigator", "notes", "source"
+  ];
+
+  function fieldFingerprint(value) {
+    if (value == null) return "";
+    if (typeof value === "object") {
+      try { return JSON.stringify(value); } catch (_) { return String(value); }
+    }
+    return String(value);
+  }
+
+  function rebaseCaseOnConflict(base, local, server) {
+    const b = base && typeof base === "object" ? base : {};
+    const l = local && typeof local === "object" ? local : {};
+    const s = server && typeof server === "object" ? server : {};
+    const merged = Object.assign({}, s, l);
+    const conflicts = [];
+
+    CASE_SYNC_FIELDS.forEach(function (field) {
+      const baseVal = fieldFingerprint(b[field]);
+      const localVal = fieldFingerprint(l[field]);
+      const serverVal = fieldFingerprint(s[field]);
+      const localChanged = localVal !== baseVal;
+      const serverChanged = serverVal !== baseVal;
+      if (localChanged && serverChanged && localVal !== serverVal) {
+        conflicts.push({
+          field: field,
+          base: b[field] == null ? "" : b[field],
+          local: l[field] == null ? "" : l[field],
+          server: s[field] == null ? "" : s[field],
+          message: "This field was changed in another session. Choose Server Version or Your Version."
+        });
+        merged[field] = l[field];
+        return;
+      }
+      if (serverChanged && !localChanged) merged[field] = s[field];
+      else if (localChanged) merged[field] = l[field];
+      else merged[field] = s[field] != null && s[field] !== "" ? s[field] : l[field];
+    });
+
+    ["intake", "uploadedFiles"].forEach(function (field) {
+      const baseVal = fieldFingerprint(b[field]);
+      const localVal = fieldFingerprint(l[field]);
+      const serverVal = fieldFingerprint(s[field]);
+      const localChanged = localVal !== baseVal;
+      const serverChanged = serverVal !== baseVal;
+      if (localChanged && serverChanged && localVal !== serverVal) {
+        conflicts.push({
+          field: field,
+          base: b[field] == null ? null : b[field],
+          local: l[field] == null ? null : l[field],
+          server: s[field] == null ? null : s[field],
+          message: "This field was changed in another session. Choose Server Version or Your Version."
+        });
+        merged[field] = l[field];
+      } else if (serverChanged && !localChanged) merged[field] = s[field];
+      else if (localChanged) merged[field] = l[field];
+      else merged[field] = s[field] != null ? s[field] : l[field];
+    });
+
+    merged.caseId = s.caseId || l.caseId || b.caseId || "";
+    merged.id = merged.caseId;
+    merged.__rev = Number(s.__rev || s.rev || 0) || 0;
+    merged.__updatedAt = s.__updatedAt || s.updatedAt || l.__updatedAt || null;
+    merged.__updatedBy = s.__updatedBy || s.updatedBy || "";
+    merged.updatedAt = l.updatedAt || s.updatedAt || merged.__updatedAt;
+    return { merged: merged, conflicts: conflicts, canAutoSave: conflicts.length === 0 };
+  }
+
+  function rememberSyncBase(caseRecord) {
+    const normalized = normalizeCase(caseRecord || {});
+    const id = canonicalCaseId(normalized);
+    if (!id) return;
+    caseSyncBases.set(id, normalizeCase(normalized));
+  }
+
+  function loadPersistedConflicts() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(CONFLICT_STORE_KEY) || "{}");
+      Object.keys(raw || {}).forEach(function (id) {
+        if (Array.isArray(raw[id]) && raw[id].length) caseFieldConflicts.set(id, raw[id]);
+      });
+    } catch (_) {}
+  }
+
+  function persistConflicts() {
+    const out = {};
+    caseFieldConflicts.forEach(function (rows, id) {
+      if (rows && rows.length) out[id] = rows;
+    });
+    try { localStorage.setItem(CONFLICT_STORE_KEY, JSON.stringify(out)); } catch (_) {}
+  }
+
+  function getCaseConflicts(caseId) {
+    const id = String(caseId || canonicalCaseId(read(CASE_KEY, {})) || "");
+    return (id && caseFieldConflicts.get(id)) || [];
+  }
+
+  function hasUnresolvedCaseConflicts(caseId) {
+    return getCaseConflicts(caseId).length > 0;
+  }
+
+  function setCaseConflicts(caseId, conflicts) {
+    const id = String(caseId || "");
+    if (!id) return;
+    if (conflicts && conflicts.length) caseFieldConflicts.set(id, conflicts);
+    else caseFieldConflicts.delete(id);
+    persistConflicts();
+    renderSyncConflictBanner();
+    document.dispatchEvent(new CustomEvent("arc:case-sync-conflict", {
+      detail: { caseId: id, conflicts: getCaseConflicts(id) }
+    }));
+  }
+
+  function setCaseSaveStatus(state, message, caseId) {
+    caseSaveStatus = {
+      state: state || "idle",
+      message: message || "",
+      caseId: caseId || "",
+      at: new Date().toISOString()
+    };
+    document.dispatchEvent(new CustomEvent("arc:case-save-status", { detail: caseSaveStatus }));
+    const chip = document.getElementById("arc-case-save-status");
+    if (chip) {
+      chip.setAttribute("data-state", caseSaveStatus.state);
+      chip.textContent = caseSaveStatus.message || ({
+        idle: "",
+        saving: "Saving…",
+        saved: "Saved",
+        error: "Save failed — Retry",
+        conflict: "Sync conflict — resolve to continue"
+      })[caseSaveStatus.state] || caseSaveStatus.message;
+    }
+    renderSyncConflictBanner();
+  }
+
+  function getCaseSaveStatus() {
+    return Object.assign({}, caseSaveStatus);
+  }
+
+  function isCaseDirtyAgainstBase(local, base) {
+    if (!base) return false;
+    return CASE_SYNC_FIELDS.concat(["intake", "uploadedFiles"]).some(function (field) {
+      return fieldFingerprint(local[field]) !== fieldFingerprint(base[field]);
+    });
+  }
+
+  function renderSyncConflictBanner() {
+    if (!document.body) return;
+    let banner = document.getElementById("arc-sync-conflict-banner");
+    const activeId = canonicalCaseId(read(CASE_KEY, {}));
+    const conflicts = getCaseConflicts(activeId);
+    if (!conflicts.length) {
+      if (banner) banner.remove();
+      document.documentElement.classList.remove("arc-has-sync-conflict");
+      return;
+    }
+    document.documentElement.classList.add("arc-has-sync-conflict");
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "arc-sync-conflict-banner";
+      banner.setAttribute("role", "alert");
+      document.body.appendChild(banner);
+    }
+    banner.style.cssText = "position:sticky;top:0;z-index:2147483001;background:#5c1d18;color:#fff;padding:10px 14px;font:600 13px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;border-bottom:2px solid #c9a84c";
+    const rows = conflicts.map(function (c, index) {
+      const label = String(c.field || "field");
+      return "<div style='margin:8px 0;padding:8px;border:1px solid rgba(255,255,255,.25);border-radius:6px'>" +
+        "<div>" + label + ": " + String(c.message || "This field was changed in another session. Choose Server Version or Your Version.") + "</div>" +
+        "<div style='margin-top:6px;display:flex;gap:8px;flex-wrap:wrap'>" +
+        "<button type='button' data-arc-resolve-conflict='" + index + "' data-choice='server' style='cursor:pointer;padding:6px 10px;font-weight:700'>Server Version</button>" +
+        "<button type='button' data-arc-resolve-conflict='" + index + "' data-choice='local' style='cursor:pointer;padding:6px 10px;font-weight:700'>Your Version</button>" +
+        "</div></div>";
+    }).join("");
+    banner.innerHTML = "<strong>Unresolved case sync conflict</strong> — filing and final-report approval are blocked until every field is resolved." + rows;
+    banner.onclick = function (event) {
+      const button = event.target && event.target.closest ? event.target.closest("[data-arc-resolve-conflict]") : null;
+      if (!button) return;
+      const index = Number(button.getAttribute("data-arc-resolve-conflict"));
+      const choice = button.getAttribute("data-choice");
+      resolveCaseFieldConflict(activeId, index, choice);
+    };
+  }
+
+  function resolveCaseFieldConflict(caseId, index, choice) {
+    const id = String(caseId || "");
+    const conflicts = getCaseConflicts(id).slice();
+    const row = conflicts[index];
+    if (!row) return;
+    const current = normalizeCase(read(CASE_KEY, {}));
+    if (canonicalCaseId(current) !== id) return;
+    const next = Object.assign({}, current);
+    next[row.field] = choice === "server" ? row.server : row.local;
+    next.updatedAt = new Date().toISOString();
+    conflicts.splice(index, 1);
+    write(CASE_KEY, normalizeCase(next));
+    applyCaseContext(next);
+    setCaseConflicts(id, conflicts);
+    if (!conflicts.length) {
+      setCaseSaveStatus("saving", "Saving…", id);
+      saveCaseAsync(read(CASE_KEY, {})).then(function () {
+        setCaseSaveStatus("saved", "Saved", id);
+      }).catch(function (error) {
+        setCaseSaveStatus(hasUnresolvedCaseConflicts(id) ? "conflict" : "error",
+          hasUnresolvedCaseConflicts(id) ? "Sync conflict — resolve to continue" : (error && error.message) || "Save failed — Retry", id);
+      });
+    }
+  }
+
+  function casePayloadFromServer(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return source.case && typeof source.case === "object" ? source.case : source;
+  }
+
+  async function putCaseRevision(caseId, record, expectedRev) {
+    const payload = Object.assign({}, record, { id: caseId, expectedRev: expectedRev });
+    const response = await authFetch("PUT", "/api/cases/" + encodeURIComponent(caseId), payload);
+    return response;
+  }
+
+  async function handleCaseConflict(caseId, pendingLocal, responseBody, depth) {
+    depth = Number(depth || 0) || 0;
+    if (depth > 2) {
+      setCaseSaveStatus("conflict", "Sync conflict — resolve to continue", caseId);
+      return {
+        ok: false,
+        conflict: true,
+        error: new Error("This case kept changing on the server. Resolve the conflict and retry.")
+      };
+    }
+    const reload = await authFetch("GET", "/api/cases/" + encodeURIComponent(caseId)).catch(function () { return null; });
+    if (!reload || !reload.ok) {
+      return { ok: false, conflict: true, error: new Error((responseBody && responseBody.message) || "This case changed elsewhere. Reload and retry.") };
+    }
+    const latestBody = await reload.json().catch(function () { return {}; });
+    const serverCase = normalizeCase(casePayloadFromServer(latestBody));
+    const base = caseSyncBases.get(caseId) || normalizeCase({});
+    const pending = normalizeCase(pendingLocal);
+    const rebased = rebaseCaseOnConflict(base, pending, serverCase);
+
+    // Always keep the pending browser edit material; never replace wholesale with server.
+    const preserved = normalizeCase(Object.assign({}, rebased.merged, {
+      updatedAt: pending.updatedAt || rebased.merged.updatedAt
+    }));
+
+    if (!rebased.canAutoSave) {
+      write(CASE_KEY, preserved);
+      applyCaseContext(preserved);
+      setCaseConflicts(caseId, rebased.conflicts);
+      setCaseSaveStatus("conflict", "Sync conflict — resolve to continue", caseId);
+      document.dispatchEvent(new CustomEvent("arc:case-updated", { detail: preserved }));
+      return {
+        ok: false,
+        conflict: true,
+        fieldConflicts: rebased.conflicts,
+        error: new Error("This field was changed in another session. Choose Server Version or Your Version.")
+      };
+    }
+
+    // Auto-merge succeeded: local non-overlapping edits survive, then retry at server rev.
+    const retryLocal = normalizeCase(Object.assign({}, preserved, {
+      __rev: Number(serverCase.__rev || 0) || 0,
+      __updatedAt: serverCase.__updatedAt || serverCase.updatedAt || preserved.__updatedAt,
+      __updatedBy: serverCase.__updatedBy || ""
+    }));
+    write(CASE_KEY, retryLocal);
+    applyCaseContext(retryLocal);
+    setCaseConflicts(caseId, []);
+    const expectedRev = Number(serverCase.__rev || 0) || 0;
+    if (!(expectedRev > 0)) {
+      return { ok: false, conflict: true, error: new Error("Could not determine the server revision to retry.") };
+    }
+    const retry = await putCaseRevision(caseId, retryLocal, expectedRev);
+    if (!retry) return { ok: false, error: new Error("ARC case server did not respond.") };
+    const retryBody = await retry.json().catch(function () { return {}; });
+    if (retry.status === 409) {
+      return handleCaseConflict(caseId, normalizeCase(read(CASE_KEY, {})), retryBody, depth + 1);
+    }
+    if (!retry.ok) {
+      return { ok: false, error: new Error(retryBody.error || ("Case save failed (HTTP " + retry.status + ")")) };
+    }
+    const latestLocal = normalizeCase(read(CASE_KEY, {}));
+    const baseLocal = canonicalCaseId(latestLocal) === caseId ? latestLocal : retryLocal;
+    const merged = normalizeCase(Object.assign({}, baseLocal, {
+      caseId: retryBody.id || caseId,
+      __rev: retryBody.rev || expectedRev + 1,
+      __updatedAt: retryBody.updatedAt || baseLocal.__updatedAt || new Date().toISOString(),
+      __updatedBy: retryBody.updatedBy || "",
+      updatedAt: baseLocal.updatedAt || retryBody.updatedAt || new Date().toISOString()
+    }));
+    write(CASE_KEY, merged);
+    applyCaseContext(merged);
+    rememberSyncBase(merged);
+    setCaseConflicts(caseId, []);
+    document.dispatchEvent(new CustomEvent("arc:case-updated", { detail: merged }));
+    return { ok: true, case: merged, rebased: true };
+  }
+
+  function syncCaseToServer(next, previous) {
+    const caseId = canonicalCaseId(next);
+    if (!caseId) return Promise.resolve({ ok: true, case: next, localOnly: true });
+    if (location.protocol === "file:") return Promise.resolve({ ok: true, case: next, localOnly: true });
+
+    if (!caseSyncBases.has(caseId) && previous && canonicalCaseId(previous) === caseId) {
+      rememberSyncBase(previous);
+    }
+
+    // Serialize per-case syncs: one caseId = one save queue = one server write at a time.
+    const prior = caseSyncPromises.get(caseId) || Promise.resolve({ ok: true });
+    const promise = prior.catch(function () {
+      return { ok: false };
+    }).then(async function () {
+      if (hasUnresolvedCaseConflicts(caseId)) {
+        setCaseSaveStatus("conflict", "Sync conflict — resolve to continue", caseId);
+        return {
+          ok: false,
+          conflict: true,
+          fieldConflicts: getCaseConflicts(caseId),
+          error: new Error("Unresolved case sync conflict. Choose Server Version or Your Version for each field.")
+        };
+      }
+
+      let current = normalizeCase(read(CASE_KEY, {}));
+      if (canonicalCaseId(current) !== caseId) current = normalizeCase(next);
+      const existingRev = Number(current.__rev || current.rev || 0) || 0;
+      const method = existingRev > 0 ? "PUT" : "POST";
+      const path = method === "PUT" ? "/api/cases/" + encodeURIComponent(caseId) : "/api/cases";
+      const payload = Object.assign({}, current, { id: caseId });
+      if (method === "PUT") payload.expectedRev = existingRev;
+
+      let response;
+      try {
+        response = await authFetch(method, path, payload);
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error : new Error(String(error)) };
+      }
+      if (!response) return { ok: false, error: new Error("ARC case server did not respond.") };
+      const body = await response.json().catch(function () { return {}; });
+      if (response.status === 409) {
+        return handleCaseConflict(caseId, normalizeCase(read(CASE_KEY, {})), body);
+      }
+      if (!response.ok) return { ok: false, error: new Error(body.error || ("Case save failed (HTTP " + response.status + ")")) };
+
+      const latestLocal = normalizeCase(read(CASE_KEY, {}));
+      const base = canonicalCaseId(latestLocal) === caseId ? latestLocal : current;
+      const merged = normalizeCase(Object.assign({}, base, {
+        caseId: body.id || caseId,
+        __rev: body.rev || base.__rev || 1,
+        __updatedAt: body.updatedAt || base.__updatedAt || base.updatedAt || new Date().toISOString(),
+        __updatedBy: body.updatedBy || "",
+        updatedAt: base.updatedAt || body.updatedAt || new Date().toISOString()
+      }));
+      write(CASE_KEY, merged);
+      applyCaseContext(merged);
+      rememberSyncBase(merged);
+      setCaseConflicts(caseId, []);
+      document.dispatchEvent(new CustomEvent("arc:case-updated", { detail: merged }));
+      return { ok: true, case: merged };
+    });
+    caseSyncPromises.set(caseId, promise);
+    promise.finally(function () {
+      if (caseSyncPromises.get(caseId) === promise) caseSyncPromises.delete(caseId);
+    });
+    return promise;
+  }
+
   function saveCase(value) {
     const previous = normalizeCase(read(CASE_KEY, {}));
     const incoming = normalizeCase(value || {});
@@ -1181,61 +1592,71 @@
     const incomingId = canonicalCaseId(incoming);
     let next;
     if (incomingId && previousId && incomingId !== previousId) {
-      // Different case: NEVER merge with the prior case. Fresh object only.
       next = incoming;
     } else if (!incomingId && !previousId && caseIdentity(incoming) && caseIdentity(previous) && caseIdentity(incoming) !== caseIdentity(previous)) {
-      // Legacy records without canonical ids that clearly identify different
-      // matters (docket/matter mismatch): also refuse to merge.
       next = incoming;
     } else {
-      // Same case (or partial update to the active case): merge is allowed.
       next = normalizeCase(Object.assign({}, previous, value || {}));
     }
     if (!canonicalCaseId(next)) next.caseId = newCaseId();
     next.updatedAt = new Date().toISOString();
     write(CASE_KEY, next);
+    const applied = applyCaseContext(next);
     const caseId = canonicalCaseId(next);
-    if (caseId) {
-      const method = previousId === caseId ? "PUT" : "POST";
-      const path = method === "PUT" ? "/api/cases/" + encodeURIComponent(caseId) : "/api/cases";
-      const payload = Object.assign({}, next, {
-        id: caseId,
-        updatedAt: previous.updatedAt || next.updatedAt
-      });
-      authFetch(method, path, payload).then(async function (response) {
-        if (!response) return;
-        if (response.status === 409) {
-          const conflict = await response.json().catch(function () { return null; });
-          if (conflict && conflict.conflict && conflict.conflict.current) {
-            write(CASE_KEY, normalizeCase(conflict.conflict.current));
-            applyCaseContext(conflict.conflict.current);
-            alert("Case was modified elsewhere. Loaded the newer server version.");
-          }
-          return;
-        }
-        if (!response.ok) return;
-        const saved = await response.json().catch(function () { return null; });
-        if (saved && saved.id) {
-          write(CASE_KEY, normalizeCase(saved));
-          applyCaseContext(saved);
-        }
-      }).catch(function () {});
+    setCaseSaveStatus("saving", "Saving…", caseId);
+    syncCaseToServer(next, previous).then(function (result) {
+      if (result && result.ok) setCaseSaveStatus("saved", "Saved", caseId);
+      else if (result && result.fieldConflicts) setCaseSaveStatus("conflict", "Sync conflict — resolve to continue", caseId);
+      else setCaseSaveStatus("error", (result && result.error && result.error.message) || "Save failed — Retry", caseId);
+    });
+    return applied;
+  }
+
+  async function saveCaseAsync(value) {
+    const previous = normalizeCase(read(CASE_KEY, {}));
+    const incoming = normalizeCase(value || {});
+    const previousId = canonicalCaseId(previous);
+    const incomingId = canonicalCaseId(incoming);
+    let next;
+    if (incomingId && previousId && incomingId !== previousId) next = incoming;
+    else if (!incomingId && !previousId && caseIdentity(incoming) && caseIdentity(previous) && caseIdentity(incoming) !== caseIdentity(previous)) next = incoming;
+    else next = normalizeCase(Object.assign({}, previous, value || {}));
+    if (!canonicalCaseId(next)) next.caseId = newCaseId();
+    next.updatedAt = new Date().toISOString();
+    write(CASE_KEY, next);
+    applyCaseContext(next);
+    const caseId = canonicalCaseId(next);
+    setCaseSaveStatus("saving", "Saving…", caseId);
+    const result = await syncCaseToServer(next, previous);
+    if (!result || !result.ok) {
+      if (result && result.fieldConflicts) setCaseSaveStatus("conflict", "Sync conflict — resolve to continue", caseId);
+      else setCaseSaveStatus("error", (result && result.error && result.error.message) || "Save failed — Retry", caseId);
+      throw (result && result.error) || new Error("Case could not be saved to ARC.");
     }
-    return applyCaseContext(next);
+    setCaseSaveStatus("saved", "Saved", caseId);
+    return normalizeCase(result.case || next);
   }
 
   async function pollServerCase() {
     const current = normalizeCase(read(CASE_KEY, {}));
     const caseId = canonicalCaseId(current);
     if (!caseId) return;
+    if (caseSyncPromises.has(caseId)) return;
+    if (hasUnresolvedCaseConflicts(caseId)) return;
+    const base = caseSyncBases.get(caseId);
+    if (base && isCaseDirtyAgainstBase(current, base)) return;
     try {
       const response = await authFetch("GET", "/api/cases/" + encodeURIComponent(caseId));
       if (!response || !response.ok) return;
-      const serverCase = await response.json();
-      if (!serverCase || !serverCase.updatedAt) return;
-      if (String(serverCase.updatedAt) !== String(current.updatedAt || "")) {
-        write(CASE_KEY, normalizeCase(serverCase));
+      const serverBody = await response.json();
+      const serverCase = normalizeCase(casePayloadFromServer(serverBody));
+      if (!serverCase || !canonicalCaseId(serverCase)) return;
+      const changed = Number(serverCase.__rev || 0) !== Number(current.__rev || 0) ||
+        String(serverCase.__updatedAt || serverCase.updatedAt || "") !== String(current.__updatedAt || current.updatedAt || "");
+      if (changed) {
+        write(CASE_KEY, serverCase);
         applyCaseContext(serverCase);
+        rememberSyncBase(serverCase);
         if (channel) channel.postMessage({ type: "case-update", case: serverCase });
         document.dispatchEvent(new CustomEvent("arc:case-updated", { detail: serverCase }));
       }
@@ -1260,7 +1681,8 @@
 
   function requestedCaseId() {
     try {
-      const value = new URLSearchParams(window.location.search).get("caseId") || "";
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get("caseId") || params.get("case") || "";
       return CANONICAL_CASE_ID.test(value) ? value : "";
     } catch (error) {
       return "";
@@ -1272,7 +1694,7 @@
     if (!wanted) return false;
 
     const current = normalizeCase(read(CASE_KEY, {}));
-    if (canonicalCaseId(current) === wanted) return true;
+    if (canonicalCaseId(current) === wanted && current.matter && Number(current.__rev || 0) > 0) return true;
 
     // Different case than the one held locally: drop it before fetching so no
     // field from the previous matter can survive into this one.
@@ -1300,7 +1722,8 @@
       return false;
     }
 
-    const serverCase = await response.json().catch(function () { return null; });
+    const responseBody = await response.json().catch(function () { return null; });
+    const serverCase = casePayloadFromServer(responseBody);
     if (!serverCase || canonicalCaseId(normalizeCase(serverCase)) !== wanted) {
       document.dispatchEvent(new CustomEvent("arc:case-hydration-failed", {
         detail: { caseId: wanted, status: 0, message: "The ARC server returned a different case than the one requested." }
@@ -1310,6 +1733,7 @@
 
     write(CASE_KEY, normalizeCase(serverCase));
     applyCaseContext(serverCase);
+    rememberSyncBase(serverCase);
     document.dispatchEvent(new CustomEvent("arc:case-updated", { detail: serverCase }));
     return true;
   }
@@ -1374,6 +1798,11 @@
   // default with a new canonical id. NEVER merges with the prior case.
   // Dispatches "arc:case-new" so every module can clear its case-bound caches.
   function beginNewCase(seed) {
+    const priorId = canonicalCaseId(read(CASE_KEY, {}));
+    if (priorId) {
+      caseSyncBases.delete(priorId);
+      setCaseConflicts(priorId, []);
+    }
     write(CASE_KEY, {});
     const fresh = normalizeCase(Object.assign({
       caseId: newCaseId(),
@@ -1537,6 +1966,69 @@
     };
   }
 
+
+  function installUniversalFileDrop() {
+    if (window.__ARC_UNIVERSAL_DROP_INSTALLED) return;
+    window.__ARC_UNIVERSAL_DROP_INSTALLED = true;
+    const style = document.createElement("style");
+    style.id = "arc-universal-drop-style";
+    style.textContent = ".arc-universal-drop-target{position:relative}.arc-universal-drop-target.arc-drop-active{outline:2px dashed #C9A84C!important;outline-offset:4px!important;background-image:linear-gradient(rgba(201,168,76,.06),rgba(201,168,76,.06))}.arc-universal-drop-target.arc-drop-active::after{content:'Drop files here';position:absolute;right:10px;top:10px;z-index:2147482500;background:#0b1726;color:#f2d47b;border:1px solid #C9A84C;border-radius:7px;padding:6px 9px;font:700 11px/1.2 system-ui;pointer-events:none}";
+    document.head.appendChild(style);
+
+    function bindInput(input) {
+      if (!input || input.dataset.arcDropBound === "1") return;
+      input.dataset.arcDropBound = "1";
+      const nativeDrop = input.closest('[id*="drop" i],[class*="dropzone" i],[class~="drop-zone"]');
+      if (nativeDrop) return;
+      let target = input.closest('label,.upload-row,.upload-card,.file-row,.field,.control,.card,.panel,.row,section');
+      if (!target || target === document.body) target = input.parentElement;
+      if (!target) return;
+      target.classList.add("arc-universal-drop-target");
+      let depth = 0;
+      target.addEventListener("dragenter", function (event) {
+        if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes("Files")) {
+          event.preventDefault(); depth++; target.classList.add("arc-drop-active");
+        }
+      });
+      target.addEventListener("dragover", function (event) {
+        if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes("Files")) {
+          event.preventDefault(); event.dataTransfer.dropEffect = "copy";
+        }
+      });
+      target.addEventListener("dragleave", function () { depth = Math.max(0, depth - 1); if (!depth) target.classList.remove("arc-drop-active"); });
+      target.addEventListener("drop", function (event) {
+        depth = 0; target.classList.remove("arc-drop-active");
+        if (!event.dataTransfer || !event.dataTransfer.files || !event.dataTransfer.files.length) return;
+        event.preventDefault(); event.stopPropagation();
+        try {
+          const transfer = new DataTransfer();
+          const incoming = Array.from(event.dataTransfer.files);
+          const chosen = input.multiple ? incoming : incoming.slice(0, 1);
+          chosen.forEach(function (file) { transfer.items.add(file); });
+          input.files = transfer.files;
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        } catch (error) {
+          console.error("ARC drag/drop could not assign the file input", error);
+        }
+      });
+    }
+
+    function scan(root) {
+      if (!root || !root.querySelectorAll) return;
+      if (root.matches && root.matches('input[type="file"]')) bindInput(root);
+      root.querySelectorAll('input[type="file"]').forEach(bindInput);
+    }
+
+    scan(document);
+    if (typeof MutationObserver === "function") {
+      const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) { mutation.addedNodes.forEach(function (node) { if (node.nodeType === 1) scan(node); }); });
+      });
+      observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+    }
+  }
+
+
   window.ARCUnified = {
     REPORT_KEY: REPORT_KEY,
     requestedCaseId: requestedCaseId,
@@ -1545,6 +2037,12 @@
     CASE_KEY: CASE_KEY,
     getCase: function () { return normalizeCase(read(CASE_KEY, {})); },
     saveCase: saveCase,
+    saveCaseAsync: saveCaseAsync,
+    getCaseSaveStatus: getCaseSaveStatus,
+    hasUnresolvedCaseConflicts: hasUnresolvedCaseConflicts,
+    getCaseConflicts: getCaseConflicts,
+    resolveCaseFieldConflict: resolveCaseFieldConflict,
+    rebaseCaseOnConflict: rebaseCaseOnConflict,
     beginNewCase: beginNewCase,
     canonicalCaseId: canonicalCaseId,
     newCaseId: newCaseId,
@@ -1606,17 +2104,22 @@
     findingsReleaseCheck: findingsReleaseCheck
   };
 
+  loadPersistedConflicts();
   applyCaseContext(read(CASE_KEY, {}));
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       injectProductExperience();
+      installUniversalFileDrop();
       injectPageTools();
       injectReportExportButton();
+      renderSyncConflictBanner();
     }, { once: true });
   } else {
     injectProductExperience();
+    installUniversalFileDrop();
     injectPageTools();
     injectReportExportButton();
+    renderSyncConflictBanner();
   }
   if (window.parent !== window) {
     try { window.parent.postMessage({ type: "ARC_MODULE_READY", title: document.title }, (location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"); } catch (error) {}

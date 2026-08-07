@@ -56,15 +56,28 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;border-bottom:1p
     var id=ARCUnified.canonicalCaseId(c);
     status.textContent=id ? (c.matter||"Unnamed matter")+" · "+id : "No active case";
   }
-  form.addEventListener("submit",function(e){
+  form.addEventListener("submit",async function(e){
     e.preventDefault();
     try{
       var data=Object.fromEntries(new FormData(form).entries()), current=active();
       if(!ARCUnified.canonicalCaseId(current)) current=ARCUnified.beginNewCase();
-      var saved=ARCUnified.saveCase(Object.assign({},current,data,{status:"active",updatedAt:new Date().toISOString()}));
+      if(typeof ARCUnified.saveCaseAsync!=="function") throw new Error("Shared case bridge is not available.");
+      message.className="notice"; message.textContent="Saving…";
+      var saved=await ARCUnified.saveCaseAsync(Object.assign({},current,data,{status:"active",updatedAt:new Date().toISOString()}));
       ARCUnified.setStageState("case",{status:data.matter&&data.scope?"complete":"in_progress",requirements:{caseId:true,matter:!!data.matter,scope:!!data.scope},blockers:[]});
-      message.className="notice ok"; message.textContent="Case intake saved. Shared case ID: "+ARCUnified.canonicalCaseId(saved); render();
-    }catch(err){message.className="notice error";message.textContent=err.message}
+      message.className="notice ok"; message.textContent="Saved. Shared case ID: "+ARCUnified.canonicalCaseId(saved); render();
+    }catch(err){
+      var conflict=window.ARCUnified&&ARCUnified.hasUnresolvedCaseConflicts&&ARCUnified.hasUnresolvedCaseConflicts();
+      message.className="notice error";
+      message.textContent=conflict?"Sync conflict — resolve before continuing. "+(err.message||""):(err.message||"Save failed — Retry");
+    }
+  });
+  document.addEventListener("arc:case-save-status",function(ev){
+    var detail=ev.detail||{};
+    if(detail.state==="saving"){message.className="notice";message.textContent="Saving…";}
+    else if(detail.state==="saved"){message.className="notice ok";message.textContent="Saved";}
+    else if(detail.state==="error"){message.className="notice error";message.textContent="Save failed — Retry";}
+    else if(detail.state==="conflict"){message.className="notice error";message.textContent="Sync conflict — resolve before continuing";}
   });
   document.getElementById("newCase").addEventListener("click",function(){
     if(!confirm("Start a separate case? Unsaved form edits will be discarded.")) return;

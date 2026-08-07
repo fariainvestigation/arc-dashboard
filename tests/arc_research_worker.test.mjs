@@ -19,6 +19,16 @@ function req(method,path,{token='valid',body,caseId=CASE}={}){
   return new Request('https://arcdefensereport.com/research-api/'+path,{method,headers,body:body!==undefined?JSON.stringify(body):undefined});
 }
 
+
+test('disallowed research origin is rejected before auth or Firecrawl work',async()=>{
+  const env=await envBase(); const original=globalThis.fetch; let called=false;
+  globalThis.fetch=async()=>{called=true;throw new Error('provider must not run')};
+  try {
+    const r=await handle(new Request('https://arcdefensereport.com/research-api/search',{method:'POST',headers:{Origin:'https://evil.example','Cf-Access-Jwt-Assertion':'valid','X-ARC-Case-ID':CASE,'content-type':'application/json'},body:JSON.stringify({query:'policy'})}),env);
+    assert.equal(r.status,403); assert.equal(called,false);
+  } finally { globalThis.fetch=original; }
+});
+
 test('research status is authenticated and never returns the Firecrawl key',async()=>{
   const env=await envBase(); const r=await handle(req('GET','status',{caseId:''}),env); const raw=await r.text();
   assert.equal(r.status,200); assert.ok(!raw.includes(env.FIRECRAWL_API_KEY));
@@ -31,7 +41,13 @@ test('unassigned users cannot research a case',async()=>{
 
 test('private and local scrape targets are rejected before provider access',async()=>{
   const env=await envBase(); const original=globalThis.fetch; let called=false; globalThis.fetch=async()=>{called=true;throw new Error('should not call provider')};
-  try { const r=await handle(req('POST','scrape',{body:{url:'http://127.0.0.1/admin'}}),env); assert.equal(r.status,400); assert.equal(called,false); }
+  try {
+    for (const target of ['http://127.0.0.1/admin','http://0.0.0.0/','http://127.1/secret','http://[::ffff:127.0.0.1]/']) {
+      const r=await handle(req('POST','scrape',{body:{url:target}}),env);
+      assert.equal(r.status,400,target);
+      assert.equal(called,false,target);
+    }
+  }
   finally { globalThis.fetch=original; }
 });
 
@@ -51,6 +67,24 @@ test('public hostnames resolving to private IPs are rejected before provider acc
     const r=await handle(req('POST','scrape',{body:{url:'https://research.example/policy'}}),env);
     assert.equal(r.status,400);
     assert.ok(calls.every(u=>u.includes('cloudflare-dns.com')));
+  } finally { globalThis.fetch=original; }
+});
+
+test('CNAME-only DNS answers fail closed instead of treating hostnames as addresses',async()=>{
+  const env=await envBase();
+  env.ARC_DNS_SSRF_CHECK='1';
+  const original=globalThis.fetch;
+  let provider=false;
+  globalThis.fetch=async(url)=>{
+    if(String(url).includes('cloudflare-dns.com')) {
+      return new Response(JSON.stringify({Answer:[{type:5,data:'internal.corp.example.'}]}),{status:200,headers:{'content-type':'application/json'}});
+    }
+    provider=true; throw new Error('provider should not be called');
+  };
+  try {
+    const r=await handle(req('POST','scrape',{body:{url:'https://alias.example/policy'}}),env);
+    assert.equal(r.status,400);
+    assert.equal(provider,false);
   } finally { globalThis.fetch=original; }
 });
 

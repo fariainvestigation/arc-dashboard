@@ -200,6 +200,8 @@ async function ensureInitialAnalysisTable(env){if(!env.DB)return;await env.DB.pr
 
 export async function handleRequest(request, env) {
   const cors = corsHeaders(request, env);
+  const origin = request.headers.get('Origin') || '';
+  if (origin && !cors['Access-Control-Allow-Origin']) return json({ error: 'Origin not allowed' }, 403, cors);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
   const url = new URL(request.url);

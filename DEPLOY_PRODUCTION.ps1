@@ -11,10 +11,13 @@ Write-Host "R2: arc-legal-files"
 Write-Host "`n[1/7] Running local release tests..." -ForegroundColor Yellow
 npm test
 
-Write-Host "`n[2/7] Checking/creating R2 bucket..." -ForegroundColor Yellow
-try { npx wrangler r2 bucket create arc-legal-files } catch {
-  Write-Host "R2 bucket creation failed. If R2 is not enabled on the account, enable it in Cloudflare and rerun this script." -ForegroundColor Red
-  throw
+Write-Host "`n[2/7] Verifying R2 bucket..." -ForegroundColor Yellow
+$bucketList = (npx wrangler r2 bucket list 2>&1 | Out-String)
+if ($bucketList -notmatch "arc-legal-files") {
+  Write-Host "arc-legal-files was not found; creating it now..." -ForegroundColor Yellow
+  npx wrangler r2 bucket create arc-legal-files
+} else {
+  Write-Host "arc-legal-files already exists; reusing the production bucket." -ForegroundColor Green
 }
 
 Write-Host "`n[3/7] Applying shared D1 schema..." -ForegroundColor Yellow

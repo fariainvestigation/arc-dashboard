@@ -69,6 +69,23 @@ const call = (env, body, headers = {}) => handleRequest(
     body: JSON.stringify({ caseId: TEST_CASE, ...body }),
   }), env);
 
+
+test('disallowed AI origin is rejected before authentication or provider work', async () => {
+  const env = makeEnv();
+  let providerCalled = false;
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => { providerCalled = true; throw new Error('provider must not run'); };
+  try {
+    const res = await handleRequest(new Request('https://arcdefensereport.com/ai/run', {
+      method: 'POST',
+      headers: { Origin: 'https://evil.example', 'Cf-Access-Jwt-Assertion': 'ok', 'content-type': 'application/json' },
+      body: JSON.stringify({ caseId: TEST_CASE, task: 'evidence.extract', payload: { prompt: 'p' } }),
+    }), env);
+    assert.equal(res.status, 403);
+    assert.equal(providerCalled, false);
+  } finally { globalThis.fetch = original; }
+});
+
 test('every task in the policy routes to exactly one provider', () => {
   const providers = new Set(Object.values(TASK_POLICY).map(r => r.provider));
   assert.deepEqual([...providers].sort(), ['claude', 'gemini']);
