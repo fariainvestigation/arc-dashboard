@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="arc-version" content="11.6.2"><title>ARC Field Investigation</title>
+<link rel="stylesheet" href="arc_uniform_design.css"><style>
+:root{--navy:#0b1726;--navy2:#18304d;--gold:#b59461;--paper:#fff;--ink:#172033;--muted:#657184;--line:#d9e0e8;--bg:#f4f6f9;--ok:#19734a;--warn:#9b6414;--bad:#a52a2a}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:#fff;padding:18px 24px;border-bottom:3px solid var(--gold)}header h1{margin:0;font-size:22px}header p{margin:5px 0 0;color:#d8e1ec}
+main{max-width:1280px;margin:auto;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:16px;box-shadow:0 2px 8px rgba(13,31,52,.04)}h2,h3{margin:0 0 12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button,.btn{border:1px solid #aeb9c7;border-radius:6px;background:#fff;padding:9px 12px;font-weight:700;cursor:pointer}
+.tabs button[aria-selected=true],.btn.primary{background:var(--navy2);color:#fff;border-color:var(--navy2)}.btn.danger{color:var(--bad)}
+.panel{display:none}.panel.active{display:block}.field{display:grid;gap:5px;margin-bottom:11px}.field input,.field textarea,.field select{width:100%;padding:9px;border:1px solid #b9c4d1;border-radius:6px;background:#fff}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.item{border-top:1px solid var(--line);padding:12px 0}.item:first-child{border-top:0}
+.muted{color:var(--muted)}.notice{padding:10px 12px;border-left:4px solid var(--gold);background:#fff8e9;margin:10px 0}.error{color:var(--bad)}.ok{color:var(--ok)}
+.badge{display:inline-block;border:1px solid #c5ced9;border-radius:999px;padding:3px 8px;font-size:12px;background:#f7f9fc}.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+iframe{width:100%;min-height:680px;border:1px solid var(--line);border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+@media(max-width:720px){main{padding:12px}header{padding:15px}.grid{grid-template-columns:1fr}}
+</style>
+<script src="arc_provider_client.js"></script><script src="arc_report_header.js"></script><script src="arc_unified_bridge.js"></script>
+</head><body>
+<header><h1>Stage 4 · Field Investigation</h1><p>Resolve Stage 3 open questions through documented investigative acts.</p></header>
+<main><div class="toolbar"><div id="caseLabel" class="badge"></div><a class="btn primary" href="investigation.html#supplemental">Continue to Supplemental</a></div>
+<div class="tabs" role="tablist"><button type="button" data-tab="witness" aria-selected="true">Witnesses</button><button type="button" data-tab="interview" aria-selected="false">Interviews</button><button type="button" data-tab="site_visit" aria-selected="false">Site Visits</button><button type="button" data-tab="records_request" aria-selected="false">Records Requests</button><button type="button" data-tab="investigator_note" aria-selected="false">Investigator Notes</button></div>
+<div class="grid"><form id="fieldForm" class="card"><h2 id="formTitle">Add field act</h2>
+<input type="hidden" name="type" value="witness">
+<label class="field">Title<input name="title" required maxlength="240"></label>
+<label class="field">Date and time<input name="occurredAt" type="datetime-local" required></label>
+<label class="field">Related open question<select name="questionId"><option value="">None</option></select></label>
+<label class="field">Details<textarea name="details" rows="7" maxlength="10000"></textarea></label>
+<button class="btn primary" type="submit">Save as needs_review</button><div id="message"></div></form>
+<section class="card"><h2>Open questions</h2><div id="questions"></div></section></div>
+<section class="card" style="margin-top:16px"><h2>Field records</h2><div id="records"></div></section></main>
+<script>
+(function(){"use strict";
+var currentType="witness",form=document.getElementById("fieldForm"),msg=document.getElementById("message");
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])})}
+function render(){
+ var c=ARCUnified.getCase();document.getElementById("caseLabel").textContent=(c.matter||"No active case");
+ var qs=ARCUnified.getOpenQuestions(), sel=form.elements.questionId;sel.innerHTML='<option value="">None</option>'+qs.map(function(q){return '<option value="'+esc(q.id)+'">'+esc(q.question)+' ['+esc(q.status)+']</option>'}).join("");
+ document.getElementById("questions").innerHTML=qs.length?qs.map(function(q){return '<div class=item><strong>'+esc(q.question)+'</strong><div class=muted>'+esc(q.priority)+' · '+esc(q.status)+'</div><div class=row><select data-q-status="'+esc(q.id)+'"><option>resolved</option><option>unresolved</option><option>unobtainable</option><option>reopened</option></select><input data-q-reason="'+esc(q.id)+'" placeholder="Required reason"><button class=btn data-resolve="'+esc(q.id)+'">Update</button></div></div>'}).join(""):'<p class=muted>No Stage 3 questions exist.</p>';
+ var records=ARCUnified.getFieldRecords().filter(function(r){return r.type===currentType});
+ document.getElementById("records").innerHTML=records.length?records.map(function(r){return '<div class=item><strong>'+esc(r.title)+'</strong> <span class=badge>'+esc(r.status)+'</span><div class=muted>'+esc(r.occurredAt)+'</div><p>'+esc(r.details)+'</p></div>'}).join(""):'<p class=muted>No records in this category.</p>';
+}
+document.querySelectorAll("[data-tab]").forEach(function(b){b.onclick=function(){currentType=b.dataset.tab;form.elements.type.value=currentType;document.querySelectorAll("[data-tab]").forEach(function(x){x.setAttribute("aria-selected",String(x===b))});render()}});
+form.onsubmit=function(e){e.preventDefault();try{var d=Object.fromEntries(new FormData(form).entries());d.questionIds=d.questionId?[d.questionId]:[];delete d.questionId;ARCUnified.saveFieldRecord(d);form.reset();form.elements.type.value=currentType;msg.className="notice ok";msg.textContent="Field act saved.";render()}catch(err){msg.className="notice error";msg.textContent=err.message}};
+document.getElementById("questions").onclick=function(e){var id=e.target.dataset.resolve;if(!id)return;var st=document.querySelector('[data-q-status="'+id+'"]').value,reason=document.querySelector('[data-q-reason="'+id+'"]').value;try{ARCUnified.resolveOpenQuestion(id,st,"",reason);render()}catch(err){alert(err.message)}};
+document.addEventListener("DOMContentLoaded",render);
+})();
+</script></body></html>

@@ -1,0 +1,22 @@
+name: Verify production release
+
+on:
+  push:
+    branches: [main, "repair/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Production configuration, security, unit, legal, report and navigation checks
+        run: npm test
+      - name: Focused Worker API tests
+        run: npm run test:api
+      - name: Production Pages link check
+        run: npm run test:pages-links

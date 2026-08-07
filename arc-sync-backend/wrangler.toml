@@ -1,10 +1,58 @@
 name = "arc-case-sync"
 main = "worker.js"
-compatibility_date = "2026-01-15"
+compatibility_date = "2026-08-01"
 
-# D1 database binding. Create the database first (see DEPLOY.md), then paste the
-# database_id it prints into the line below.
+[vars]
+ARC_ALLOWED_ORIGINS = "https://arcdefensereport.com,https://www.arcdefensereport.com"
+ACCESS_TEAM_DOMAIN = "old-lake-2c90.cloudflareaccess.com"
+ACCESS_AUD = "165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212"
+
 [[d1_databases]]
 binding = "ARC_DB"
-database_name = "arc-cases"
-database_id = "PASTE_YOUR_DATABASE_ID_HERE"
+database_name = "arc_legal"
+database_id = "6c04c557-f8de-4590-a235-76fa117ff6d8"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "arc-legal-files"
+
+[[routes]]
+pattern = "arcdefensereport.com/sync/*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "www.arcdefensereport.com/sync/*"
+zone_name = "arcdefensereport.com"
+
+# Explicit compatibility routes used by older ARC frontend modules. Provider
+# routes are intentionally NOT covered here; AI, legal, and research each own
+# their dedicated Worker routes.
+[[routes]]
+pattern = "arcdefensereport.com/api/cases*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "www.arcdefensereport.com/api/cases*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "arcdefensereport.com/api/health*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "www.arcdefensereport.com/api/health*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "arcdefensereport.com/api/audit-log*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "www.arcdefensereport.com/api/audit-log*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "arcdefensereport.com/api/report-approvals*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "www.arcdefensereport.com/api/report-approvals*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "arcdefensereport.com/api/report-assets*"
+zone_name = "arcdefensereport.com"
+[[routes]]
+pattern = "www.arcdefensereport.com/api/report-assets*"
+zone_name = "arcdefensereport.com"

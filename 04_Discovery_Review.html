@@ -1,0 +1,34 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ARC Discovery Review</title><link rel="stylesheet" href="arc_uniform_design.css"><style>body{background:#14181c;color:#e8ecef;font:14px system-ui}main{max-width:1100px;margin:auto;padding:22px}.card{background:#1b2127;border:1px solid #2e3841;border-radius:8px;padding:16px;margin:12px 0}textarea{width:100%;min-height:260px;background:#0f1418;color:#fff;border:1px solid #48535d;padding:12px}button{background:#C9A84C;border:0;padding:10px 15px;font-weight:700}.item{border-top:1px solid #2e3841;padding:10px 0}.muted{color:#94a2ad}.quote{border-left:3px solid #C9A84C;padding-left:10px;color:#c7d0d7}</style><script src="arc_unified_bridge.js"></script><script src="arc_case_link.js"></script><script src="arc_ai_client.js"></script></head><body><main><h1>Discovery Review</h1><p id="case"></p><section class="card"><p>Paste one discovery record or narrative. Gemini identifies <b>potential</b> contradictions, referenced-but-missing material, unsupported assertions, and open investigative questions. Every finding must quote the supplied text and remains <b>needs review</b> until an investigator approves it.</p><textarea id="text" placeholder="Paste police report, discovery narrative, or supplemental record text"></textarea><p><button id="run">Analyze Discovery</button></p><div id="msg" class="muted"></div></section><section class="card"><h2>Analysis</h2><div id="out"></div></section></main><script>
+(function(){
+  var c=ARCUnified.getCase(),cid=ARCUnified.canonicalCaseId(c);
+  document.getElementById('case').textContent=(c.matter||'No active case')+(c.docket?' · '+c.docket:'');
+  function esc(v){return String(v||'').replace(/[&<>"']/g,function(x){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[x]})}
+  async function sha256(v){var b=new TextEncoder().encode(v),d=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(d)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  var schema={type:'OBJECT',properties:{findings:{type:'ARRAY',items:{type:'OBJECT',properties:{classification:{type:'STRING',enum:['contradiction','referenced_missing_material','unsupported_assertion','investigative_gap']},statement:{type:'STRING'},significance:{type:'STRING'},sourceLocator:{type:'STRING'},supportingQuote:{type:'STRING'},secondQuote:{type:'STRING'}},required:['classification','statement','significance','sourceLocator','supportingQuote']}},questions:{type:'ARRAY',items:{type:'OBJECT',properties:{question:{type:'STRING'},priority:{type:'STRING',enum:['high','medium','low']},sourceLocator:{type:'STRING'},supportingQuote:{type:'STRING'}},required:['question','priority','sourceLocator','supportingQuote']}}},required:['findings','questions']};
+  var system=`You are ARC's discovery-review extraction and issue-spotting engine. Use ONLY the supplied text. Your output is investigative triage for human review, not a legal conclusion.
+RULES:
+1. Never invent facts, law, missing documents, motives, credibility judgments, or events outside the supplied text.
+2. A contradiction requires two genuinely inconsistent statements in the supplied text. Quote both; if only one side exists, do not call it a contradiction.
+3. Mark referenced_missing_material only when the supplied text itself refers to a record, recording, attachment, test, report, photograph, log, or other item whose contents are not present in the supplied text. Do not assume standard discovery should exist.
+4. Mark unsupported_assertion only when the supplied text makes a material assertion but does not identify the basis described within that same supplied text. This does not mean the assertion is false.
+5. investigative_gap means a concrete factual question suggested by the supplied text that an investigator could answer through an interview, record request, scene work, evidence review, or expert consultation.
+6. Every finding and question must include a source locator and an exact supportingQuote copied verbatim from the supplied text. Do not paraphrase the quote.
+7. Significance must explain why the item deserves review without saying evidence is inadmissible, a witness is lying, a violation occurred, or a motion will succeed.
+8. If the text does not support a category, return no item for that category. Return JSON only.`;
+  document.getElementById('run').onclick=async function(){
+    var t=document.getElementById('text').value.trim(),m=document.getElementById('msg'),o=document.getElementById('out');
+    if(!cid){m.textContent='Open an ARC case first.';return} if(!t){m.textContent='Paste discovery text first.';return}
+    this.disabled=true;m.textContent='Analyzing…';
+    try{
+      var hash=await sha256(t),sourceId='discovery_'+hash.slice(0,20);
+      var existing=(ARCUnified.getEvidenceRecords(cid)||[]).some(function(x){return x.id===sourceId});
+      if(!existing) ARCUnified.saveEvidenceRecord({id:sourceId,title:'Discovery Review Source',description:'Pasted discovery text retained for source verification.',text:t,source:'Discovery Review paste',citation:'SHA-256 '+hash,sha256:hash,status:'source_record'});
+      var j=await ARCAI.run('discovery.review',{system:system,prompt:'Review this single supplied discovery text. Preserve exact quotations and source locators.\n\n'+t,schema:schema,caseId:cid},{caseId:cid});
+      (j.findings||[]).forEach(function(f){ARCUnified.saveFinding({classification:f.classification,statement:f.statement,significance:f.significance,sourceQuote:f.supportingQuote,secondQuote:f.secondQuote||'',sourceLinks:[{sourceId:sourceId,locator:f.sourceLocator||'pasted discovery',sha256:hash}]})});
+      (j.questions||[]).forEach(function(q){ARCUnified.saveOpenQuestion({question:q.question,priority:q.priority||'medium',originType:'discovery_review',originRefs:[sourceId],sourceLocator:q.sourceLocator,supportingQuote:q.supportingQuote})});
+      o.innerHTML=(j.findings||[]).map(function(f){return '<div class="item"><strong>'+esc(f.classification.replace(/_/g,' '))+'</strong><p>'+esc(f.statement)+'</p><div class="muted">'+esc(f.significance)+'</div><p class="quote">“'+esc(f.supportingQuote)+'”'+(f.secondQuote?'<br>“'+esc(f.secondQuote)+'”':'')+'</p><small>'+esc(f.sourceLocator)+'</small></div>'}).join('')+(j.questions||[]).map(function(q){return '<div class="item"><strong>Open question · '+esc(q.priority)+'</strong><p>'+esc(q.question)+'</p><p class="quote">“'+esc(q.supportingQuote)+'”</p><small>'+esc(q.sourceLocator)+'</small></div>'}).join('');
+      m.textContent='Saved as needs-review analysis with a hashed source record. Approve findings only after checking the quoted source text.';
+    }catch(e){m.textContent=e.message}finally{document.getElementById('run').disabled=false}
+  };
+})();
+</script></body></html>

@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="libs/pdf.min.js"></script>
+<script>if(window.pdfjsLib&&pdfjsLib.GlobalWorkerOptions){pdfjsLib.GlobalWorkerOptions.workerSrc="libs/pdf.worker.min.js";}</script>
+<script src="arc_provider_client.js"></script>
+<script src="arc_report_header.js"></script>
+<script src="arc_unified_bridge.js"></script>
+<title>ARC Evidence Integrity & Chain Review</title>
+<style>
+:root{
+  color-scheme:light;
+  --navy:#071426;--navy2:#0d1f36;--ink:#111827;--muted:#667085;--line:#d8dee8;--soft:#f5f7fb;--paper:#fff;
+  --gold:#d49a1f;--gold2:#f7d172;--red:#c1121f;--red-bg:#fff2f2;--green:#167c3f;--green-bg:#edf9f1;--blue:#0c3768;--blue-bg:#eef6ff;--gray:#6b7280;--gray-bg:#f3f4f6;
+  --shadow:0 14px 34px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box} [hidden]{display:none!important}
+html,body{margin:0;min-height:100%;background:var(--soft);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit} button{cursor:pointer}
+.arc-top{height:64px;background:linear-gradient(180deg,#061223,#091b31);color:#fff;display:flex;align-items:center;gap:24px;padding:0 28px;box-shadow:0 2px 10px rgba(0,0,0,.24);position:sticky;top:0;z-index:20}
+.brand{font-family:Georgia,"Times New Roman",serif;color:#f4bf4b;font-size:31px;font-weight:700;letter-spacing:.02em}
+.mini-nav{display:flex;gap:6px;align-items:center;overflow:auto;white-space:nowrap}
+.mini-nav span{padding:9px 11px;border-radius:5px;color:#eef3fb;font-size:13px}.mini-nav .active{background:linear-gradient(180deg,#f6d372,#d99f25);color:#111827;font-weight:800}
+.top-icons{margin-left:auto;display:flex;align-items:center;gap:10px}.avatar{height:36px;width:36px;border-radius:999px;background:#f2c45c;color:#111827;display:grid;place-items:center;font-weight:800}
+.wrap{padding:22px 28px 28px;max-width:1740px;margin:0 auto}
+.hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:40px;line-height:1.05;margin:0;color:#111827;letter-spacing:-.01em}
+.sub{margin-top:7px;color:#1f2a44;font-size:16px}.dot{display:inline-block;height:5px;width:5px;background:var(--gold);border-radius:50%;margin:0 12px 3px}
+.actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:1px solid #ccd4df;background:#fff;color:#132033;border-radius:6px;padding:10px 14px;font-weight:750;min-height:38px;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:#9aa7b7}.btn.navy{background:#071426;color:#fff;border-color:#071426}.btn.gold{background:linear-gradient(180deg,#f4cc62,#d89b22);color:#111827;border-color:#c88d18}.btn.warn{background:#fff8e7;border-color:#e8b547;color:#7a4a00}.btn.danger{background:#fff;border-color:#f4b4b4;color:#a40f18}.btn:disabled{opacity:.52;cursor:not-allowed}.btn.icon{width:38px;justify-content:center;padding:0}.btn.small{min-height:30px;padding:6px 9px;font-size:12px}
+.notice{border:1px solid #ecc05d;background:#fffaf0;border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+.notice b{font-weight:800}.layout{display:grid;grid-template-columns:284px minmax(0,1fr) 424px;gap:20px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:var(--shadow)}
+.panel-pad{padding:18px}.panel h2,.panel h3{margin:0;color:#111827}.panel h2{font-family:Georgia,"Times New Roman",serif;font-size:31px;letter-spacing:.02em}.panel h3{font-family:Georgia,"Times New Roman",serif;font-size:20px}
+.side{padding:14px}.side h3{font-family:Inter,ui-sans-serif;font-size:16px;margin:0 0 11px}
+.section-list{display:grid;gap:4px}.section-list button{border:1px solid transparent;background:transparent;border-radius:6px;padding:9px 10px;text-align:left;display:flex;align-items:center;gap:9px;color:#172033;font-weight:650}
+.section-list button.active{border-color:#e7bb52;background:#fff8e8}.count{margin-left:auto;background:#eef1f5;border-radius:6px;padding:2px 8px;color:#394150;font-size:12px}.donut-row{border-top:1px solid var(--line);margin-top:16px;padding-top:20px;display:flex;align-items:center;gap:16px}
+.donut{height:92px;width:92px;border-radius:50%;background:conic-gradient(var(--gold) var(--p,0deg),#071426 0 310deg,#dbe3ef 0);position:relative}.donut:after{content:"";position:absolute;inset:15px;background:#fff;border-radius:50%}
+.main-card{padding:22px 24px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;margin:17px 0}.metric{border:1px solid var(--line);border-radius:7px;padding:15px 16px;display:flex;align-items:center;gap:14px}.metric .num{font-size:28px;font-weight:850}.metric span{display:block;font-size:12px;color:#243149}.rule{height:1px;background:var(--line);margin:18px 0}
+.seg{display:inline-flex;border:1px solid var(--line);background:#f8fafc;border-radius:7px;padding:3px;gap:3px}.seg button{border:0;background:transparent;border-radius:5px;padding:8px 12px;font-weight:800;color:#4b5563}.seg button.active{background:#fff;color:#111827;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.view{display:none}.view.active{display:block}
+.inventory-list{display:grid;gap:10px}.item-card{border:1px solid var(--line);border-radius:7px;padding:12px;background:#fff;display:grid;gap:6px}.item-card.selected{border-color:#e2a72d;background:#fffaf0}.item-card .top{display:flex;justify-content:space-between;gap:10px}.item-card b{font-size:14px}.muted{color:var(--muted)}.small-text{font-size:12px;line-height:1.45}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid;padding:3px 8px;font-size:11px;font-weight:850}.green{color:var(--green);border-color:#aadbb9;background:var(--green-bg)}.golden{color:#8a5900;border-color:#efcf81;background:#fff8e5}.red{color:var(--red);border-color:#f2aaa9;background:var(--red-bg)}.gray{color:#4b5563;border-color:#d1d5db;background:var(--gray-bg)}.blue{color:#164d81;border-color:#b9d8f7;background:var(--blue-bg)}
+.timeline{display:grid;gap:10px}.event-node{border:1px solid var(--line);border-left-width:5px;border-radius:7px;background:#fff;padding:12px 14px}.event-node.green{border-left-color:var(--green)}.event-node.golden{border-left-color:var(--gold)}.event-node.red{border-left-color:var(--red)}.event-node.gray{border-left-color:var(--gray)}.event-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.event-node h4{margin:0;font-size:15px}.citation{border:1px solid #ccd4df;background:#f8fafc;border-radius:5px;padding:5px 8px;display:inline-flex;gap:6px;align-items:center;color:#344054;font-size:12px;text-decoration:none;margin:6px 5px 0 0}.citation:hover{border-color:#e2a72d;background:#fff8e8}
+.gap{display:flex;align-items:center;gap:10px;color:var(--red);font-weight:800;font-size:12px;margin:2px 0 2px 18px}.gap:before,.gap:after{content:"";height:2px;background:repeating-linear-gradient(90deg,var(--red) 0 8px,transparent 8px 14px);flex:1}
+.graph-wrap{overflow:auto;border:1px solid var(--line);border-radius:7px;background:#fff;padding:14px;margin-top:12px}.graph{display:flex;align-items:center;min-width:max-content;padding:8px}.graph-node{width:132px;min-height:92px;border:2px solid;border-radius:7px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9px;font-size:11px;gap:4px}.graph-node.green{border-color:var(--green)}.graph-node.golden{border-color:var(--gold)}.graph-node.red{border-color:var(--red)}.graph-node.gray{border-color:var(--gray)}.graph-icon{height:22px;width:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900}.graph-node.green .graph-icon{background:var(--green)}.graph-node.golden .graph-icon{background:var(--gold)}.graph-node.red .graph-icon{background:var(--red)}.graph-node.gray .graph-icon{background:var(--gray)}
+.connector{width:60px;height:2px;background:#111827;position:relative;flex:0 0 60px}.connector:after{content:"";position:absolute;right:-1px;top:-4px;border-left:8px solid #111827;border-top:5px solid transparent;border-bottom:5px solid transparent}.connector.broken{background:repeating-linear-gradient(90deg,var(--red) 0 8px,transparent 8px 13px)}.connector.broken:after{border-left-color:var(--red)}.connector .label{position:absolute;top:-27px;left:4px;color:var(--red);font-size:10px;font-weight:850;width:70px;text-align:center}
+.finding{border:1px solid var(--line);border-left-width:4px;border-radius:7px;padding:12px;margin:10px 0;background:#fff}.finding.red{border-left-color:var(--red)}.finding.golden{border-left-color:var(--gold)}.finding.blue{border-left-color:#3576b5}.finding h4{margin:0 0 5px}.finding-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.assistant{padding:18px}.assistant-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.spark{color:var(--gold);font-size:22px;font-weight:900}.suggestions{display:grid;gap:8px;margin:14px 0}.suggestions button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;text-align:left;color:#1f2a44}.chatbox{border:1px solid #b7dbfb;background:#eef8ff;border-radius:6px;padding:11px;margin:10px 0;font-size:13px}.chatbox.assistant-msg{background:#fff;border-color:var(--line)}.chat-input{display:grid;grid-template-columns:1fr 68px;gap:8px;margin-top:12px}.chat-input input{border:1px solid var(--line);border-radius:6px;padding:11px}
+.readiness{border:1px solid #efc56d;background:#fff9ea;border-radius:7px;padding:13px;margin-top:15px}.readiness-row{display:flex;justify-content:space-between;margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:10px}th{color:#475467;background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.04em}
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}.field{grid-column:span 4}.field.half{grid-column:span 6}.field.wide{grid-column:span 12}.field label{display:block;font-size:10px;color:#667085;text-transform:uppercase;font-weight:850;letter-spacing:.05em;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:9px 10px;background:#fff}.field textarea{min-height:72px;resize:vertical}
+.modal{position:fixed;inset:0;background:rgba(9,20,34,.64);display:grid;place-items:center;z-index:50;padding:20px}.modal-card{background:#fff;border-radius:8px;width:min(960px,96vw);max-height:92vh;overflow:auto}.modal-head,.modal-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line)}.modal-foot{border-top:1px solid var(--line);border-bottom:0;justify-content:flex-end}.modal-body{padding:18px}
+.file-drop{border:2px dashed #bcc6d3;border-radius:7px;background:#f8fafc;padding:20px;text-align:center}.toast{position:fixed;right:22px;bottom:20px;z-index:80;background:#071426;color:#fff;border-radius:7px;padding:12px 14px;box-shadow:var(--shadow);max-width:440px;font-size:13px}.empty{border:1px dashed #cbd5e1;border-radius:7px;background:#fbfdff;text-align:center;padding:28px;color:#667085}
+.report-paper{font-family:Georgia,"Times New Roman",serif;background:#fff;color:#111827;border:1px solid #cbd5e1;padding:.65in;max-width:8.5in;margin:0 auto;box-shadow:var(--shadow)}.report-paper h1{font-size:22px;text-transform:uppercase;letter-spacing:.04em}.report-paper h2{font-size:16px;margin:22px 0 8px;text-transform:uppercase}.report-paper p,.report-paper li{font-size:12.5pt;line-height:1.55}.report-paper table{font-family:Georgia,"Times New Roman",serif}.report-paper th,.report-paper td{font-size:10.5pt}.report-paper .graph-wrap{box-shadow:none}.report-note{font-size:10pt;color:#475467;border-top:1px solid #98a2b3;margin-top:18px;padding-top:8px}
+@media(max-width:1280px){.layout{grid-template-columns:260px 1fr}.assistant-panel{grid-column:1 / -1}.metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:850px){.arc-top{height:auto;align-items:flex-start;flex-wrap:wrap;padding:12px 16px}.wrap{padding:16px}.hero{display:block}.actions{justify-content:flex-start;margin-top:14px}.layout{display:block}.side,.assistant-panel{margin-bottom:14px}.metrics,.grid2,.grid3{grid-template-columns:1fr}.field,.field.half{grid-column:span 12}h1{font-size:31px}}
+@media print{.arc-top,.actions,.side,.assistant-panel,.notice,.btn,.seg,.modal,.toast,.no-print{display:none!important}body{background:#fff}.wrap{padding:0}.layout{display:block}.panel{border:0;box-shadow:none}.main-card{padding:0}.view{display:block}.view:not(#view-report){display:none}.report-paper{border:0;box-shadow:none;max-width:none;padding:0}.graph-wrap{overflow:visible}}
+</style>
+  <link rel="stylesheet" href="arc_uniform_design.css">
+</head>
+<body>
+<header class="arc-top">
+  <div class="brand">ARC</div>
+  <nav class="mini-nav" aria-label="ARC modules">
+    <span>Notebook</span><span>Main Report</span><span>Full Report Builder</span><span>Legal Research</span><span>Motion Bank</span><span>Discovery Gap Map</span><span class="active">Chain of Custody</span><span>Timeline</span><span>Intelligence / Slides / Analysis / Investigator</span><span>ARC OSINT</span><span>OUI / Drug Defense</span>
+  </nav>
+  <div class="top-icons"><span>Bell</span><span>Settings</span><span class="avatar" id="avatar">ARC</span></div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Evidence Integrity & Chain Review</h1>
+      <div class="sub"><span id="caseLabel">No active case</span><span class="dot"></span><span id="caseStatusLabel">Open or select a case in ARC Notebook before reviewing evidence.</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn navy" id="backBtn" type="button">Back to Chain</button>
+      <button class="btn" id="importBtn" type="button">Import Evidence</button>
+      <button class="btn" id="exportPdfBtn" type="button">Export Report</button>
+      <button class="btn gold" id="sendEditBtn" type="button">Send to Edit Report</button>
+      <button class="btn warn" id="sendFinalBtn" type="button" disabled>Send to Final Report</button>
+    </div>
+  </section>
+  <div class="notice"><span><b>Review rule:</b> All factual findings require investigator approval before final report transfer. ARC identifies documentation issues; it does not decide admissibility.</span><span id="reviewCounts">0 reviewed - 0 pending</span></div>
+
+  <div class="layout">
+    <aside class="panel side">
+      <h3>Report Sections</h3>
+      <div class="section-list" id="sectionList"></div>
+      <div class="donut-row">
+        <div class="donut" id="reviewDonut"></div>
+        <div><div style="font-size:26px;font-weight:850"><span id="reviewedItems">0</span> of <span id="totalItems">0</span></div><div class="muted">items reviewed</div></div>
+      </div>
+    </aside>
+
+    <section class="panel main-card">
+      <div class="no-print" style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px">
+        <div class="seg" role="tablist">
+          <button class="active" data-view="chain" type="button">Documented Legal Chain</button>
+          <button data-view="filelog" type="button">ARC File Integrity Log</button>
+          <button data-view="digital" type="button">Digital Integrity</button>
+          <button data-view="connections" type="button">Connected Analysis</button>
+          <button data-view="review" type="button">Review</button>
+          <button data-view="report" type="button">Report</button>
+        </div>
+        <button class="btn small" id="analyzeBtn" type="button">Analyze Chain</button>
+      </div>
+
+      <section class="view active" id="view-chain">
+        <h2>EVIDENCE INTEGRITY & CHAIN REVIEW</h2>
+        <p class="muted" id="scopeLine">Active matter will load automatically from ARC shared case context.</p>
+        <div class="metrics" id="metrics"></div>
+        <div class="rule"></div>
+        <div class="grid2">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+              <h3>Evidence Inventory</h3>
+              <button class="btn small" id="addItemBtn" type="button">Add Item</button>
+            </div>
+            <div id="inventory" class="inventory-list"></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+              <h3>Source-Linked Custody Timeline</h3>
+              <button class="btn small" id="addEventBtn" type="button">Add Event</button>
+            </div>
+            <div id="timeline" class="timeline"></div>
+          </div>
+        </div>
+        <div class="rule"></div>
+        <h3>Custody Graph</h3>
+        <div id="graphContainer"></div>
+      </section>
+
+      <section class="view" id="view-filelog">
+        <h2>ARC FILE INTEGRITY LOG</h2>
+        <p class="muted">This is ARC's internal file receipt, hashing, derivation, and export log. It is not automatically the documented legal chain of custody.</p>
+        <div class="grid2">
+          <div class="file-drop" id="fileDrop"><b>Drop source files here</b><br><span class="muted">Hashes are calculated locally and only when files are provided.</span><br><button class="btn small" id="sourceFileBtn" type="button">Choose Files</button></div>
+          <div>
+            <h3>Sources</h3>
+            <div id="sourcesTable"></div>
+          </div>
+        </div>
+        <div class="rule"></div>
+        <h3>Source Citations</h3>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn small" id="addCitationBtn" type="button">Add Citation</button></div>
+        <div id="citationsTable"></div>
+      </section>
+
+      <section class="view" id="view-digital">
+        <h2>DIGITAL EVIDENCE, ACQUISITION & HASH REVIEW</h2>
+        <p class="muted">ARC distinguishes a missing hash from a hash mismatch. It never fabricates an acquisition method, extraction identifier, tool version, or hash value.</p>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn small" id="addDigitalBtn" type="button">Add Digital Record</button></div>
+        <div id="digitalTable"></div>
+      </section>
+
+      <section class="view" id="view-connections">
+        <h2>CONNECTED EVIDENCE ANALYSIS</h2>
+        <div class="notice"><b>Analytical connections are not custody transfers.</b><span>Device-account, location, media, communication, and person links require their own source support and do not prove possession or ownership.</span></div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn small" id="addConnectionBtn" type="button">Add Connection</button></div>
+        <div id="connectionsTable"></div>
+      </section>
+
+      <section class="view" id="view-review">
+        <h2>POTENTIAL BREAK & FINDING REVIEW</h2>
+        <p class="muted">Each proposed issue remains pending until dismissed or approved by an investigator. Dismissed issues remain traceable and do not enter the final report as findings.</p>
+        <div id="findings"></div>
+      </section>
+
+      <section class="view" id="view-report">
+        <div id="reportOutput"></div>
+      </section>
+    </section>
+
+    <aside class="panel assistant assistant-panel">
+      <div class="assistant-title"><h3><span class="spark">* </span>ARC Chain Assistant</h3><button class="btn icon" id="assistantClearBtn" title="Clear assistant conversation" type="button">x</button></div>
+      <p id="assistantSummary" class="small-text">The uploaded evidence records do not establish an answer yet.</p>
+      <div class="suggestions">
+        <button data-question="Where does the documented chain first become incomplete?" type="button">Explain this finding</button>
+        <button data-question="Which additional records should be requested?" type="button">Build records request</button>
+        <button data-question="Generate cross-examination areas for an approved finding." type="button">Generate cross-examination areas</button>
+        <button data-question="Check supporting sources." type="button">Check supporting sources</button>
+      </div>
+      <div class="readiness">
+        <h3 style="font-family:Inter,ui-sans-serif;font-size:16px">Final Report Readiness</h3>
+        <div class="readiness-row"><span>Approved findings:</span><b id="approvedCount">0</b></div>
+        <div class="readiness-row"><span>Pending review:</span><b id="pendingCount">0</b></div>
+        <div class="readiness-row"><span>Excluded:</span><b id="dismissedCount">0</b></div>
+        <div class="readiness-row"><span>Status:</span><span class="badge golden" id="readyStatus">Not ready</span></div>
+        <button class="btn gold" id="reviewPendingBtn" type="button" style="width:100%;justify-content:center;margin-top:10px">Review pending items</button>
+      </div>
+      <h3 style="font-family:Inter,ui-sans-serif;font-size:13px;margin-top:16px">Pending Review</h3>
+      <div id="pendingMini"></div>
+      <div id="chatLog"></div>
+      <div class="chat-input"><input id="assistantInput" placeholder="Ask about this report..."><button class="btn navy" id="assistantSendBtn" type="button">Send</button></div>
+    </aside>
+  </div>
+</main>
+
+<input type="file" id="importFile" accept=".json,.csv,.txt,application/json,text/csv" hidden>
+<input type="file" id="sourceFiles" multiple hidden>
+<div id="modalHost"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const STORAGE_KEY="arc_chain_review_state_v2";
+const TRANSFER_KEY="arc_chain_review_transfers_v1";
+const $=(sel,root=document)=>root.querySelector(sel);
+const $$=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
+const uid=(p)=>p+"_"+Math.random().toString(36).slice(2,8)+"_"+Date.now().toString(36);
+let objectUrls=new Map();
+let selectedItemId="";
+let currentView="chain";
+let lastAnalysis=null;
+let initialized=false;
+let state=blankState();
+
+function blankState(){
+  return {version:2,case:{caseId:"",matter:"",docket:"",court:"",clientName:"",subjectName:"",investigator:"",status:"",incidentDate:"",notes:""},items:[],events:[],sources:[],citations:[],digitalRecords:[],connections:[],exhibits:[],findingReviews:{},assistant:[],lastAnalyzedAt:null,updatedAt:new Date().toISOString()};
+}
+function text(v){return String(v==null?"":v).trim()}
+function esc(v){return text(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function attr(v){return esc(v)}
+function norm(v){return text(v).toLowerCase().replace(/[^a-z0-9]/g,"")}
+function dt(v){if(!v)return "Not listed";const d=new Date(v);return isNaN(d)?v:new Intl.DateTimeFormat("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(d)}
+function hours(a,b){const x=new Date(a),y=new Date(b);return isNaN(x)||isNaN(y)?null:(y-x)/36e5}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.hidden=true,3400)}
+function save(){state.updatedAt=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function load(){
+  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(x&&typeof x==="object")state=migrate(x)}catch(e){}
+}
+function migrate(x){
+  const b=blankState();
+  return {...b,...x,case:{...b.case,...(x.case||{})},items:Array.isArray(x.items)?x.items:[],events:Array.isArray(x.events)?x.events:[],sources:Array.isArray(x.sources)?x.sources:[],citations:Array.isArray(x.citations)?x.citations:[],digitalRecords:Array.isArray(x.digitalRecords)?x.digitalRecords:[],connections:Array.isArray(x.connections)?x.connections:[],exhibits:Array.isArray(x.exhibits)?x.exhibits:[],findingReviews:x.findingReviews&&typeof x.findingReviews==="object"?x.findingReviews:{},assistant:Array.isArray(x.assistant)?x.assistant:[]};
+}
+function activeCaseFromBridge(){return window.ARCUnified?window.ARCUnified.getCase():{}}
+function applySharedCustodyCase(context){
+  if(!context){return}
+ if(!initialized){return}
+  const caseId=text(context.caseId),matter=text(context.matter),docket=text(context.docket);
+  if(!caseId&&!matter&&!docket){render();return}
+  const same=(caseId&&state.case.caseId===caseId)||(!caseId&&docket&&norm(state.case.docket)===norm(docket))||(!caseId&&!docket&&matter&&norm(state.case.matter)===norm(matter));
+  if(!same&&(state.items.length||state.events.length||state.sources.length)){
+    toast("Active ARC case changed. Existing chain-review data remains isolated until you import or start a matching review.");
+  }
+  state.case={...state.case,caseId:caseId||state.case.caseId,matter:matter||state.case.matter,docket:docket||state.case.docket,court:text(context.court)||state.case.court,clientName:text(context.clientName)||state.case.clientName,subjectName:text(context.subjectName)||state.case.subjectName,incidentDate:text(context.incidentDate)||state.case.incidentDate,status:text(context.status)||state.case.status,investigator:text(context.investigator)||state.case.investigator,notes:text(context.notes)||state.case.notes};
+  save();render();
+}
+document.addEventListener("arc:case-context",e=>applySharedCustodyCase(e.detail||{}));
+document.addEventListener("arc:shared-storage",()=>{const c=activeCaseFromBridge();if(c)applySharedCustodyCase(c)});
+window.addEventListener("storage",e=>{if(e.key==="arc_unified_case_context_v1"){const c=activeCaseFromBridge();if(c)applySharedCustodyCase(c)}});
+
+function sourceById(id){return state.sources.find(s=>s.sourceId===id)}
+function citationById(id){return state.citations.find(c=>c.citationId===id)}
+function itemById(id){return state.items.find(i=>i.evidenceId===id)}
+function eventsFor(itemId){return state.events.filter(e=>e.evidenceId===itemId).sort((a,b)=>new Date(a.releasedAt||a.receivedAt||"9999")-new Date(b.releasedAt||b.receivedAt||"9999"))}
+function itemLabel(item){return item?`${item.agencyItemNumber||"Unnumbered"} - ${item.description||"Unnamed evidence"}`:"No item selected"}
+function citeLabel(id){const c=citationById(id);if(!c)return "Citation missing";const s=sourceById(c.sourceId);return `${s?s.originalFilename:"Unknown source"}${c.page?" p. "+c.page:""}${c.timestamp?" @ "+c.timestamp:""}${c.unverified?" (unverified - auto-created on import)":""}`}
+function citeChip(id){return `<button class="citation" data-open-citation="${attr(id)}" type="button">Source: ${esc(citeLabel(id))}</button>`}
+function reviewFor(f){return state.findingReviews[f.fingerprint]||{status:"pending"}}
+function statusRank(v){return {documented:0,review:1,potential:2,na:0}[v]||0}
+function statusClass(status){return status==="documented"?"green":status==="potential"?"red":status==="review"?"golden":"gray"}
+
+function analyzeItem(item){
+  const findings=[]; const evs=eventsFor(item.evidenceId);
+  const add=(kind,severity,title,detail,opts={})=>{
+    const fingerprint=[kind,item.evidenceId,opts.eventId||"",opts.priorEventId||"",title,detail].map(norm).join("|");
+    findings.push({fingerprint,kind,severity,title,detail,itemId:item.evidenceId,eventId:opts.eventId||"",priorEventId:opts.priorEventId||"",missing:opts.missing||[],citations:opts.citations||[],recommendation:opts.recommendation||"Review the cited source records and request the missing custody documentation.",defenseSignificance:opts.defenseSignificance||"This may affect the ability to test continuity, identity, condition, or the basis for a witness's foundation testimony."});
+  };
+  if(!item.collector)add("missing_collector","review","Missing collector","No identified collector appears in the entered evidence item record.",{missing:["collector"],citations:item.sourceCitations||[],recommendation:"Obtain the collection report or property record identifying the collecting person."});
+  if(!item.collectedAt||!item.recoveryLocation)add("missing_collection","review","Missing collection details","The collection date/time or recovery location is absent from the entered item record.",{missing:[!item.collectedAt?"collection date/time":"",!item.recoveryLocation?"recovery location":""].filter(Boolean),citations:item.sourceCitations||[],recommendation:"Request the original collection notes, evidence label, and scene/property log."});
+  if(!evs.length){add("missing_records","potential","No custody events entered","No custody history has been entered for this item. ARC cannot trace collection, transfer, storage, examination, return, or disposition.",{citations:item.sourceCitations||[],recommendation:"Import or enter custody logs, transfer receipts, storage records, lab forms, and disposition records."});return {item,events:evs,findings,node:{},edges:{},status:"potential"}}
+  const node={},edges={};
+  evs.forEach((e,idx)=>{
+    let s=e.verificationStatus==="verified"?"documented":e.verificationStatus==="not_applicable"?"na":"review";
+    const missing=[];
+    if(!e.eventType)missing.push("event type");
+    if(!e.releasedAt&&!e.receivedAt)missing.push("date/time");
+    if(!e.toCustodian)missing.push("recipient or custodian");
+    if(!e.location)missing.push("location");
+    if(!(e.citations||[]).length)missing.push("source citation");
+    if(missing.length){s=(s==="na")?s:(statusRank(s)<1?"review":s);add("missing_event_fields",missing.includes("date/time")||missing.includes("recipient or custodian")?"potential":"review","Missing custody-event field",`The ${e.eventType||"custody"} event is missing: ${missing.join(", ")}.`,{eventId:e.eventId,missing,citations:e.citations||[],recommendation:"Review the source record and add the exact missing field only if it appears in the record."})}
+    if(item.agencyItemNumber&&e.itemIdentifier&&norm(item.agencyItemNumber)!==norm(e.itemIdentifier)){s="potential";add("identifier_conflict","potential","Identifier conflict",`The inventory lists ${item.agencyItemNumber}, but this event lists ${e.itemIdentifier}. ARC does not decide which identifier is correct.`,{eventId:e.eventId,citations:[...(item.sourceCitations||[]),...(e.citations||[])],recommendation:"Compare the evidence label, property log, lab form, and transfer receipt for a documented cross-reference."})}
+    if(/transfer|return|intake/i.test(e.eventType||"")&&(!e.fromCustodian||!e.receiptReference)){s=(s==="na")?s:(statusRank(s)<1?"review":s);add("receipt_issue","review","Signature or receipt issue",`The ${e.eventType||"transfer"} entry lacks ${!e.fromCustodian?"a releasing custodian":""}${!e.fromCustodian&&!e.receiptReference?" and ":""}${!e.receiptReference?"a receipt reference":""}.`,{eventId:e.eventId,missing:[!e.fromCustodian?"releasing custodian":"",!e.receiptReference?"receipt":""].filter(Boolean),citations:e.citations||[],recommendation:"Request the signed transfer receipt, property-room transaction record, courier log, or lab accession receipt."})}
+    if(/packag|seal|intake|transfer|return|analysis/i.test(e.eventType||"")&&!e.sealCondition){s=(s==="na")?s:(statusRank(s)<1?"review":s);add("seal_issue","review","Seal or packaging condition missing",`The ${e.eventType||"event"} entry does not document seal or package condition. ARC does not infer tampering from the omission.`,{eventId:e.eventId,missing:["seal condition"],citations:e.citations||[],recommendation:"Request seal photographs, package labels, accession notes, or resealing documentation."})}
+    if(idx>0){
+      const p=evs[idx-1],key=p.eventId+"__"+e.eventId; let edge="documented";
+      const gap=hours(p.receivedAt||p.releasedAt,e.releasedAt||e.receivedAt);
+      const custodianMismatch=p.toCustodian&&e.fromCustodian&&norm(p.toCustodian)!==norm(e.fromCustodian);
+      if(gap!==null&&gap>12&&custodianMismatch){
+        edge="potential";s="potential";add("transfer_gap","potential","Potential undocumented interval",`A ${gap.toFixed(1)} hour interval separates ${p.eventType||"prior event"} and ${e.eventType||"next event"}, and the prior custodian (${p.toCustodian}) does not match the next releasing custodian (${e.fromCustodian}).`,{eventId:e.eventId,priorEventId:p.eventId,citations:[...(p.citations||[]),...(e.citations||[])],missing:["intervening transfer or storage record"],recommendation:"Obtain the transfer receipt, storage/access log, or witness statement covering the interval."});
+      }else if(gap!==null&&gap>12){
+        edge="review";add("storage_interval","review","Long documented interval",`A ${gap.toFixed(1)} hour interval appears between documented events. Custodian continuity is consistent in the entered records, but storage and access should be confirmed.`,{eventId:e.eventId,priorEventId:p.eventId,citations:[...(p.citations||[]),...(e.citations||[])],missing:["storage/access record"],recommendation:"Confirm storage location, access controls, and property-room access history for the interval."});
+      }
+      edges[key]=edge;
+    }
+    node[e.eventId]=s;
+  });
+  const final=evs[evs.length-1];if(!/return|destroy|release|court|storage|disposition/i.test(final.eventType||""))add("missing_final","review","Final disposition not documented",`The last entered event is ${final.eventType||"not identified"}; return, release, destruction, court use, or continuing storage is not documented.`,{eventId:final.eventId,citations:final.citations||[],recommendation:"Request the final disposition record or current storage verification."});
+  const status=findings.some(f=>f.severity==="potential")?"potential":findings.some(f=>f.severity==="review")?"review":"documented";
+  return {item,events:evs,findings,node,edges,status};
+}
+function analyzeDigital(){
+  const findings=[];
+  state.digitalRecords.forEach(r=>{
+    const item=itemById(r.evidenceId);
+    const add=(kind,severity,title,detail,missing=[])=>{
+      const fingerprint=[kind,r.recordId,title,detail].map(norm).join("|");
+      findings.push({fingerprint,kind,severity,title,detail,itemId:r.evidenceId,digitalRecordId:r.recordId,missing,citations:r.citations||[],recommendation:"Request the acquisition report, extraction log, hash report, tool/version record, and working-copy verification.",defenseSignificance:"Digital review may affect the ability to test acquisition integrity, derivation, and whether analysis used a documented working copy."});
+    };
+    ["toolName","toolVersion","acquisitionMethod","acquiredAt","extractionId"].forEach(k=>{if(!r[k])add("digital_integrity","review","Digital acquisition detail missing",`${itemLabel(item)} is missing ${k.replace(/[A-Z]/g,m=>" "+m.toLowerCase())}.`,[k])});
+    if(!r.originalHash)add("missing_hash","review","Original hash missing",`${itemLabel(item)} does not include an original hash value. ARC states this as missing, not as a mismatch.`,["original hash"]);
+    if(!r.workingCopyHash)add("missing_hash","review","Working-copy hash missing",`${itemLabel(item)} does not include a working-copy hash value. ARC states this as missing, not as a mismatch.`,["working-copy hash"]);
+    if(r.originalHash&&r.workingCopyHash&&norm(r.originalHash)!==norm(r.workingCopyHash)&&norm(r.hashAlgorithm)===norm(r.workingHashAlgorithm||r.hashAlgorithm)){
+      add("hash_mismatch","potential","Hash mismatch",`The original ${r.hashAlgorithm||"hash"} value and working-copy ${r.workingHashAlgorithm||r.hashAlgorithm||"hash"} value differ. ARC identifies the compared objects but does not decide alteration.`,["hash reconciliation"]);
+    }
+  });
+  return findings;
+}
+function connectionFingerprint(c){
+  return [
+    "analytical_connection",
+    c.connectionId,
+    c.view,
+    c.label,
+    c.from,
+    c.to,
+    c.supportedAssociation,
+    [...(c.citations||[])].sort().join(",")
+  ].map(norm).join("|");
+}
+function analyzeConnections(){
+  const findings=[];
+  state.connections.forEach(c=>{
+    const citations=c.citations||[];
+    const cited=Boolean(citations.length);
+    findings.push({
+      fingerprint:connectionFingerprint(c),
+      kind:"analytical_connection",
+      severity:"review",
+      title:cited?"Analytical connection requires investigator approval":"Analytical connection lacks source citation",
+      detail:cited
+        ?`The connection "${c.label||"untitled connection"}" is source-linked but remains an analytical association. It cannot enter a factual report section until an investigator reviews and approves the connection.`
+        :`The connection "${c.label||"untitled connection"}" has no source citation. It is not a custody transfer and cannot support a factual report statement until sourced and approved.`,
+      itemId:"",
+      connectionId:c.connectionId,
+      citations,
+      recommendation:cited
+        ?"Compare the proposed association against every linked source, confirm that the wording does not overstate identity, possession, ownership, location, communication, or custody, then approve or dismiss it."
+        :"Add the report page, media timestamp, extraction artifact, transcript segment, or record supporting the analytical connection, then complete investigator review.",
+      defenseSignificance:"Analytical associations must remain distinct from proven identity, possession, ownership, location, communication, or custody."
+    });
+  });
+  return findings;
+}
+function analyzeAll(){
+  const analyses=state.items.map(analyzeItem);
+  const findings=[...analyses.flatMap(a=>a.findings),...analyzeDigital(),...analyzeConnections()].map(f=>({...f,review:reviewFor(f)}));
+  const active=findings.filter(f=>f.review.status!=="dismissed");
+  const pending=active.filter(f=>!f.review.status||f.review.status==="pending"||f.review.status==="saved").length;
+  const approved=active.filter(f=>f.review.status==="approved").length;
+  const dismissed=findings.filter(f=>f.review.status==="dismissed").length;
+  const potential=active.filter(f=>f.severity==="potential").length;
+  const missing=active.filter(f=>/missing|receipt|seal|storage|digital/.test(f.kind)).length;
+  const conflicts=active.filter(f=>/conflict|mismatch/.test(f.kind)).length;
+  return {analyses,findings,active,pending,approved,dismissed,potential,missing,conflicts,status:potential?"potential":pending?"review":state.items.length?"documented":"na"};
+}
+
+function render(){
+  const a=analyzeAll(); lastAnalysis=a;
+  renderHeader(a);renderSections(a);renderMetrics(a);renderInventory(a);renderTimeline(a);renderGraph(a);renderSources();renderCitations();renderDigital();renderConnections();renderFindings(a);renderAssistant(a);renderReport(a);
+}
+function renderHeader(a){
+  const hasCase=!!(state.case.caseId||state.case.matter||state.case.docket);
+  $("#caseLabel").textContent=hasCase?[state.case.matter||"Untitled matter",state.case.docket].filter(Boolean).join(" - "):"No active case";
+  $("#caseStatusLabel").textContent=hasCase?(state.case.status||"Active matter"):"Open or select a case in ARC Notebook before reviewing evidence.";
+  $("#scopeLine").textContent=hasCase?`${state.case.matter||"Untitled matter"} ${state.case.docket?"- "+state.case.docket:""} ${state.case.subjectName?"- "+state.case.subjectName:""}`:"No active case loaded. ARC will not fabricate a matter.";
+  $("#avatar").textContent=(state.case.investigator||state.case.subjectName||"ARC").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase()||"ARC";
+  $("#reviewCounts").textContent=`${a.approved+a.dismissed} reviewed - ${a.pending} pending`;
+  $("#approvedCount").textContent=a.approved;$("#pendingCount").textContent=a.pending;$("#dismissedCount").textContent=a.dismissed;
+  const ready=isFinalReady(a);
+  $("#readyStatus").className="badge "+(ready.ok?"green":"golden");
+  $("#readyStatus").textContent=ready.ok?"Ready":"Not ready";
+  $("#sendFinalBtn").disabled=!ready.ok;
+  const reviewedItems=state.items.filter(i=>i.reviewStatus==="reviewed"||i.reviewStatus==="excluded").length;
+  $("#reviewedItems").textContent=reviewedItems;$("#totalItems").textContent=state.items.length;
+  const deg=state.items.length?Math.round(360*reviewedItems/state.items.length):0;$("#reviewDonut").style.setProperty("--p",deg+"deg");
+}
+function renderSections(a){
+  const rows=[["Executive Summary","report",a.approved],["Materials Reviewed","filelog",state.sources.length],["Evidence Inventory","chain",state.items.length],["Potential Breaks","review",a.potential],["Identifier Conflicts","review",a.conflicts],["Seal & Packaging","review",a.active.filter(f=>/seal/i.test(f.kind)).length],["Digital Integrity","digital",state.digitalRecords.length],["Missing Records","review",a.missing],["Custodian List","chain",custodianList().length],["Custody Graph","chain",state.events.length?1:0]];
+  $("#sectionList").innerHTML=rows.map(r=>`<button class="${currentView===r[1]?"active":""}" data-go-view="${r[1]}" type="button">${esc(r[0])}<span class="count">${r[2]}</span></button>`).join("");
+}
+function renderMetrics(a){
+  $("#metrics").innerHTML=[
+    ["Evidence Items",state.items.length,"folder"],
+    ["Potential Breaks",a.potential,"alert"],
+    ["Missing Records",a.missing,"file"],
+    ["Identifier Conflicts",a.conflicts,"shield"]
+  ].map(m=>`<div class="metric"><div class="num">${m[1]}</div><span>${esc(m[0])}</span></div>`).join("");
+}
+function renderInventory(a){
+  if(!state.items.length){$("#inventory").innerHTML='<div class="empty"><b>No evidence inventory yet</b><br>Import evidence records or add an item. ARC will not fabricate custody events.</div>';return}
+  const by=Object.fromEntries(a.analyses.map(x=>[x.item.evidenceId,x]));
+  if(!selectedItemId||!itemById(selectedItemId))selectedItemId=state.items[0].evidenceId;
+  $("#inventory").innerHTML=state.items.map(i=>{const an=by[i.evidenceId]||{status:"na",findings:[]};return `<article class="item-card ${selectedItemId===i.evidenceId?"selected":""}" data-select-item="${attr(i.evidenceId)}"><div class="top"><b>${esc(i.agencyItemNumber||"Unnumbered")}</b><span class="badge ${statusClass(an.status)}">${an.status==="potential"?"review":an.status}</span></div><div>${esc(i.description||"Unnamed evidence")}</div><div class="small-text muted">${esc(i.category||"Uncategorized")} - ${esc(i.collector||"collector not listed")}</div><div>${(i.sourceCitations||[]).map(citeChip).join("")}</div><div><button class="btn small" data-edit-item="${attr(i.evidenceId)}" type="button">Edit</button></div></article>`}).join("");
+}
+function renderTimeline(a){
+  const item=itemById(selectedItemId); if(!item){$("#timeline").innerHTML='<div class="empty">Select or add an evidence item.</div>';return}
+  const an=a.analyses.find(x=>x.item.evidenceId===item.evidenceId)||analyzeItem(item);
+  if(!an.events.length){$("#timeline").innerHTML='<div class="empty">No custody events entered for this item.</div>';return}
+  const parts=[];
+  an.events.forEach((e,idx)=>{
+    if(idx>0){const prev=an.events[idx-1],edge=an.edges[prev.eventId+"__"+e.eventId];if(edge==="potential"){const gap=hours(prev.receivedAt||prev.releasedAt,e.releasedAt||e.receivedAt);parts.push(`<div class="gap">${gap?gap.toFixed(1)+" hours undocumented":"undocumented interval"}</div>`)}}
+    const cls=statusClass(an.node[e.eventId]||"review");
+    parts.push(`<article class="event-node ${cls}" data-event-id="${attr(e.eventId)}"><div class="event-head"><div><h4>${esc(e.eventType||"Custody event")}</h4><div class="small-text">${esc(e.fromCustodian||"Not listed")} to ${esc(e.toCustodian||"Not listed")}</div></div><span class="badge ${cls}">${esc(an.node[e.eventId]||"review")}</span></div><div class="small-text muted">${dt(e.releasedAt||e.receivedAt)} - ${esc(e.location||"location not listed")} - ${esc(e.purpose||"purpose not listed")}</div><div class="small-text">Seal: ${esc(e.sealCondition||"not listed")} - Receipt: ${esc(e.receiptReference||"not listed")}</div><div>${(e.citations||[]).map(citeChip).join("")}</div><div class="finding-actions"><button class="btn small" data-edit-event="${attr(e.eventId)}" type="button">Edit Event</button><button class="btn small" data-snip-citation="${attr((e.citations||[])[0]||"")}" type="button" ${!(e.citations||[])[0]?"disabled":""}>Snip to Exhibit</button></div></article>`);
+  });
+  $("#timeline").innerHTML=parts.join("");
+}
+function renderGraph(a){
+  const item=itemById(selectedItemId); if(!item){$("#graphContainer").innerHTML='<div class="empty">No graph until an evidence item is selected.</div>';return}
+  const an=(a.analyses||[]).find(x=>x.item.evidenceId===item.evidenceId)||analyzeItem(item);
+  $("#graphContainer").innerHTML=graphMarkup(an);
+}
+function graphMarkup(an){
+  if(!an.events.length)return '<div class="empty">Add source-linked custody events to render the graph.</div>';
+  let html='<div class="graph-wrap"><div class="graph" role="img" aria-label="'+attr(graphSummary(an))+'">';
+  an.events.forEach((e,idx)=>{
+    if(idx>0){const p=an.events[idx-1],edge=an.edges[p.eventId+"__"+e.eventId];const gap=hours(p.receivedAt||p.releasedAt,e.releasedAt||e.receivedAt);html+=`<div class="connector ${edge==="potential"?"broken":""}">${edge==="potential"?`<span class="label">${gap?gap.toFixed(0)+" hr":""}<br>gap</span>`:""}</div>`}
+    const cls=statusClass(an.node[e.eventId]||"review");
+    html+=`<div class="graph-node ${cls}" data-edit-event="${attr(e.eventId)}"><span class="graph-icon">${cls==="green"?"OK":cls==="red"?"!":cls==="golden"?"?":"-"}</span><b>${esc(e.eventType||"Event")}</b><span>${esc(e.toCustodian||e.fromCustodian||"Custodian not listed")}</span><span>${dt(e.releasedAt||e.receivedAt)}</span></div>`;
+  });
+  html+='</div><div class="small-text muted" style="margin-top:10px">The graph is a source-linked analytical demonstrative and does not replace the underlying custody records.</div><div class="small-text">'+graphCitations(an).map(citeChip).join("")+'</div></div>';
+  return html;
+}
+function graphSummary(an){return `${itemLabel(an.item)} graph with ${an.events.length} event nodes and ${Object.values(an.edges).filter(x=>x==="potential").length} potential break connectors.`}
+function graphCitations(an){return [...new Set(an.events.flatMap(e=>e.citations||[]))]}
+function renderSources(){
+  $("#sourcesTable").innerHTML=state.sources.length?`<table><thead><tr><th>File</th><th>Size</th><th>SHA-256</th><th>Actions</th></tr></thead><tbody>${state.sources.map(s=>`<tr><td><b>${esc(s.originalFilename)}</b><br><span class="muted">${esc(s.kind||"source")} - ${esc(s.addedAt||"")}</span></td><td>${s.size?Math.round(s.size/1024)+" KB":"Not listed"}</td><td class="mono" style="word-break:break-all">${esc(s.sha256||"Hash not calculated or supplied")}</td><td><button class="btn small" data-add-cite-source="${attr(s.sourceId)}" type="button">Cite</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">No custody sources imported. Import evidence and custody records before analyzing the chain.</div>';
+}
+function renderCitations(){
+  $("#citationsTable").innerHTML=state.citations.length?`<table><thead><tr><th>Citation</th><th>Location</th><th>Supporting Text</th><th></th></tr></thead><tbody>${state.citations.map(c=>`<tr><td>${esc(citeLabel(c.citationId))}</td><td>${esc([c.page?"p. "+c.page:"",c.paragraph?"para. "+c.paragraph:"",c.timestamp].filter(Boolean).join(", ")||"Not listed")}</td><td>${esc(c.quote||"Exact supporting text not entered")}</td><td><button class="btn small" data-snip-citation="${attr(c.citationId)}" type="button">Snip</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">No source citations yet. Every factual custody event should link to a citation.</div>';
+}
+function renderDigital(){
+  $("#digitalTable").innerHTML=state.digitalRecords.length?`<table><thead><tr><th>Device</th><th>Acquisition</th><th>Tool</th><th>Extraction</th><th>Hashes</th><th>Sources</th><th></th></tr></thead><tbody>${state.digitalRecords.map(r=>`<tr><td>${esc(itemLabel(itemById(r.evidenceId)))}</td><td>${esc(r.acquisitionMethod||"Not listed")}<br>${dt(r.acquiredAt)}</td><td>${esc(r.toolName||"Not listed")} ${esc(r.toolVersion||"")}</td><td>${esc(r.extractionId||"Not listed")}</td><td class="mono">${esc(r.hashAlgorithm||"hash")} original: ${esc(r.originalHash||"missing")}<br>${esc(r.workingHashAlgorithm||r.hashAlgorithm||"hash")} working: ${esc(r.workingCopyHash||"missing")}</td><td>${(r.citations||[]).map(citeChip).join("")}</td><td><button class="btn small" data-edit-digital="${attr(r.recordId)}" type="button">Edit</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">No digital acquisition records entered.</div>';
+}
+function renderConnections(){
+  $("#connectionsTable").innerHTML=state.connections.length?`<table><thead><tr><th>View</th><th>Connection</th><th>Supported Association</th><th>Sources</th><th></th></tr></thead><tbody>${state.connections.map(c=>`<tr><td>${esc(c.view||"Connections")}</td><td><b>${esc(c.label||"Untitled")}</b><br><span class="muted">${esc(c.from||"")} to ${esc(c.to||"")}</span></td><td>${esc(c.supportedAssociation||"Not established")}</td><td>${(c.citations||[]).map(citeChip).join("")}</td><td><button class="btn small" data-edit-connection="${attr(c.connectionId)}" type="button">Edit</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">No analytical connections entered. Connections must stay separate from custody transfers.</div>';
+}
+function renderFindings(a){
+  if(!a.findings.length){$("#findings").innerHTML='<div class="empty">No proposed findings yet. Add evidence items, custody events, citations, or digital records, then analyze.</div>';return}
+  $("#findings").innerHTML=a.findings.map(f=>{const r=f.review||{};const cls=f.severity==="potential"?"red":f.severity==="review"?"golden":"blue";return `<article class="finding ${cls}" data-finding="${attr(f.fingerprint)}"><div style="display:flex;justify-content:space-between;gap:10px"><h4>${esc(f.title)}</h4><span class="badge ${r.status==="approved"?"green":r.status==="dismissed"?"gray":"golden"}">${esc(r.status||"pending")}</span></div><p>${esc(f.detail)}</p><p class="small-text"><b>Defense significance:</b> ${esc(f.defenseSignificance)}</p><p class="small-text"><b>Recommended follow-up:</b> ${esc(f.recommendation)}</p><div>${(f.citations||[]).map(citeChip).join("")}</div>${r.status==="approved"?`<div class="small-text muted">Approved by ${esc(r.by||"investigator")} at ${dt(r.at)}</div>`:""}${r.status==="dismissed"?`<div class="small-text muted">Dismissed by ${esc(r.by||"investigator")} at ${dt(r.at)}. Reason: ${esc(r.reason||"Not stated")}</div>`:""}<div class="finding-actions"><button class="btn small" data-review-action="save" data-fp="${attr(f.fingerprint)}" type="button">Save for Review</button><button class="btn small danger" data-review-action="dismiss" data-fp="${attr(f.fingerprint)}" type="button">Dismiss</button><button class="btn small gold" data-review-action="approve" data-fp="${attr(f.fingerprint)}" type="button">Approve Finding</button><button class="btn small" data-snip-citation="${attr((f.citations||[])[0]||"")}" ${!(f.citations||[])[0]?"disabled":""} type="button">Snip to Exhibit</button></div></article>`}).join("");
+}
+function renderAssistant(a){
+  $("#assistantSummary").textContent=state.items.length?`This report contains ${a.potential} potential chain breaks, ${a.conflicts} identifier conflicts, and ${a.missing} missing-record or integrity issues.`:"The uploaded evidence records do not establish this yet.";
+  $("#pendingMini").innerHTML=a.active.filter(f=>!f.review.status||f.review.status==="pending"||f.review.status==="saved").slice(0,3).map(f=>`<div class="finding red"><b>${esc(itemLabel(itemById(f.itemId)))}</b><br><span class="small-text">${esc(f.title)}</span><div>${(f.citations||[]).slice(0,1).map(citeChip).join("")}</div></div>`).join("")||'<div class="small-text muted">No pending findings.</div>';
+  $("#chatLog").innerHTML=state.assistant.map(m=>`<div class="chatbox ${m.role==="assistant"?"assistant-msg":""}"><b>${m.role==="assistant"?"ARC": "You"}</b><br>${m.html||esc(m.text)}</div>`).join("");
+}
+function custodianList(){return [...new Set(state.events.flatMap(e=>[e.fromCustodian,e.toCustodian]).map(text).filter(Boolean))].sort()}
+function reportHtml(a,final=false){
+  const approved=a.findings.filter(f=>f.review.status==="approved");
+  const pending=a.findings.filter(f=>!f.review.status||f.review.status==="pending"||f.review.status==="saved");
+  const dismissed=a.findings.filter(f=>f.review.status==="dismissed");
+  const graph=state.items.map(i=>{const an=(a.analyses||[]).find(x=>x.item.evidenceId===i.evidenceId)||analyzeItem(i);return an.events.length?"<h3>"+esc(itemLabel(i))+"</h3>"+graphMarkup(an):""}).filter(Boolean).join("")||"<p>No custody graph generated.</p>";
+  const row=(l,v)=>`<tr><th>${esc(l)}</th><td>${v}</td></tr>`;
+  return `<article class="report-paper"><h1>Evidence Integrity & Chain Report</h1><p><b>${esc(state.case.matter||"Untitled matter")}</b>${state.case.docket?" - "+esc(state.case.docket):""}</p><h2>1. Case Identification</h2><table><tbody>${row("Matter",esc(state.case.matter||"Not listed"))}${row("Docket",esc(state.case.docket||"Not listed"))}${row("Court",esc(state.case.court||"Not listed"))}${row("Subject / Client",esc(state.case.subjectName||state.case.clientName||"Not listed"))}${row("Investigator",esc(state.case.investigator||"Not listed"))}</tbody></table><h2>2. Purpose and Scope</h2><p>ARC reviewed entered evidence inventory, custody events, source citations, file-integrity records, digital acquisition fields, and analytical connections for documentation and integrity issues. ARC does not decide admissibility, authenticity, alteration, or legal usability.</p><h2>3. Materials Reviewed</h2>${sourceList()}<h2>4. Evidence Inventory</h2>${inventoryReport()}<h2>5. Documented Custody History</h2>${custodyHistory()}<h2>6. Custody Graphs</h2>${graph}<h2>7. Potential Chain Breaks</h2>${findingList(approved.filter(f=>f.kind==="transfer_gap"),pending,final)}<h2>8. Identifier Conflicts</h2>${findingList(approved.filter(f=>/conflict|mismatch/.test(f.kind)),pending.filter(f=>/conflict|mismatch/.test(f.kind)),final)}<h2>9. Packaging and Seal Issues</h2>${findingList(approved.filter(f=>/seal/.test(f.kind)),pending.filter(f=>/seal/.test(f.kind)),final)}<h2>10. Storage and Access Issues</h2>${findingList(approved.filter(f=>/storage|interval/.test(f.kind)),pending.filter(f=>/storage|interval/.test(f.kind)),final)}<h2>11. Digital Acquisition and Hash Review</h2>${digitalReport()}<h2>12. Connected Evidence Analysis</h2>${connectionReport(a,final)}<h2>13. Proposed Exhibits</h2>${exhibitReport()}<h2>14. Missing Records</h2>${findingList(approved.filter(f=>/missing|receipt/.test(f.kind)),pending.filter(f=>/missing|receipt/.test(f.kind)),final)}<h2>15. Custodian and Witness List</h2><ul>${custodianList().map(c=>`<li>${esc(c)}</li>`).join("")||"<li>No custodians entered.</li>"}</ul><h2>16. Recommended Follow-Up</h2>${followupList(a)}<h2>17. Cross-Examination Areas</h2>${crossAreas(approved)}<h2>18. Source Citations</h2>${citationReport()}<h2>19. Verification Notes and Limitations</h2><p>All findings require investigator review. Pending items are not approved findings. Analytical connections are not custody transfers. Missing records do not prove that an event did not occur, and missing hashes are not hash mismatches.</p>${dismissed.length?`<p><b>Dismissed or excluded issues retained for audit:</b> ${dismissed.length}</p>`:""}<p class="report-note">Generated locally from ARC Chain Review. No API keys, hidden prompts, or raw credential values are included.</p></article>`;
+}
+function sourceList(){return state.sources.length?`<ul>${state.sources.map(s=>`<li>${esc(s.originalFilename)}${s.sha256?" - SHA-256 "+esc(s.sha256):" - hash not calculated or supplied"}</li>`).join("")}</ul>`:"<p>No custody sources entered.</p>"}
+function inventoryReport(){return state.items.length?`<table><thead><tr><th>Item</th><th>Category</th><th>Collector</th><th>Collection</th><th>Sources</th></tr></thead><tbody>${state.items.map(i=>`<tr><td>${esc(i.agencyItemNumber||"Unnumbered")} - ${esc(i.description||"Unnamed")}</td><td>${esc(i.category||"Not listed")}</td><td>${esc(i.collector||"Not listed")}</td><td>${dt(i.collectedAt)}<br>${esc(i.recoveryLocation||"location not listed")}</td><td>${(i.sourceCitations||[]).map(citeLabel).map(esc).join("; ")||"Not cited"}</td></tr>`).join("")}</tbody></table>`:"<p>No evidence items entered.</p>"}
+function custodyHistory(){return state.events.length?`<table><thead><tr><th>Item</th><th>Event</th><th>Custody</th><th>Date/Location</th><th>Citations</th></tr></thead><tbody>${state.events.map(e=>`<tr><td>${esc(itemLabel(itemById(e.evidenceId)))}</td><td>${esc(e.eventType||"Not listed")}</td><td>${esc(e.fromCustodian||"Not listed")} to ${esc(e.toCustodian||"Not listed")}</td><td>${dt(e.releasedAt||e.receivedAt)}<br>${esc(e.location||"Not listed")}</td><td>${(e.citations||[]).map(citeLabel).map(esc).join("; ")||"Not cited"}</td></tr>`).join("")}</tbody></table>`:"<p>No custody events entered.</p>"}
+function findingList(list,pending,final){const use=final?list:list.concat(pending||[]);return use.length?`<ol>${use.map(f=>`<li><b>${esc(itemLabel(itemById(f.itemId)))}</b>: ${esc(f.detail)} <i>Status: ${esc(f.review.status||"pending")}</i>. Sources: ${esc((f.citations||[]).map(citeLabel).join("; ")||"not cited")}.</li>`).join("")}</ol>`:"<p>No approved finding in this section.</p>"}
+function digitalReport(){return state.digitalRecords.length?`<table><thead><tr><th>Device</th><th>Acquisition</th><th>Tool/Version</th><th>Extraction</th><th>Hash Review</th></tr></thead><tbody>${state.digitalRecords.map(r=>`<tr><td>${esc(itemLabel(itemById(r.evidenceId)))}</td><td>${esc(r.acquisitionMethod||"Not listed")}<br>${dt(r.acquiredAt)}</td><td>${esc(r.toolName||"Not listed")} ${esc(r.toolVersion||"")}</td><td>${esc(r.extractionId||"Not listed")}</td><td>${esc(r.hashAlgorithm||"Hash")} original: ${esc(r.originalHash||"missing")}<br>${esc(r.workingHashAlgorithm||r.hashAlgorithm||"Hash")} working copy: ${esc(r.workingCopyHash||"missing")}</td></tr>`).join("")}</tbody></table>`:"<p>No digital acquisition or hash record entered.</p>"}
+function connectionReport(a,final){
+  const rows=state.connections.map(c=>{
+    const f=a.findings.find(x=>x.connectionId===c.connectionId);
+    const status=f&&f.review?f.review.status:"pending";
+    if(final&&status!=="approved")return "";
+    return `<tr><td><b>${esc(c.label||"Untitled connection")}</b><br><span class="muted">${esc(c.view||"Connections")}</span></td><td>${esc(c.from||"Not listed")} to ${esc(c.to||"Not listed")}</td><td>${esc(c.supportedAssociation||"No supported association entered")}</td><td>${esc((c.citations||[]).map(citeLabel).join("; ")||"Not cited")}</td><td>${esc(status)}</td></tr>`;
+  }).filter(Boolean);
+  return rows.length?`<table><thead><tr><th>Connection</th><th>Linked Records</th><th>Supported Association</th><th>Sources</th><th>Review Status</th></tr></thead><tbody>${rows.join("")}</tbody></table><p class="small-text muted">Analytical connections are not custody transfers and do not independently prove identity, possession, ownership, location, communication, or custody.</p>`:"<p>No approved analytical connection is available for this report.</p>";
+}
+function exhibitReport(){
+  return state.exhibits.length
+    ?`<table><thead><tr><th>Exhibit</th><th>Visual Clip</th><th>Source</th><th>Locator</th><th>Source SHA-256</th><th>Provenance</th></tr></thead><tbody>${state.exhibits.map(x=>{
+      const s=sourceById(x.sourceId)||{};
+      const loc=[x.sourcePage?"p. "+x.sourcePage:"",x.sourceTimestamp||""].filter(Boolean).join(" ");
+      const sel=x.selection&&isFinite(x.selection.x)?`selection x ${x.selection.x.toFixed(4)}, y ${x.selection.y.toFixed(4)}, w ${x.selection.width.toFixed(4)}, h ${x.selection.height.toFixed(4)}`:"";
+      const image=x.imageDataUrl
+        ?`<img src="${attr(x.imageDataUrl)}" alt="${attr(x.title||"Proposed exhibit crop")}" style="display:block;max-width:240px;max-height:180px;border:1px solid #cbd3df">`
+        :`<span class="muted">Legacy metadata-only exhibit; recreate the snip to add a visual crop.</span>`;
+      return `<tr><td>${esc(x.title||"Untitled exhibit")} <i>(${esc(x.status||"proposed")})</i><br><span class="small-text">${esc(x.description||"")}</span></td><td>${image}</td><td>${esc(s.originalFilename||"Unknown source")}</td><td>${esc(loc||"Not listed")}${sel?`<br><span class="small-text muted">${esc(sel)}</span>`:""}</td><td class="mono">${esc(x.sourceHash||"not hashed")}</td><td>${dt(x.createdAt)} by ${esc(x.createdBy||"investigator")}${x.citationId?`<br>${citeChip(x.citationId)}`:""}</td></tr>`;
+    }).join("")}</tbody></table><p class="small-text muted">Proposed exhibits are investigator-created visual excerpts. The original source file remains unchanged and controls if any question arises.</p>`
+    :"<p>No proposed exhibits.</p>";
+}
+function followupList(a){const rec=[...new Set(a.findings.filter(f=>f.review.status!=="dismissed").map(f=>f.recommendation).filter(Boolean))];return rec.length?`<ol>${rec.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:"<p>No follow-up generated from approved findings.</p>"}
+function crossAreas(approved){return approved.length?`<ol>${approved.map(f=>`<li>For ${esc(itemLabel(itemById(f.itemId)))}: establish the witness's personal knowledge, identify the missing or conflicting record, and ask whether the witness can supply the undocumented step from personal observation. Source focus: ${esc((f.citations||[]).map(citeLabel).join("; ")||"not cited")}.</li>`).join("")}</ol>`:"<p>No approved findings available for cross-examination areas.</p>"}
+function citationReport(){const unv=state.citations.filter(c=>c.unverified).length;return state.citations.length?`<ol>${state.citations.map(c=>`<li>${esc(citeLabel(c.citationId))}: ${esc(c.quote||"supporting text not entered")}.</li>`).join("")}</ol>${unv?`<p class="small-text muted"><b>${unv} citation(s) were auto-created from imported row titles and are not yet matched to a verified source file.</b> Confirm each against the underlying record before relying on it.</p>`:""}`:"<p>No citations entered.</p>"}
+function renderReport(a){$("#reportOutput").innerHTML=reportHtml(a,false)}
+function isFinalReady(a){
+  if(!(state.case.caseId||state.case.matter||state.case.docket))return {ok:false,reason:"Open or select a case in ARC Notebook before reviewing evidence."};
+  if(!state.items.length)return {ok:false,reason:"No evidence items reviewed."};
+  if(!state.events.length)return {ok:false,reason:"Generate the custody graph before sending this report to Final Report."};
+  if(a.pending)return {ok:false,reason:"Final Report transfer blocked: required findings remain pending review."};
+  const included=a.findings.filter(f=>f.review.status==="approved");
+  if(included.some(f=>!(f.citations||[]).length))return {ok:false,reason:"Every included factual finding and analytical connection must have a valid source citation."};
+  if(!state.items.some(i=>eventsFor(i.evidenceId).length))return {ok:false,reason:"Generate the custody graph before sending this report to Final Report."};
+  return {ok:true,reason:"Ready"};
+}
+
+function openCitation(id){
+  const c=citationById(id); if(!c){toast("ARC identified the source but could not open the cited location.");return}
+  const s=sourceById(c.sourceId); if(!s){toast("ARC identified the source but could not open the cited location.");return}
+  const url=objectUrls.get(s.sourceId);
+  if(url){window.open(url+(c.page&&/pdf/i.test(s.type||s.originalFilename)?"#page="+encodeURIComponent(c.page):""),"_blank","noopener");}
+  else toast(`${s.originalFilename}${c.page?" p. "+c.page:""} - ${c.quote||"Citation opened from stored metadata. Re-import the source file to open the original in this browser session."}`);
+}
+class ArcSha256 {
+  constructor() {
+    this.h = new Uint32Array([
+      0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+      0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+    ]);
+    this.buffer = new Uint8Array(64);
+    this.bufferLength = 0;
+    this.bytesHashed = 0;
+    this.finished = false;
+    this.words = new Uint32Array(64);
+  }
+  static rotr(value, shift) {
+    return (value >>> shift) | (value << (32 - shift));
+  }
+  update(input) {
+    if (this.finished) throw new Error("SHA-256 hash is already finalized.");
+    const data = input instanceof Uint8Array ? input : new Uint8Array(input);
+    this.bytesHashed += data.length;
+    let position = 0;
+    while (position < data.length) {
+      const take = Math.min(data.length - position, 64 - this.bufferLength);
+      this.buffer.set(data.subarray(position, position + take), this.bufferLength);
+      this.bufferLength += take;
+      position += take;
+      if (this.bufferLength === 64) {
+        this.hashBlock(this.buffer);
+        this.bufferLength = 0;
+      }
+    }
+    return this;
+  }
+  hashBlock(block) {
+    const w = this.words;
+    for (let index = 0; index < 16; index += 1) {
+      const offset = index * 4;
+      w[index] = (
+        (block[offset] << 24) |
+        (block[offset + 1] << 16) |
+        (block[offset + 2] << 8) |
+        block[offset + 3]
+      ) >>> 0;
+    }
+    for (let index = 16; index < 64; index += 1) {
+      const x = w[index - 15];
+      const y = w[index - 2];
+      const s0 = (ArcSha256.rotr(x, 7) ^ ArcSha256.rotr(x, 18) ^ (x >>> 3)) >>> 0;
+      const s1 = (ArcSha256.rotr(y, 17) ^ ArcSha256.rotr(y, 19) ^ (y >>> 10)) >>> 0;
+      w[index] = (w[index - 16] + s0 + w[index - 7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = this.h;
+    for (let index = 0; index < 64; index += 1) {
+      const s1 = (ArcSha256.rotr(e, 6) ^ ArcSha256.rotr(e, 11) ^ ArcSha256.rotr(e, 25)) >>> 0;
+      const choice = ((e & f) ^ (~e & g)) >>> 0;
+      const temp1 = (h + s1 + choice + ArcSha256.K[index] + w[index]) >>> 0;
+      const s0 = (ArcSha256.rotr(a, 2) ^ ArcSha256.rotr(a, 13) ^ ArcSha256.rotr(a, 22)) >>> 0;
+      const majority = ((a & b) ^ (a & c) ^ (b & c)) >>> 0;
+      const temp2 = (s0 + majority) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0;
+      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    this.h[0] = (this.h[0] + a) >>> 0;
+    this.h[1] = (this.h[1] + b) >>> 0;
+    this.h[2] = (this.h[2] + c) >>> 0;
+    this.h[3] = (this.h[3] + d) >>> 0;
+    this.h[4] = (this.h[4] + e) >>> 0;
+    this.h[5] = (this.h[5] + f) >>> 0;
+    this.h[6] = (this.h[6] + g) >>> 0;
+    this.h[7] = (this.h[7] + h) >>> 0;
+  }
+  digestHex() {
+    if (!this.finished) {
+      const bytesHashed = this.bytesHashed;
+      const left = this.bufferLength;
+      this.buffer[left] = 0x80;
+      this.buffer.fill(0, left + 1);
+      if (left >= 56) {
+        this.hashBlock(this.buffer);
+        this.buffer.fill(0);
+      }
+      const bits = bytesHashed * 8;
+      const high = Math.floor(bits / 0x100000000);
+      const low = bits >>> 0;
+      this.buffer[56] = (high >>> 24) & 0xff;
+      this.buffer[57] = (high >>> 16) & 0xff;
+      this.buffer[58] = (high >>> 8) & 0xff;
+      this.buffer[59] = high & 0xff;
+      this.buffer[60] = (low >>> 24) & 0xff;
+      this.buffer[61] = (low >>> 16) & 0xff;
+      this.buffer[62] = (low >>> 8) & 0xff;
+      this.buffer[63] = low & 0xff;
+      this.hashBlock(this.buffer);
+      this.finished = true;
+    }
+    return Array.from(this.h)
+      .map(value => value.toString(16).padStart(8, "0"))
+      .join("");
+  }
+}
+ArcSha256.K = new Uint32Array([
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+]);
+
+async function hashFile(file){
+  const hasher=new ArcSha256();
+  const chunkSize=4*1024*1024;
+  for(let offset=0;offset<file.size;offset+=chunkSize){
+    const chunk=new Uint8Array(await file.slice(offset,Math.min(file.size,offset+chunkSize)).arrayBuffer());
+    hasher.update(chunk);
+    if(offset+chunkSize<file.size){
+      const percent=Math.min(99,Math.round(((offset+chunk.length)/file.size)*100));
+      toast(`Hashing ${file.name}: ${percent}%`);
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+  }
+  return hasher.digestHex();
+}
+async function addSourceFiles(files){
+  for(const file of files){
+    const sha256=await hashFile(file);
+    if(!/^[a-f0-9]{64}$/i.test(sha256))throw new Error(`SHA-256 calculation failed for ${file.name}. The source was not added.`);
+    const sourceId=uid("src");
+    objectUrls.set(sourceId,URL.createObjectURL(file));
+    state.sources.push({sourceId,caseId:state.case.caseId||"",originalFilename:file.name,type:file.type,kind:"uploaded source",size:file.size,lastModified:new Date(file.lastModified).toISOString(),sha256,addedAt:new Date().toISOString()});
+  }
+  save();render();toast(`${files.length} source file(s) fully hashed locally with streaming SHA-256.`);
+}
+async function queueSourceFiles(files){
+  if(!files.length)return;
+  try{
+    await addSourceFiles(files);
+  }catch(error){
+    console.error("ARC source hashing failed.",error);
+    toast(error&&error.message?error.message:"The source file could not be hashed or added.");
+  }
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const txt=String(r.result||"");
+    if(file.name.toLowerCase().endsWith(".json")){
+      const data=JSON.parse(txt);
+      const items=data.evidenceItems||data.items||[];
+      const events=data.custodyEvents||data.events||[];
+      const sources=data.sources||[];
+      const citations=data.citations||[];
+      const digital=data.digitalRecords||[];
+      const connections=data.connections||[];
+      items.forEach(x=>state.items.push(normalizeItem(x)));
+      events.forEach(x=>state.events.push(normalizeEvent(x)));
+      sources.forEach(x=>state.sources.push(normalizeSource(x)));
+      citations.forEach(x=>state.citations.push(normalizeCitation(x)));
+      digital.forEach(x=>state.digitalRecords.push(normalizeDigitalRecord(x)));
+      connections.forEach(x=>state.connections.push(normalizeConnection(x)));
+      toast("Evidence import complete. Review every generated ID and citation before approval.");
+    }else{
+      parseCsvImport(txt);
+    }
+    save();render();
+  }catch(e){toast("Import failed: "+e.message)}};
+  r.readAsText(file);
+}
+function normalizeItem(x){return {evidenceId:text(x.evidenceId||x.id)||uid("ev"),caseId:state.case.caseId||text(x.caseId),agencyItemNumber:text(x.agencyItemNumber||x.itemNumber),category:text(x.category||"Physical objects"),description:text(x.description||x.name),collector:text(x.collector),collectedAt:text(x.collectedAt),recoveryLocation:text(x.recoveryLocation),initialCondition:text(x.initialCondition||x.condition),packaging:text(x.packaging),initialSeal:text(x.initialSeal||x.sealNumber),sourceCitations:Array.isArray(x.sourceCitations)?x.sourceCitations:[],reviewStatus:text(x.reviewStatus||"pending")}}
+function normalizeEvent(x){return {eventId:text(x.eventId||x.id)||uid("custody"),caseId:state.case.caseId||text(x.caseId),evidenceId:text(x.evidenceId||x.itemId)||selectedItemId,eventType:text(x.eventType),fromCustodian:text(x.fromCustodian||x.fromName),toCustodian:text(x.toCustodian||x.toName),releasedAt:text(x.releasedAt||x.dateTime),receivedAt:text(x.receivedAt||x.endDateTime||x.dateTime),location:text(x.location),purpose:text(x.purpose),method:text(x.method),sealCondition:text(x.sealCondition||x.condition),receiptReference:text(x.receiptReference),itemIdentifier:text(x.itemIdentifier||x.itemNumber),citations:Array.isArray(x.citations)?x.citations:(x.sourceTitle?[ensureQuickCitation(x)]:[]),verificationStatus:text(x.verificationStatus||x.verified||"pending")}}
+function normalizeSource(x){return {sourceId:text(x.sourceId||x.id)||uid("src"),caseId:state.case.caseId||text(x.caseId),originalFilename:text(x.originalFilename||x.name||x.source),type:text(x.type),kind:text(x.kind||"imported source"),size:Number(x.size||0),sha256:text(x.sha256||x.hash),addedAt:text(x.addedAt)||new Date().toISOString()}}
+function normalizeCitation(x){return {citationId:text(x.citationId||x.id)||uid("cite"),caseId:state.case.caseId||text(x.caseId),sourceId:text(x.sourceId),page:text(x.page),paragraph:text(x.paragraph),timestamp:text(x.timestamp),quote:text(x.quote||x.sourceQuote),locator:text(x.locator)}}
+function normalizeDigitalRecord(x){return {recordId:text(x.recordId||x.id)||uid("dig"),caseId:state.case.caseId||text(x.caseId),evidenceId:text(x.evidenceId||x.itemId),toolName:text(x.toolName),toolVersion:text(x.toolVersion),acquisitionMethod:text(x.acquisitionMethod),acquiredAt:text(x.acquiredAt),extractionId:text(x.extractionId),hashAlgorithm:text(x.hashAlgorithm||"SHA-256"),originalHash:text(x.originalHash),workingHashAlgorithm:text(x.workingHashAlgorithm||x.hashAlgorithm||"SHA-256"),workingCopyHash:text(x.workingCopyHash),derivedFiles:text(x.derivedFiles),returnDocumentation:text(x.returnDocumentation),citations:Array.isArray(x.citations)?x.citations:[]}}
+function normalizeConnection(x){return {connectionId:text(x.connectionId||x.id)||uid("conn"),caseId:state.case.caseId||text(x.caseId),view:text(x.view||"Connections"),label:text(x.label),from:text(x.from),to:text(x.to),supportedAssociation:text(x.supportedAssociation),citations:Array.isArray(x.citations)?x.citations:[]}}
+function ensureQuickCitation(x){
+  let src=state.sources.find(s=>norm(s.originalFilename)===norm(x.sourceTitle));
+  if(!src){src={sourceId:uid("src"),caseId:state.case.caseId||"",originalFilename:text(x.sourceTitle),kind:text(x.sourceType||"custody source"),sha256:"",addedAt:new Date().toISOString()};state.sources.push(src)}
+  const c={citationId:uid("cite"),caseId:state.case.caseId||"",sourceId:src.sourceId,page:text(x.sourcePage),quote:text(x.sourceQuote),unverified:true};
+  state.citations.push(c);return c.citationId;
+}
+function parseCsvImport(txt){
+  const rows=parseCSV(txt); const headers=(rows.shift()||[]).map(h=>h.trim()); let count=0;
+  rows.forEach(vals=>{const o={};headers.forEach((h,i)=>o[h]=vals[i]||""); if(o.eventType||o.fromCustodian||o.toCustodian){state.events.push(normalizeEvent(o));count++}else if(o.description||o.agencyItemNumber){state.items.push(normalizeItem(o));count++}});
+  toast(`${count} CSV row(s) imported.`);
+}
+function parseCSV(text){const rows=[];let row=[],field="",q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(q){if(c==='"'&&n==='"'){field+='"';i++}else if(c==='"')q=false;else field+=c}else if(c==='"')q=true;else if(c===","){row.push(field);field=""}else if(c==="\n"){row.push(field);rows.push(row);row=[];field=""}else if(c!=="\r")field+=c}row.push(field);if(row.some(Boolean))rows.push(row);return rows}
+
+function modal(title,body,saveLabel,onSave){
+  $("#modalHost").innerHTML=`<div class="modal"><div class="modal-card"><div class="modal-head"><h3>${esc(title)}</h3><button class="btn icon" data-close-modal type="button">x</button></div><div class="modal-body">${body}</div><div class="modal-foot"><button class="btn" data-close-modal type="button">Cancel</button><button class="btn gold" id="modalSave" type="button">${esc(saveLabel||"Save")}</button></div></div></div>`;
+  $$("[data-close-modal]").forEach(b=>b.onclick=()=>$("#modalHost").innerHTML="");
+  $("#modalSave").onclick=()=>{onSave();$("#modalHost").innerHTML="";save();render()};
+}
+function openItemForm(id){
+  const i=id?itemById(id):{};
+  modal(id?"Edit Evidence Item":"Add Evidence Item",`<form id="itemForm" class="form-grid">${field("agencyItemNumber","Agency Item Number",i.agencyItemNumber)}${selectField("category","Category",["Physical objects","Biological evidence","Trace evidence","Latent prints","Impressions","Digital evidence","Documents","Audio/video","Derived evidence"],i.category)}${field("description","Description",i.description,"wide")}${field("collector","Collector",i.collector)}${field("collectedAt","Collected At",i.collectedAt,"","datetime-local")}${field("recoveryLocation","Recovery Location",i.recoveryLocation)}${field("initialCondition","Initial Condition",i.initialCondition,"half")}${field("packaging","Packaging",i.packaging,"half")}${field("initialSeal","Initial Seal",i.initialSeal)}${selectField("reviewStatus","Review Status",["pending","reviewed","excluded"],i.reviewStatus)}${multiCitationField("sourceCitations",i.sourceCitations||[])}</form>`,"Save Item",()=>{const o=formData("#itemForm"); if(!id)state.items.push({...normalizeItem(o),evidenceId:uid("ev")}); else Object.assign(i,normalizeItem({...i,...o,evidenceId:id})); if(!selectedItemId)selectedItemId=id||state.items[state.items.length-1].evidenceId});
+}
+function openEventForm(id){
+  const e=id?state.events.find(x=>x.eventId===id):{evidenceId:selectedItemId};
+  modal(id?"Edit Custody Event":"Add Custody Event",`<form id="eventForm" class="form-grid">${selectField("evidenceId","Evidence Item",state.items.map(i=>[i.evidenceId,itemLabel(i)]),e.evidenceId)}${field("eventType","Event Type",e.eventType)}${field("fromCustodian","From Custodian",e.fromCustodian)}${field("toCustodian","To Custodian",e.toCustodian)}${field("releasedAt","Released At",e.releasedAt,"","datetime-local")}${field("receivedAt","Received At",e.receivedAt,"","datetime-local")}${field("location","Location",e.location)}${field("purpose","Purpose",e.purpose)}${field("method","Method",e.method)}${field("sealCondition","Seal / Package Condition",e.sealCondition)}${field("receiptReference","Receipt Reference",e.receiptReference)}${field("itemIdentifier","Item Identifier in Source",e.itemIdentifier)}${selectField("verificationStatus","Verification Status",["verified","pending","inferred","not_applicable"],e.verificationStatus)}${multiCitationField("citations",e.citations||[])}</form>`,"Save Event",()=>{const o=formData("#eventForm"); if(!id)state.events.push({...normalizeEvent(o),eventId:uid("custody")}); else Object.assign(e,normalizeEvent({...e,...o,eventId:id})); selectedItemId=o.evidenceId||selectedItemId});
+}
+function openCitationForm(sourceId){
+  modal("Add Source Citation",`<form id="citeForm" class="form-grid">${selectField("sourceId","Source",state.sources.map(s=>[s.sourceId,s.originalFilename]),sourceId)}${field("page","Page",null)}${field("paragraph","Paragraph / Locator",null)}${field("timestamp","Timestamp",null)}${textarea("quote","Exact Supporting Text",null,"wide")}</form>`,"Save Citation",()=>{state.citations.push(normalizeCitation({...formData("#citeForm"),citationId:uid("cite")}))});
+}
+function openDigitalForm(id){
+  const r=id?state.digitalRecords.find(x=>x.recordId===id):{evidenceId:selectedItemId};
+  modal(id?"Edit Digital Record":"Add Digital Record",`<form id="digitalForm" class="form-grid">${selectField("evidenceId","Device Evidence",state.items.map(i=>[i.evidenceId,itemLabel(i)]),r.evidenceId)}${field("acquisitionMethod","Acquisition Method",r.acquisitionMethod)}${field("acquiredAt","Acquired At",r.acquiredAt,"","datetime-local")}${field("toolName","Tool Name",r.toolName)}${field("toolVersion","Tool Version",r.toolVersion)}${field("extractionId","Extraction ID",r.extractionId)}${field("hashAlgorithm","Original Hash Algorithm",r.hashAlgorithm||"SHA-256")}${field("originalHash","Original Hash",r.originalHash,"half")}${field("workingHashAlgorithm","Working Hash Algorithm",r.workingHashAlgorithm||r.hashAlgorithm||"SHA-256")}${field("workingCopyHash","Working-Copy Hash",r.workingCopyHash,"half")}${textarea("derivedFiles","Derived Files / Reports",r.derivedFiles,"half")}${textarea("returnDocumentation","Return-to-Storage Documentation",r.returnDocumentation,"half")}${multiCitationField("citations",r.citations||[])}</form>`,"Save Digital Record",()=>{const o=formData("#digitalForm"); if(!id)state.digitalRecords.push({...normalizeDigitalRecord(o),recordId:uid("dig")}); else Object.assign(r,normalizeDigitalRecord({...r,...o,recordId:id}))});
+}
+function openConnectionForm(id){
+  const c=id?state.connections.find(x=>x.connectionId===id):{};
+  modal(id?"Edit Connection":"Add Connection",`<form id="connForm" class="form-grid">${selectField("view","View",["Acquisition Chain","Connections","Locations","Communications","Media"],c.view)}${field("label","Label",c.label)}${field("from","From",c.from)}${field("to","To",c.to)}${textarea("supportedAssociation","Supported Association",c.supportedAssociation,"wide")}${multiCitationField("citations",c.citations||[])}</form>`,"Save Connection",()=>{const o=formData("#connForm"); if(!id)state.connections.push({...normalizeConnection(o),connectionId:uid("conn")}); else Object.assign(c,normalizeConnection({...c,...o,connectionId:id}))});
+}
+async function renderSnipSource(source,citation,pageNumber,baseCanvas){
+  const url=objectUrls.get(source.sourceId);
+  if(!url)throw new Error("Re-import the original source file in this browser session before creating a visual exhibit.");
+  const context=baseCanvas.getContext("2d");
+  if(!context)throw new Error("Canvas rendering is unavailable in this browser.");
+
+  if(/^image\//i.test(source.type||"")||/\.(png|jpe?g|gif|webp|bmp)$/i.test(source.originalFilename||"")){
+    const image=new Image();
+    await new Promise((resolve,reject)=>{
+      image.onload=resolve;
+      image.onerror=()=>reject(new Error("The source image could not be decoded."));
+      image.src=url;
+    });
+    const scale=Math.min(1,1100/image.naturalWidth,1500/image.naturalHeight);
+    baseCanvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+    baseCanvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    context.drawImage(image,0,0,baseCanvas.width,baseCanvas.height);
+    return;
+  }
+
+  if(/pdf/i.test(source.type||"")||/\.pdf$/i.test(source.originalFilename||"")){
+    if(!window.pdfjsLib)throw new Error("PDF rendering did not load. Reopen this module with an internet connection or use an image source.");
+    const pdf=await pdfjsLib.getDocument(url).promise;
+    const safePage=Math.max(1,Math.min(pdf.numPages,Number(pageNumber)||Number(citation.page)||1));
+    const page=await pdf.getPage(safePage);
+    const natural=page.getViewport({scale:1});
+    const scale=Math.min(2,1100/natural.width,1500/natural.height);
+    const viewport=page.getViewport({scale});
+    baseCanvas.width=Math.max(1,Math.round(viewport.width));
+    baseCanvas.height=Math.max(1,Math.round(viewport.height));
+    await page.render({canvasContext:context,viewport}).promise;
+    return;
+  }
+
+  throw new Error("Visual snipping supports image files and PDF pages.");
+}
+
+function openSnip(citationId){
+  const c=citationById(citationId);
+  if(!c){toast("Select a valid source area before creating a proposed exhibit.");return}
+  const s=sourceById(c.sourceId)||{};
+  const selection={x:.1,y:.1,width:.7,height:.2};
+  const baseCanvas=document.createElement("canvas");
+  let ready=false;
+
+  modal(
+    "Snip to Exhibit",
+    `<form id="snipForm" class="form-grid">
+      ${field("title","Exhibit Title",`${s.originalFilename||"Source"} excerpt`)}
+      ${textarea("description","Description","Source-page excerpt proposed for investigator review.","wide")}
+      ${field("page","Source Page",c.page||"1")}
+      <div class="field wide">
+        <span>Visual Selection</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <button class="btn small" id="snipLoadPage" type="button">Load source page</button>
+          <span class="small-text muted" id="snipStatus">Preparing source preview...</span>
+        </div>
+        <div style="overflow:auto;max-height:58vh;border:1px solid #cbd3df;border-radius:7px;background:#202938;padding:8px">
+          <canvas id="snipCanvas" style="display:block;max-width:100%;height:auto;margin:auto;cursor:crosshair;background:#fff"></canvas>
+        </div>
+        <p class="small-text muted">Drag directly on the source preview to choose the visual clip. Nothing is selected automatically beyond the initial guide box; your final drag controls the exhibit crop.</p>
+      </div>
+    </form>
+    <p class="small-text muted">The original source remains unchanged. ARC stores the visual crop together with the source ID, page or timestamp, SHA-256, selection coordinates, creator, and creation time.</p>`,
+    "Create Proposed Exhibit",
+    ()=>{
+      if(!ready){toast("The source preview is not ready. Load the page and choose a crop first.");return}
+      const o=formData("#snipForm");
+      const sx=Math.max(0,Math.round(selection.x*baseCanvas.width));
+      const sy=Math.max(0,Math.round(selection.y*baseCanvas.height));
+      const sw=Math.max(1,Math.min(baseCanvas.width-sx,Math.round(selection.width*baseCanvas.width)));
+      const sh=Math.max(1,Math.min(baseCanvas.height-sy,Math.round(selection.height*baseCanvas.height)));
+      const crop=document.createElement("canvas");
+      crop.width=sw;
+      crop.height=sh;
+      crop.getContext("2d").drawImage(baseCanvas,sx,sy,sw,sh,0,0,sw,sh);
+      const imageDataUrl=crop.toDataURL("image/jpeg",.92);
+      state.exhibits.push({
+        exhibitId:uid("exhibit"),
+        caseId:state.case.caseId||"",
+        status:"proposed",
+        sourceId:c.sourceId,
+        sourcePage:o.page||c.page,
+        sourceTimestamp:c.timestamp,
+        selection:{...selection},
+        sourceHash:s.sha256||"",
+        title:o.title,
+        description:o.description,
+        imageDataUrl,
+        cropWidth:sw,
+        cropHeight:sh,
+        createdBy:state.case.investigator||"investigator",
+        createdAt:new Date().toISOString(),
+        citationId
+      });
+      toast("Proposed exhibit created with a real visual crop and original-source provenance.");
+    }
+  );
+
+  const canvas=$("#snipCanvas");
+  const saveButton=$("#modalSave");
+  const status=$("#snipStatus");
+  if(saveButton)saveButton.disabled=true;
+  if(!canvas)return;
+  const ctx=canvas.getContext("2d");
+  let dragging=false;
+  let start={x:0,y:0};
+
+  function point(event){
+    const rect=canvas.getBoundingClientRect();
+    return {
+      x:Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)),
+      y:Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height))
+    };
+  }
+  function draw(){
+    if(!baseCanvas.width||!baseCanvas.height)return;
+    canvas.width=baseCanvas.width;
+    canvas.height=baseCanvas.height;
+    ctx.drawImage(baseCanvas,0,0);
+    ctx.save();
+    ctx.fillStyle="rgba(11,23,38,.42)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    const x=selection.x*canvas.width;
+    const y=selection.y*canvas.height;
+    const w=selection.width*canvas.width;
+    const h=selection.height*canvas.height;
+    ctx.clearRect(x,y,w,h);
+    ctx.drawImage(baseCanvas,x,y,w,h,x,y,w,h);
+    ctx.strokeStyle="#f7d172";
+    ctx.lineWidth=Math.max(2,canvas.width/450);
+    ctx.setLineDash([10,6]);
+    ctx.strokeRect(x,y,w,h);
+    ctx.restore();
+    if(status)status.textContent=`Selected ${Math.round(selection.width*100)}% × ${Math.round(selection.height*100)}% of the rendered source.`;
+  }
+  async function load(){
+    ready=false;
+    if(saveButton)saveButton.disabled=true;
+    if(status)status.textContent="Rendering source page...";
+    try{
+      const pageValue=$("#snipForm [name='page']")?.value||c.page||1;
+      await renderSnipSource(s,c,pageValue,baseCanvas);
+      ready=true;
+      draw();
+      if(saveButton)saveButton.disabled=false;
+    }catch(error){
+      if(status)status.textContent=error.message;
+      toast(error.message);
+    }
+  }
+
+  canvas.addEventListener("pointerdown",event=>{
+    if(!ready)return;
+    dragging=true;
+    start=point(event);
+    selection.x=start.x;selection.y=start.y;selection.width=.01;selection.height=.01;
+    canvas.setPointerCapture(event.pointerId);
+    draw();
+  });
+  canvas.addEventListener("pointermove",event=>{
+    if(!dragging)return;
+    const now=point(event);
+    selection.x=Math.min(start.x,now.x);
+    selection.y=Math.min(start.y,now.y);
+    selection.width=Math.max(.01,Math.abs(now.x-start.x));
+    selection.height=Math.max(.01,Math.abs(now.y-start.y));
+    draw();
+  });
+  canvas.addEventListener("pointerup",event=>{
+    dragging=false;
+    try{canvas.releasePointerCapture(event.pointerId)}catch(error){}
+    draw();
+  });
+  $("#snipLoadPage")?.addEventListener("click",load);
+  load();
+}
+
+function formData(sel){return Object.fromEntries(new FormData($(sel)).entries())}
+function field(name,label,value,cls="",type="text"){return `<label class="field ${cls}"><span>${esc(label)}</span><input name="${attr(name)}" type="${type}" value="${attr(value||"")}"></label>`}
+function textarea(name,label,value,cls=""){return `<label class="field ${cls}"><span>${esc(label)}</span><textarea name="${attr(name)}">${esc(value||"")}</textarea></label>`}
+function selectField(name,label,opts,value){const options=opts.map(o=>Array.isArray(o)?o:[o,o]);return `<label class="field"><span>${esc(label)}</span><select name="${attr(name)}">${options.map(o=>`<option value="${attr(o[0])}" ${text(value)===text(o[0])?"selected":""}>${esc(o[1])}</option>`).join("")}</select></label>`}
+function multiCitationField(name,selected){return `<label class="field wide"><span>Source Citations</span><select name="${attr(name)}" multiple size="4">${state.citations.map(c=>`<option value="${attr(c.citationId)}" ${(selected||[]).includes(c.citationId)?"selected":""}>${esc(citeLabel(c.citationId))}</option>`).join("")}</select></label>`}
+
+function approveFinding(fp,action){
+  const a=analyzeAll(); const f=a.findings.find(x=>x.fingerprint===fp); if(!f)return;
+  const by=text(prompt("Confirm approver name for this custody finding:",state.case.investigator||"Investigator")||"");
+  if(!by){toast("Review not recorded: an approver name is required.");return}
+  if(action==="dismiss"){const reason=prompt("Dismissal reason:","Issue resolved by source review or excluded from report.");state.findingReviews[fp]={status:"dismissed",by,at:new Date().toISOString(),reason:reason||""}}
+  if(action==="approve")state.findingReviews[fp]={status:"approved",by,at:new Date().toISOString()};
+  if(action==="save")state.findingReviews[fp]={status:"saved",by,at:new Date().toISOString()};
+  save();render();
+}
+function answerQuestion(q){
+  const a=analyzeAll(); let html="";
+  const low=q.toLowerCase();
+  if(!state.items.length){html="The uploaded evidence records do not establish this."; }
+  else if(low.includes("first")||low.includes("incomplete")||low.includes("finding")){
+    const f=a.active.find(x=>x.severity==="potential")||a.active[0];
+    html=f?`${esc(f.title)}: ${esc(f.detail)} ${f.citations.length?f.citations.map(citeChip).join(""):"No citation is linked, so this cannot be treated as an approved factual finding."}`:"No potential chain break appears from the entered records.";
+  }else if(low.includes("record")){
+    const rec=[...new Set(a.active.map(f=>f.recommendation))]; html=rec.length?`<ol>${rec.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:"The uploaded evidence records do not establish a missing-record request.";
+  }else if(low.includes("cross")){
+    const approved=a.findings.filter(f=>f.review.status==="approved"); html=approved.length?crossAreas(approved):"No approved findings are available for cross-examination areas.";
+  }else if(low.includes("source")){
+    const uncited=a.active.filter(f=>!(f.citations||[]).length).length; html=uncited?`${uncited} active issue(s) lack source citations. ARC identified those issues from entered fields, but they cannot enter the final report as factual findings until cited.`:"Every active issue currently has at least one linked citation.";
+  }else if(low.includes("custodian")){
+    html=custodianList().length?`Custodians listed in entered events: ${esc(custodianList().join(", "))}. ${graphCitations({events:state.events}).map(citeChip).join("")}`:"The uploaded evidence records do not establish this.";
+  }else html="The uploaded evidence records do not establish this.";
+  state.assistant.push({role:"user",text:q},{role:"assistant",html});state.assistant=state.assistant.slice(-12);save();render();
+}
+function chainLogicalKey(){
+  const caseIdentifier=state.case.caseId||state.case.docket||state.case.matter||"unfiled";
+  const caseKey=text(caseIdentifier).toLowerCase().replace(/[^a-z0-9]+/g," ").trim()||"unfiled";
+  return "chain-review::"+caseKey;
+}
+function transferPayload(status,a){
+  const html=reportHtml(a,status==="approved");
+  const raw=JSON.stringify({
+    case:state.case,
+    items:state.items,
+    events:state.events,
+    digital:state.digitalRecords,
+    reviews:state.findingReviews,
+    citations:state.citations,
+    connections:state.connections,
+    exhibits:state.exhibits,
+    status
+  });
+  let h1=0x811c9dc5,h2=0x01000193;
+  for(let i=0;i<raw.length;i++){
+    const ch=raw.charCodeAt(i);
+    h1=Math.imul(h1^ch,16777619)>>>0;
+    h2=Math.imul(h2^ch,2246822519)>>>0;
+  }
+  const contentVersion=h1.toString(36)+h2.toString(36);
+  return {
+    type:status==="approved"?"ARC_SEND_CHAIN_REPORT_TO_FINAL":"ARC_SEND_CHAIN_REPORT_TO_EDIT",
+    version:2,
+    transferId:`chain_${status}_${contentVersion.slice(0,24)}`,
+    logicalKey:chainLogicalKey(),
+    contentVersion,
+    caseId:state.case.caseId||state.case.docket||state.case.matter,
+    sourceModule:"chain-review",
+    targetModule:status==="approved"?"final-report":"main-report-editor",
+    reportStatus:status,
+    reportHtml:html,
+    graph:{
+      format:"html-svg-compatible",
+      eventIds:state.events.map(e=>e.eventId),
+      summary:state.items.map(i=>itemLabel(i)+": "+eventsFor(i.evidenceId).map(e=>(e.eventType||"event")+" "+(e.toCustodian||e.fromCustodian||"custodian not listed")).join(" -> ")).join(" | ")
+    },
+    citations:[...new Set(a.findings.flatMap(f=>f.citations||[]))],
+    sentAt:new Date().toISOString(),
+    approvalSummary:{
+      approvedFindings:a.approved,
+      pendingFindings:a.pending,
+      excludedFindings:a.dismissed,
+      approvedBy:state.case.investigator||"investigator",
+      approvedAt:new Date().toISOString()
+    }
+  };
+}
+function saveChainReport(payload,title,reportType){
+  return window.ARCUnified.saveReport({
+    id:payload.transferId,
+    logicalKey:payload.logicalKey,
+    title,
+    reportType,
+    text:$("#reportOutput").innerText,
+    html:payload.reportHtml,
+    source:"chain-review",
+    caseContext:state.case,
+    contentVersion:payload.contentVersion,
+    transferPayload:payload
+  });
+}
+function sendToEdit(){
+  const a=analyzeAll();
+  const active=activeCaseFromBridge()||{};
+  const thisCase=state.case.caseId||state.case.docket||state.case.matter;
+  const activeId=active.caseId||active.docket||active.matter;
+  if(activeId&&thisCase&&norm(activeId)!==norm(thisCase)){
+    toast("Transfer blocked: the draft and the active ARC case are different cases.");
+    return;
+  }
+  const payload=transferPayload("draft",a);
+  if(!window.ARCUnified){
+    toast("Transfer was not confirmed. Open Main Report and retry.");
+    return;
+  }
+  saveChainReport(payload,"Evidence Integrity & Chain Report - Draft","Chain Review Draft");
+  toast("Draft sent to Edit Report as the current revision for this case.");
+}
+function sentTransfers(){
+  try{
+    const value=JSON.parse(localStorage.getItem(TRANSFER_KEY)||"[]");
+    return Array.isArray(value)?value:[];
+  }catch(e){
+    return [];
+  }
+}
+function writeTransfers(list){
+  localStorage.setItem(TRANSFER_KEY,JSON.stringify(list.slice(-250)));
+}
+function sendToFinal(){
+  const a=analyzeAll();
+  const ready=isFinalReady(a);
+  if(!ready.ok){
+    toast(ready.reason);
+    return;
+  }
+  const active=activeCaseFromBridge();
+  const thisCase=state.case.caseId||state.case.docket||state.case.matter;
+  const activeId=active.caseId||active.docket||active.matter;
+  if(activeId&&thisCase&&norm(activeId)!==norm(thisCase)){
+    toast("Transfer blocked: the Chain Integrity Report and Final Report belong to different cases.");
+    return;
+  }
+  const payload=transferPayload("approved",a);
+  const sent=sentTransfers();
+  const exactDuplicate=sent.some(x=>
+    x.transferId===payload.transferId||
+    (x.logicalKey===payload.logicalKey&&x.contentVersion===payload.contentVersion)
+  );
+  if(exactDuplicate){
+    toast("This exact Chain Integrity Report revision was already added.");
+    return;
+  }
+  const priorForCase=sent.some(x=>
+    x.logicalKey===payload.logicalKey||
+    (norm(x.caseId)&&norm(x.caseId)===norm(payload.caseId))
+  );
+  if(priorForCase&&!confirm("A prior approved Chain Integrity section exists for this case. Replace it with this reviewed revision?")){
+    toast("Transfer was not confirmed.");
+    return;
+  }
+  if(!window.ARCUnified){
+    toast("Transfer was not confirmed. Open Main Report and retry.");
+    return;
+  }
+  saveChainReport(payload,"Evidence Integrity & Chain Report - Approved Final Section","Chain Review Final");
+  sent.push({
+    transferId:payload.transferId,
+    logicalKey:payload.logicalKey,
+    contentVersion:payload.contentVersion,
+    caseId:payload.caseId,
+    sentAt:payload.sentAt
+  });
+  writeTransfers(sent);
+  toast("Approved Chain Integrity Report sent as the current reviewed revision.");
+}
+function exportCurrentReport(){
+  const a=analyzeAll();
+  const ready=isFinalReady(a);
+  const status=ready.ok?"approved":"draft";
+  const payload=transferPayload(status,a);
+  if(!window.ARCUnified){
+    toast("Report export is unavailable. Reload the module and try again.");
+    return;
+  }
+  window.ARCUnified.openReportExport({
+    id:payload.transferId,
+    logicalKey:payload.logicalKey,
+    title:status==="approved"
+      ?"Evidence Integrity & Chain Report - Approved"
+      :"Evidence Integrity & Chain Report - Review Draft",
+    reportType:status==="approved"?"Chain Review Final":"Chain Review Draft",
+    text:$("#reportOutput").innerText,
+    html:payload.reportHtml,
+    source:"chain-review",
+    caseContext:state.case,
+    contentVersion:payload.contentVersion,
+    transferPayload:payload
+  });
+}
+
+function bind(){
+  $(".seg").addEventListener("click",e=>{const b=e.target.closest("[data-view]");if(!b)return;currentView=b.dataset.view;$$(".seg button").forEach(x=>x.classList.toggle("active",x===b));$$(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+currentView));renderSections(lastAnalysis||analyzeAll())});
+  $("#sectionList").addEventListener("click",e=>{const b=e.target.closest("[data-go-view]");if(b)$(`.seg [data-view="${b.dataset.goView}"]`).click()});
+  $("#inventory").addEventListener("click",e=>{const edit=e.target.closest("[data-edit-item]");if(edit){e.stopPropagation();openItemForm(edit.dataset.editItem);return}const b=e.target.closest("[data-select-item]");if(b){selectedItemId=b.dataset.selectItem;render()}});
+  $("#timeline").addEventListener("click",e=>{const edit=e.target.closest("[data-edit-event]");if(edit)openEventForm(edit.dataset.editEvent)});
+  $("#graphContainer").addEventListener("click",e=>{const edit=e.target.closest("[data-edit-event]");if(edit)openEventForm(edit.dataset.editEvent)});
+  document.addEventListener("click",e=>{const c=e.target.closest("[data-open-citation]");if(c)openCitation(c.dataset.openCitation);const snip=e.target.closest("[data-snip-citation]");if(snip&&snip.dataset.snipCitation)openSnip(snip.dataset.snipCitation)});
+  $("#findings").addEventListener("click",e=>{const b=e.target.closest("[data-review-action]");if(b)approveFinding(b.dataset.fp,b.dataset.reviewAction)});
+  $("#sourcesTable").addEventListener("click",e=>{const b=e.target.closest("[data-add-cite-source]");if(b)openCitationForm(b.dataset.addCiteSource)});
+  $("#digitalTable").addEventListener("click",e=>{const b=e.target.closest("[data-edit-digital]");if(b)openDigitalForm(b.dataset.editDigital)});
+  $("#connectionsTable").addEventListener("click",e=>{const b=e.target.closest("[data-edit-connection]");if(b)openConnectionForm(b.dataset.editConnection)});
+  $("#addItemBtn").onclick=()=>openItemForm();$("#addEventBtn").onclick=()=>state.items.length?openEventForm():toast("Add an evidence item first.");$("#addCitationBtn").onclick=()=>state.sources.length?openCitationForm():toast("Import a source before adding a citation.");$("#addDigitalBtn").onclick=()=>state.items.length?openDigitalForm():toast("Add a digital evidence item first.");$("#addConnectionBtn").onclick=()=>openConnectionForm();
+  $("#importBtn").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=""};
+  $("#sourceFileBtn").onclick=()=>$("#sourceFiles").click();$("#sourceFiles").onchange=e=>{queueSourceFiles([...e.target.files]);e.target.value=""};
+  const drop=$("#fileDrop");drop.addEventListener("dragover",e=>{e.preventDefault();drop.style.borderColor="#d49a1f"});drop.addEventListener("dragleave",()=>drop.style.borderColor="");drop.addEventListener("drop",e=>{e.preventDefault();drop.style.borderColor="";queueSourceFiles([...e.dataTransfer.files])});
+  $("#analyzeBtn").onclick=()=>{if(!state.items.length)toast("Import evidence and custody records before analyzing the chain.");else{state.lastAnalyzedAt=new Date().toISOString();save();render();toast("Chain analysis refreshed from entered source-linked records.")}};
+  $("#reviewPendingBtn").onclick=()=>{$('.seg [data-view="review"]').click();window.scrollTo({top:0,behavior:"smooth"})};
+  $("#assistantSendBtn").onclick=()=>{const q=text($("#assistantInput").value);if(q){$("#assistantInput").value="";answerQuestion(q)}};$("#assistantInput").addEventListener("keydown",e=>{if(e.key==="Enter")$("#assistantSendBtn").click()});
+  $(".suggestions").addEventListener("click",e=>{const b=e.target.closest("[data-question]");if(b)answerQuestion(b.dataset.question)});
+  $("#assistantClearBtn").onclick=()=>{state.assistant=[];save();render()};
+  $("#sendEditBtn").onclick=sendToEdit;$("#sendFinalBtn").onclick=sendToFinal;$("#exportPdfBtn").onclick=exportCurrentReport;$("#backBtn").onclick=()=>{$('.seg [data-view="chain"]').click()};
+  window.addEventListener("pagehide",()=>{objectUrls.forEach(u=>{try{URL.revokeObjectURL(u)}catch(err){}});objectUrls.clear()});
+}
+function init(){
+   load(); initialized=true; const shared=activeCaseFromBridge(); if(shared)applySharedCustodyCase(shared);
+  bind(); render();
+  if(window.parent!==window){try{window.parent.postMessage({type:"ARC_MODULE_READY",title:document.title},(location.protocol==="http:"||location.protocol==="https:")?location.origin:"*")}catch(e){}}
+}
+window.addEventListener("DOMContentLoaded",init);
+})();
+</script>
+</body>
+</html>

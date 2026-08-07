@@ -1,0 +1,41 @@
+{
+  "product": "ARC Integrated Case System",
+  "release": "11.7.0-production",
+  "builtUtc": "2026-08-07T19:55:06+00:00",
+  "productionOrigins": [
+    "https://arcdefensereport.com",
+    "https://www.arcdefensereport.com"
+  ],
+  "cloudflareAccess": {
+    "teamDomain": "old-lake-2c90.cloudflareaccess.com",
+    "aud": "165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212"
+  },
+  "d1": {
+    "name": "arc_legal",
+    "databaseId": "6c04c557-f8de-4590-a235-76fa117ff6d8"
+  },
+  "r2": {
+    "bucket": "arc-legal-files",
+    "externalPrerequisite": "R2 must be enabled and the bucket created before Worker deployment"
+  },
+  "requiredSecrets": [
+    "GOOGLE_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "COURTLISTENER_API_KEY",
+    "FIRECRAWL_API_KEY"
+  ],
+  "pagesPayload": "DEPLOY_PAGES/",
+  "backend": "Cloudflare Pages + Access + Workers + D1 + R2",
+  "legacyVercelIncluded": false,
+  "validation": {
+    "npmTest": "passed",
+    "primaryAutomatedTests": "69/69 passed (47 core + 22 Motion & Legal)",
+    "apiFocusedTests": "31/31 passed",
+    "pagesLinkCheck": "136 references, 0 broken/root-absolute paths",
+    "localNavigationCheck": "272 references, 0 broken/root-absolute paths",
+    "javascriptSyntax": "125/125 JS/MJS files passed",
+    "inlineScriptSyntax": "62/62 inline scripts passed",
+    "productionSchema": "parsed successfully (24 tables)",
+    "liveProviderKeyPatterns": "none detected"
+  }
+}

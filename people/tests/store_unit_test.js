@@ -1,0 +1,31 @@
+"use strict";
+const assert = require("assert");
+const path = require("path");
+const root = path.resolve(__dirname, "..");
+const memory = new Map();
+global.window = global;
+global.location = { search: "?caseId=UNIT-CASE" };
+global.sessionStorage = { getItem:k=>memory.get("s:"+k)||null, setItem:(k,v)=>memory.set("s:"+k,String(v)), removeItem:k=>memory.delete("s:"+k) };
+global.localStorage = { getItem:k=>memory.get("l:"+k)||null, setItem:(k,v)=>memory.set("l:"+k,String(v)), removeItem:k=>memory.delete("l:"+k) };
+require(path.join(root,"assets/config.js"));
+require(path.join(root,"assets/store.js"));
+
+(async()=>{
+  await ARC_PEOPLE.resetPrototype("UNIT-CASE");
+  let people = await ARC_PEOPLE.listPeople("UNIT-CASE");
+  assert.equal(people.length,0);
+  const jane = await ARC_PEOPLE.savePerson({firstName:"Jane",lastName:"Doe",primaryRole:"witness",primaryPhone:"6175550101"},"UNIT-CASE");
+  assert.ok(jane.id.startsWith("PRSN-"));
+  assert.equal((await ARC_PEOPLE.listPeople("UNIT-CASE")).length,1);
+  const duplicates = await ARC_PEOPLE.findDuplicates({firstName:"Jane",lastName:"Doe",primaryRole:"witness",primaryPhone:"6175550101"},"","UNIT-CASE");
+  assert.ok(duplicates.length>=1);
+  await ARC_PEOPLE.ingestExtraction({documentId:"DOC-1",documentName:"report.pdf",people:[{extractionId:"EXT-1",nameAsWritten:"John Smith",identity:{firstName:"John",lastName:"Smith",fullName:"John Smith"},roles:{primarySuggestedRole:"police_officer",secondarySuggestedRoles:[]},contact:{phones:[],emails:[],addresses:[]},sourceReferences:[{documentId:"DOC-1",documentName:"report.pdf",page:"2"}],confidence:{overall:90}}]},"UNIT-CASE");
+  assert.equal((await ARC_PEOPLE.listExtractions("UNIT-CASE")).length,1);
+  const john = await ARC_PEOPLE.approveExtraction("EXT-1","UNIT-CASE");
+  assert.equal(john.identity.fullName,"John Smith");
+  assert.equal((await ARC_PEOPLE.listPeople("UNIT-CASE")).length,2);
+  const johnAgain = await ARC_PEOPLE.approveExtraction("EXT-1","UNIT-CASE");
+  assert.equal(johnAgain.id,john.id);
+  assert.equal((await ARC_PEOPLE.listPeople("UNIT-CASE")).length,2,"repeat approval must not duplicate a person");
+  console.log("PASS: store create, duplicate detection, extraction ingest, approval, and repeat-approval protection.");
+})().catch(err=>{console.error(err);process.exit(1)});

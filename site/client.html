@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Sign-In -- ARC Investigations & Consulting</title>
+<meta name="description" content="Case Status &amp; Docs for ARC Investigations & Consulting. Your case status, documents, and messages from your team.">
+<meta property="og:title" content="Client Sign-In -- ARC Investigations & Consulting">
+<meta property="og:description" content="Case Status &amp; Docs for ARC Investigations & Consulting. Your case status, documents, and messages from your team.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B162C'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' fill='%23D4AF37' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="../assets/fonts/playfair-display.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="page">
+
+  <header class="site-header">
+    <!-- Placeholder mark, taken from the prototype's own header treatment.
+         To swap in the real logo, replace the <span class="wordmark__mark">
+         with: <img class="wordmark__mark" src="../assets/logo.svg" alt=""> -->
+    <a class="wordmark" href="../index.html">
+      <img class="wordmark__mark" src="../assets/arc-logo.svg" alt="" width="28" height="28">
+      <span class="wordmark__text">ARC</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="services.html">Services</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a class="site-nav__portal" href="portal.html" aria-current="page">Portal</a>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <section class="page-head">
+      <p class="eyebrow"><span class="eyebrow__rule" aria-hidden="true"></span>Case Status &amp; Docs</p>
+      <h1 class="page-head__title">Client portal</h1>
+      <p class="page-head__lede">Your case status, documents, and messages from your team.</p>
+    </section>
+
+    <section class="signin">
+      <div class="signin__card">
+        <h2 class="signin__title">Client portal</h2>
+        <p class="signin__sub">Case status and documents shared with you.</p>
+
+        <!-- No sign-in form here by design. Cloudflare Access is the only
+             authentication layer for ARC, so this portal will be gated by an
+             Access policy rather than by an ARC password. Until that policy
+             exists there is nothing to sign in to, and a password field on a
+             public page invites people to type a real password into a form
+             with no server behind it. -->
+        <p class="signin__notice" role="status">
+          This portal is not open yet. When it is, access will be granted through Cloudflare Access using the email address on your matter, so there is no separate ARC password to create or remember. Contact ARC directly in the meantime.
+        </p>
+
+        <a class="btn btn--primary" href="contact.html">Contact ARC</a>
+
+        <p class="signin__foot">Not the right portal? <a href="portal.html">Choose another</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="site-footer__mark">ARC Investigations &amp; Consulting</span>
+    <span class="site-footer__legal">&copy; 2026 ARC Investigations &amp; Consulting. All rights reserved.</span>
+  </footer>
+
+</div>
+
+<script src="../script.js" defer></script>
+</body>
+</html>

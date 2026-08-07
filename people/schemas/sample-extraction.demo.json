@@ -1,0 +1,62 @@
+{
+  "documentId": "DOC-DEMO-001",
+  "documentName": "Sample_Police_Report.pdf",
+  "people": [
+    {
+      "extractionId": "EXT-DEMO-001",
+      "nameAsWritten": "James R. Smith",
+      "identity": {
+        "firstName": "James",
+        "middleName": "R.",
+        "lastName": "Smith",
+        "fullName": "James R. Smith",
+        "aliases": []
+      },
+      "roles": {
+        "primarySuggestedRole": "witness",
+        "secondarySuggestedRoles": []
+      },
+      "contact": {
+        "phones": [],
+        "emails": [],
+        "addresses": []
+      },
+      "professional": {},
+      "attorney": {},
+      "caseRelationship": {
+        "summary": "Named as a witness in the uploaded report."
+      },
+      "statements": [
+        {
+          "statementType": "Police Report Paraphrase",
+          "exactQuote": "",
+          "paraphrase": "The report attributes an observation to Smith.",
+          "sourcePage": "4"
+        }
+      ],
+      "evidenceLinks": [],
+      "timelineEvents": [],
+      "interviewReferences": [],
+      "sourceReferences": [
+        {
+          "documentId": "DOC-DEMO-001",
+          "documentName": "Sample_Police_Report.pdf",
+          "page": "4",
+          "supportingText": "Demonstration source text only."
+        }
+      ],
+      "possibleMatchKey": {
+        "normalizedName": "jamesrsmith"
+      },
+      "confidence": {
+        "overall": 92,
+        "name": 98,
+        "role": 90,
+        "contact": 0
+      },
+      "limitations": [
+        "Demonstration record only; do not use in production."
+      ]
+    }
+  ]
+}

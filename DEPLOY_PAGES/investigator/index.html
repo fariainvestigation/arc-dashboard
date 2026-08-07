@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html lang="en" style=""><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="investigator.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..900&amp;family=Public+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/></head><body class="bg-background font-body-md text-on-background"><header class="fixed top-0 w-full z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant"><div class="h-16 max-w-[1440px] mx-auto px-margin-mobile lg:px-margin-desktop flex items-center justify-between"><div class="flex items-center gap-4"><img alt="Logo" class="h-8 w-auto object-contain" src="../assets/arc-logo.svg"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary uppercase tracking-wider"><h1 class="font-headline-md text-headline-md text-primary uppercase mb-4" style="--tw-border-spacing-y: 0; --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: ; --tw-pinch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; --tw-ordinal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-spacing: ; --tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / 0.5); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightness: ; --tw-contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; --tw-saturate: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --tw-backdrop-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale: ; --tw-backdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacity: ; --tw-backdrop-saturate: ; --tw-backdrop-sepia: ; --tw-contain-size: ; --tw-contain-layout: ; --tw-contain-paint: ; --tw-contain-style: ; --tw-text-opacity: 1; color: rgb(0, 10, 35); letter-spacing: normal; background-color: rgb(237, 238, 239);">ARC Investigations &amp; Consulting </h1></span><span class="font-label-metadata text-label-metadata text-outline uppercase">Secure Terminal // V4.2</span></div></div><div class="flex items-center gap-4"><span class="font-label-metadata text-label-metadata text-outline uppercase" id="arcActiveUser">Not signed in</span><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16"><div class="flex flex-col w-full">
+<!-- Status / Technical Header Bar -->
+<div class="w-full bg-surface-container-highest flex justify-between items-center px-margin-mobile lg:px-margin-desktop py-2 relative">
+<div class="flex items-center gap-6">
+<span class="font-label-technical text-label-technical text-primary uppercase tracking-widest">
+        <span id="arcNode">NODE: --</span>
+      </span>
+<span class="font-label-metadata text-label-metadata text-outline hidden md:inline-block">
+        <span id="arcSessionMeta"></span>
+      </span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 bg-primary"></div>
+<span class="font-label-technical text-label-technical text-on-surface uppercase tracking-widest"><span id="arcLinkStatus">VERIFYING SECURE LINK</span></span>
+</div>
+</div>
+<!-- Main Grid Layout -->
+<div class="w-full max-w-[1440px] mx-auto px-margin-mobile lg:px-margin-desktop py-12 lg:py-24 grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-gutter">
+<!-- Left Pane: Identity & Context -->
+<div class="col-span-4 md:col-span-8 lg:col-span-7 flex flex-col">
+<div class="bg-surface-container flex flex-col relative p-8 md:p-12 h-full justify-between">
+<!-- Badge & Meta -->
+<div class="flex justify-between items-start w-full mb-16">
+<div class="bg-error text-on-error font-headline-sm text-headline-sm uppercase px-4 py-1 tracking-wider">
+            Confidential
+          </div>
+<span class="font-label-metadata text-label-metadata text-outline text-right">
+            DOC_REF: ARC-INIT-001<br/>
+            TS/SCI CLEARANCE REQUIRED
+          </span>
+</div>
+<!-- Brand Asset -->
+<div class="flex-grow flex flex-col justify-center my-12">
+<img alt="ARC Federal Module Identity Logo" class="w-full max-w-lg h-auto mix-blend-multiply object-contain" src="../assets/arc-logo.svg"/>
+</div>
+<!-- Bureaucratic Description -->
+<div class="mt-8 border-t-2 border-outline-variant pt-6">
+<h1 class="font-headline-md text-headline-md text-primary uppercase mb-4">ARC Investigations &amp; Consulting </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+            Authorized access point for investigative operations, secure dossier retrieval, and classified case initiation. Disconnect immediately if not Authorized </p>
+</div>
+</div>
+</div>
+<!-- Right Pane: Primary Actions -->
+<div class="col-span-4 md:col-span-8 lg:col-span-5 flex flex-col gap-gutter">
+<!-- Action 1: New Case -->
+<div class="bg-primary-container text-on-primary-container p-8 lg:p-10 flex flex-col group relative overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer">
+<div class="absolute -right-12 -top-12 text-[120px] text-primary opacity-20 group-hover:scale-110 transition-transform duration-500 material-symbols-outlined pointer-events-none" style='font-variation-settings: "FILL" 1;'>
+          note_add
+        </div>
+<div class="flex justify-between items-center mb-8 relative z-10">
+<span class="font-label-technical text-label-technical text-primary-fixed-dim uppercase">Action // 01</span>
+<span class="material-symbols-outlined text-[32px] text-primary-fixed">add_circle</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-primary-container mb-4 relative z-10">
+          New Case
+        </h2>
+<p class="font-body-md text-body-md text-primary-fixed-dim mb-12 relative z-10 max-w-sm">
+          Initialize a blank investigative dossier. Assign standard routing tags, assign primary operatives, and lock preliminary evidence caches.
+        </p>
+<button class="mt-auto w-full bg-primary-fixed text-on-primary-container font-label-technical text-label-technical py-4 px-6 uppercase tracking-widest hover:bg-on-primary transition-colors text-left flex justify-between items-center relative z-10" id="arcInitializeRecord" type="button">
+<span class="">Initialize Record</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- Action 2: Open Case -->
+<div class="bg-surface-container-high text-on-surface p-8 lg:p-10 flex flex-col group relative overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer">
+<div class="absolute -right-12 -top-12 text-[120px] text-surface-variant opacity-50 group-hover:scale-110 transition-transform duration-500 material-symbols-outlined pointer-events-none" style='font-variation-settings: "FILL" 1;'>
+          folder_open
+        </div>
+<div class="flex justify-between items-center mb-8 relative z-10">
+<span class="font-label-technical text-label-technical text-outline uppercase">Action // 02</span>
+<span class="material-symbols-outlined text-[32px] text-primary">search</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4 relative z-10">
+          Open Case
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-12 relative z-10 max-w-sm">
+          Retrieve active or archived Cases </p>
+<button class="mt-auto w-full bg-primary text-on-primary font-label-technical text-label-technical py-4 px-6 uppercase tracking-widest hover:bg-primary-container transition-colors text-left flex justify-between items-center relative z-10" id="arcAccessDatabase" type="button">
+<span class="">Access Database</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div><section class="w-full bg-surface-container-low border-t border-outline-variant py-12 lg:py-16">
+<div class="max-w-[1440px] mx-auto px-margin-mobile lg:px-margin-desktop">
+<div class="flex items-center justify-between mb-8 border-b border-outline-variant pb-4">
+<h2 class="font-headline-md text-headline-md text-primary uppercase tracking-wider">Operational Dashboard</h2>
+<div class="flex gap-4">
+<span class="font-label-technical text-label-technical text-outline uppercase">System Status: <span id="arcSystemStatus">Checking</span></span>
+<span class="font-label-technical text-label-technical text-primary uppercase">Node: <span id="arcNodeLower">--</span></span>
+</div>
+</div>
+<div class="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-gutter">
+<!-- Case Overview Stats -->
+<div class="col-span-4 md:col-span-8 lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+<div class="bg-surface-container-highest p-6 border-l-4 border-primary">
+<p class="font-label-technical text-label-technical text-outline uppercase mb-2">Total Open Cases</p>
+<p class="font-headline-lg text-headline-lg text-primary" id="statOpenCases">--</p>
+</div>
+<div class="bg-surface-container-highest p-6 border-l-4 border-secondary">
+<p class="font-label-technical text-label-technical text-outline uppercase mb-2">Pending Review</p>
+<p class="font-headline-lg text-headline-lg text-primary" id="statPendingReview">--</p>
+</div>
+<div class="bg-surface-container-highest p-6 border-l-4 border-error">
+<p class="font-label-technical text-label-technical text-outline uppercase mb-2">Urgent Due Dates</p>
+<p class="font-headline-lg text-headline-lg text-error" id="statUrgent">--</p>
+</div>
+</div>
+<!-- Recently Opened Cases -->
+<div class="col-span-4 md:col-span-8 lg:col-span-9">
+<h3 class="font-label-technical text-label-technical text-primary uppercase mb-4 tracking-widest">Recently Accessed Dossiers</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="arcRecentCases">
+<!-- populated at runtime from the authenticated user's cases -->
+
+</div>
+<!-- Investigation Calendar Sidebar -->
+<div class="col-span-4 md:col-span-8 lg:col-span-3">
+<h3 class="font-label-technical text-label-technical text-primary uppercase mb-4 tracking-widest">Deadlines</h3>
+<div id="arcDeadlines" class="flex flex-col gap-4 mb-6"></div>
+<button class="mt-6 w-full border border-on-primary/30 py-2 font-label-technical text-label-technical uppercase hover:bg-on-primary hover:text-primary transition-colors" id="arcViewCalendar" type="button">
+            View Full Calendar
+          </button>
+</div>
+</div>
+</div>
+</div>
+</section></main><footer class="w-full bg-surface-container-lowest border-t border-outline-variant py-12 mt-20"></footer>
+
+<script src="../arc_backend.js"></script>
+<script>
+/*
+  Investigator portal. This page merges what were the secure entry page and the
+  operational dashboard: the two action cards choose New Case or Open Case, and
+  the dashboard beneath them shows real workload. /secure/ was retired because
+  it carried the same two buttons one click earlier.
+
+  Every metric is either a real value or an unavailable state. Nothing here
+  renders a filler number, and nothing renders at all until Cloudflare Access
+  confirms an identity.
+*/
+(function () {
+  "use strict";
+  var B = window.ARCBackend;
+
+  function byId(id) { return document.getElementById(id); }
+  function text(id, value) { var el = byId(id); if (el) el.textContent = value; }
+
+  function note(host, message) {
+    if (!host) return;
+    host.textContent = "";
+    var p = document.createElement("p");
+    p.className = "font-label-metadata text-label-metadata text-on-surface-variant";
+    p.textContent = message;
+    host.appendChild(p);
+  }
+
+  function relative(iso) {
+    var then = iso ? Date.parse(iso) : 0;
+    if (!then) return "No recorded activity";
+    var mins = Math.round((Date.now() - then) / 60000);
+    if (mins < 1) return "Updated just now";
+    if (mins < 60) return "Updated " + mins + " min ago";
+    var hours = Math.round(mins / 60);
+    if (hours < 24) return "Updated " + hours + " hr ago";
+    return "Updated " + Math.round(hours / 24) + " d ago";
+  }
+
+  /* Built with createElement and textContent. Case names, dockets and client
+     names are user-controlled and are never concatenated into innerHTML. */
+  function caseCard(record) {
+    var link = document.createElement("a");
+    link.className = "bg-surface-container-lowest p-4 border border-outline-variant hover:shadow-md transition-all cursor-pointer block";
+    link.href = "../cases/index.html?action=search&caseId=" + encodeURIComponent(record.id);
+
+    var head = document.createElement("div");
+    head.className = "flex justify-between mb-2";
+    var ref = document.createElement("span");
+    ref.className = "font-label-metadata text-label-metadata text-outline";
+    ref.textContent = record.docket ? ("DOCKET: " + record.docket) : ("REF: " + record.id);
+    var dot = document.createElement("span");
+    dot.className = "w-2 h-2 rounded-full bg-primary";
+    head.appendChild(ref);
+    head.appendChild(dot);
+
+    var name = document.createElement("p");
+    name.className = "font-body-md font-bold text-primary mb-1";
+    name.textContent = record.name;
+
+    var meta = document.createElement("p");
+    meta.className = "font-label-metadata text-label-metadata text-on-surface-variant";
+    meta.textContent = relative(record.updatedAt);
+
+    link.appendChild(head);
+    link.appendChild(name);
+    link.appendChild(meta);
+    link.addEventListener("click", function () { B.setActiveCase(record.id, record.name); });
+    return link;
+  }
+
+  function deadlineRow(item) {
+    var row = document.createElement("div");
+    row.className = "border-l-4 border-error pl-4";
+    var when = document.createElement("p");
+    when.className = "font-label-technical text-label-technical text-primary uppercase";
+    when.textContent = item.label || "";
+    var what = document.createElement("p");
+    what.className = "font-body-md text-body-md text-on-surface-variant";
+    what.textContent = item.title || "";
+    row.appendChild(when);
+    row.appendChild(what);
+    return row;
+  }
+
+
+  function localRegistryCases() {
+    try {
+      var value = JSON.parse(localStorage.getItem("arc_case_registry_v1") || "null");
+      var rows = value && Array.isArray(value.cases) ? value.cases : [];
+      return rows.map(function (row) {
+        return {id:String(row.caseId||""),name:String(row.matter||row.docket||"Untitled matter"),
+          docket:String(row.docket||""),updatedAt:row.updatedAt||row.createdAt||null,status:row.status||"open"};
+      }).filter(function (row) { return row.id; });
+    } catch (error) { return []; }
+  }
+
+  function lockActions(reason) {
+    ["arcInitializeRecord", "arcAccessDatabase"].forEach(function (id) {
+      var b = byId(id);
+      if (!b) return;
+      b.disabled = true;
+      b.setAttribute("aria-disabled", "true");
+      b.title = reason;
+    });
+  }
+
+  function unlockActions() {
+    ["arcInitializeRecord", "arcAccessDatabase"].forEach(function (id) {
+      var b = byId(id);
+      if (!b) return;
+      b.disabled = false;
+      b.removeAttribute("aria-disabled");
+      b.removeAttribute("title");
+    });
+  }
+
+  lockActions("Confirming your Cloudflare Access identity.");
+
+  (async function start() {
+    var user = null;
+    try {
+      user = await B.whoami();
+    } catch (error) {
+      text("arcLinkStatus", "SECURE LINK UNAVAILABLE");
+      text("arcSystemStatus", "Unavailable");
+      lockActions(error.message);
+      note(byId("arcRecentCases"), error.message);
+      note(byId("arcDeadlines"), "Deadlines unavailable");
+      return;
+    }
+
+    if (!user) {
+      text("arcLinkStatus", "IDENTITY NOT CONFIRMED");
+      text("arcSystemStatus", "Not authenticated");
+      text("arcActiveUser", "Not signed in");
+      lockActions("Cloudflare Access did not confirm an identity. Reload this page.");
+      note(byId("arcRecentCases"), "Sign in to view your cases.");
+      note(byId("arcDeadlines"), "Sign in to view deadlines.");
+      return;
+    }
+
+    var isLocalPreview = user.source === "local-preview";
+    text("arcLinkStatus", isLocalPreview ? "LOCAL PREVIEW MODE" : "SECURE LINK ESTABLISHED");
+    text("arcActiveUser", isLocalPreview ? "Local Preview" : (B.displayName(user) || user.email || "Authenticated"));
+    text("arcNode", "NODE: " + (location.hostname || "ARC").toUpperCase());
+    text("arcNodeLower", location.hostname || "ARC");
+    text("arcSessionMeta", "IDENTITY: " + (user.email || user.userId));
+    unlockActions();
+
+    var summary = null;
+    try { summary = await B.dashboardSummary(); } catch (error) { summary = null; }
+
+    var cases = [];
+    try {
+      cases = await B.listCases();
+      text("arcSystemStatus", "Nominal");
+    } catch (error) {
+      cases = localRegistryCases();
+      text("arcSystemStatus", cases.length ? "Local registry" : "Degraded");
+      if (!cases.length) note(byId("arcRecentCases"), error.message);
+      note(byId("arcDeadlines"), "Deadlines unavailable");
+    }
+
+    function metric(id, value, fallback) {
+      if (typeof value === "number") { text(id, String(value)); return; }
+      if (typeof fallback === "number") { text(id, String(fallback)); return; }
+      text(id, "--");
+    }
+    metric("statOpenCases", summary && summary.openCases, cases.length);
+    metric("statPendingReview", summary && summary.pendingReview);
+    metric("statUrgent", summary && summary.urgentDeadlines);
+
+    var host = byId("arcRecentCases");
+    if (host) {
+      host.textContent = "";
+      var recent = cases.slice().sort(function (a, b) {
+        return String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
+      }).slice(0, 6);
+      if (!recent.length) note(host, "No recently accessed cases");
+      else recent.forEach(function (record) { host.appendChild(caseCard(record)); });
+    }
+
+    var deadlines = byId("arcDeadlines");
+    if (deadlines) {
+      deadlines.textContent = "";
+      var items = summary && Array.isArray(summary.deadlines) ? summary.deadlines : [];
+      if (!items.length) note(deadlines, "No upcoming deadlines");
+      else items.slice(0, 6).forEach(function (item) { deadlines.appendChild(deadlineRow(item)); });
+    }
+  })();
+
+  /* New Case goes straight to intake. Nothing is created by this click: the
+     case only exists once intake publishes it. Navigation state is cleared so
+     no previous case id can follow the user in. */
+  B.once(byId("arcInitializeRecord"), async function () {
+    B.setEntryMode("new");
+    B.clearActiveCase();
+    location.href = "../cases/intake/index.html?mode=new";
+  });
+
+  /* Open Case goes to the case dashboard, which owns search and the case list. */
+  B.once(byId("arcAccessDatabase"), async function () {
+    B.setEntryMode("open");
+    location.href = "../cases/index.html?action=search";
+  });
+
+  B.once(byId("arcViewCalendar"), async function () {
+    location.href = "../cases/index.html?action=search&view=deadlines";
+  });
+})();
+</script>
+
+</body></html>

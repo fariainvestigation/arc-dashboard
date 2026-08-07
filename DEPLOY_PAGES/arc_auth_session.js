@@ -1,0 +1,2 @@
+/* Cloudflare Access session helper */
+(function(g){'use strict';var cached=null;async function me(){if(cached)return cached;var r=await fetch('/legal-api/me',{credentials:'include'});if(!r.ok)throw new Error(r.status===403?'ARC account pending or disabled.':'Cloudflare Access session required.');cached=await r.json();return cached}function clear(){cached=null}g.ARCAuthSession={me:me,clear:clear};})(window);

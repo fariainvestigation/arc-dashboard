@@ -36,7 +36,21 @@ export class FakeD1 {
 export class FakeR2 {
   constructor() { this.store = new Map(); }
   async put(key, value) {
-    const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+    let bytes;
+    if (value && typeof value.getReader === 'function') {
+      const reader = value.getReader();
+      const chunks = []; let total = 0;
+      while (true) {
+        const part = await reader.read();
+        if (part.done) break;
+        const chunk = part.value instanceof Uint8Array ? part.value : new Uint8Array(part.value);
+        chunks.push(chunk); total += chunk.length;
+      }
+      bytes = new Uint8Array(total); let offset = 0;
+      for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+    } else {
+      bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+    }
     this.store.set(key, bytes);
     return { key, size: bytes.length };
   }
@@ -61,7 +75,7 @@ export function makeEnv(identities = {}) {
     ACCESS_AUD: 'test-aud',
     ALLOWED_ORIGINS: 'https://arcdefensereport.com',
     COURTLISTENER_API_KEY: 'cl-test-secret-DO-NOT-LEAK',
-    ANTHROPIC_API_KEY: 'sk-ant-test-secret-DO-NOT-LEAK',
+    ANTHROPIC_API_KEY: 'TEST_ANTHROPIC_SECRET-DO-NOT-LEAK',
     CLAUDE_MODEL: 'claude-sonnet-4-6',
     __verifyJwt: token => {
       if (!identities[token]) throw Object.assign(new Error('Access token invalid'), { status: 401 });
@@ -89,6 +103,12 @@ export async function seedUser(env, email, role, cases = []) {
   await env.DB.prepare('INSERT OR REPLACE INTO legal_users (email, name, role, status, created_at, updated_at) VALUES (?,?,?,?,?,?)')
     .bind(email, email.split('@')[0], role, 'active', now, now).run();
   for (const c of cases) {
+    await env.DB.prepare('INSERT OR REPLACE INTO cases (id, data, rev, deleted, updated_at, updated_by, owner_user_id) VALUES (?,?,?,?,?,?,?)')
+      .bind(c, JSON.stringify({ caseId: c }), 1, 0, now, email, email).run();
+    const memberRole = role === 'administrator' ? 'owner' : role === 'attorney' || role === 'supervisor' ? 'reviewer' : 'editor';
+    await env.DB.prepare('INSERT OR REPLACE INTO case_members (case_id, user_id, role, granted_by, granted_at) VALUES (?,?,?,?,?)')
+      .bind(c, email.toLowerCase(), memberRole, email.toLowerCase(), now).run();
+    // Legacy mirror only; production authorization reads case_members.
     await env.DB.prepare('INSERT OR REPLACE INTO case_assignments (case_id, email, assigned_role, assigned_at) VALUES (?,?,?,?)')
       .bind(c, email, role, now).run();
   }

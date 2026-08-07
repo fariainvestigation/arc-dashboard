@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="arc-version" content="11.6.2"><title>ARC Case Intake</title>
+<link rel="stylesheet" href="arc_uniform_design.css"><style>
+:root{--navy:#0b1726;--navy2:#18304d;--gold:#b59461;--paper:#fff;--ink:#172033;--muted:#657184;--line:#d9e0e8;--bg:#f4f6f9;--ok:#19734a;--warn:#9b6414;--bad:#a52a2a}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:#fff;padding:18px 24px;border-bottom:3px solid var(--gold)}header h1{margin:0;font-size:22px}header p{margin:5px 0 0;color:#d8e1ec}
+main{max-width:1280px;margin:auto;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:16px;box-shadow:0 2px 8px rgba(13,31,52,.04)}h2,h3{margin:0 0 12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button,.btn{border:1px solid #aeb9c7;border-radius:6px;background:#fff;padding:9px 12px;font-weight:700;cursor:pointer}
+.tabs button[aria-selected=true],.btn.primary{background:var(--navy2);color:#fff;border-color:var(--navy2)}.btn.danger{color:var(--bad)}
+.panel{display:none}.panel.active{display:block}.field{display:grid;gap:5px;margin-bottom:11px}.field input,.field textarea,.field select{width:100%;padding:9px;border:1px solid #b9c4d1;border-radius:6px;background:#fff}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.item{border-top:1px solid var(--line);padding:12px 0}.item:first-child{border-top:0}
+.muted{color:var(--muted)}.notice{padding:10px 12px;border-left:4px solid var(--gold);background:#fff8e9;margin:10px 0}.error{color:var(--bad)}.ok{color:var(--ok)}
+.badge{display:inline-block;border:1px solid #c5ced9;border-radius:999px;padding:3px 8px;font-size:12px;background:#f7f9fc}.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+iframe{width:100%;min-height:680px;border:1px solid var(--line);border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+@media(max-width:720px){main{padding:12px}header{padding:15px}.grid{grid-template-columns:1fr}}
+</style>
+<script src="arc_provider_client.js"></script><script src="arc_report_header.js"></script><script src="arc_unified_bridge.js"></script>
+</head><body>
+<header><h1>Stage 1 · Case Intake</h1><p>Canonical case metadata. This page creates and edits the shared case identity.</p></header>
+<main>
+<div class="toolbar"><div id="caseStatus" class="badge">No active case</div><div class="row"><button id="newCase" class="btn">Start new case</button><a class="btn primary" href="investigation.html#evidence">Continue to Evidence</a></div></div>
+<div id="message" role="status"></div>
+<form id="caseForm">
+<div class="grid">
+<section class="card"><h2>Matter identity</h2>
+<label class="field">Matter name<input name="matter" required maxlength="240"></label>
+<label class="field">Docket / case number<input name="docket" maxlength="120"></label>
+<label class="field">Court / jurisdiction<input name="court" maxlength="240"></label>
+<label class="field">Case type<input name="caseType" maxlength="120"></label>
+</section>
+<section class="card"><h2>Assignment</h2>
+<label class="field">Client<input name="clientName" maxlength="240"></label>
+<label class="field">Assigning attorney<input name="assigningAttorney" maxlength="240"></label>
+<label class="field">Lead investigator<input name="investigator" maxlength="240"></label>
+<label class="field">Conflict check<select name="conflictCheck"><option value="">Not completed</option><option value="clear">Clear</option><option value="potential_conflict">Potential conflict</option><option value="conflict">Conflict identified</option></select></label>
+</section>
+<section class="card"><h2>Scope and dates</h2>
+<label class="field">assignment scope<textarea name="scope" rows="6" required maxlength="5000"></textarea></label>
+<label class="field">Primary deadline<input name="deadline" type="date"></label>
+<label class="field">Hearing date<input name="hearingDate" type="date"></label>
+</section>
+</div>
+<div class="card" style="margin-top:16px"><div class="row"><button class="btn primary" type="submit">Save case intake</button><span class="muted">Saving preserves the existing case ID. “Start new case” creates a separate matter.</span></div></div>
+</form></main>
+<script>
+(function(){
+  "use strict";
+  var form=document.getElementById("caseForm"), message=document.getElementById("message"), status=document.getElementById("caseStatus");
+  function active(){return window.ARCUnified ? ARCUnified.getCase() : {}}
+  function render(){
+    var c=active();
+    Array.prototype.forEach.call(form.elements,function(el){if(el.name) el.value=c[el.name]||""});
+    var id=ARCUnified.canonicalCaseId(c);
+    status.textContent=id ? (c.matter||"Unnamed matter")+" · "+id : "No active case";
+  }
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    try{
+      var data=Object.fromEntries(new FormData(form).entries()), current=active();
+      if(!ARCUnified.canonicalCaseId(current)) current=ARCUnified.beginNewCase();
+      var saved=ARCUnified.saveCase(Object.assign({},current,data,{status:"active",updatedAt:new Date().toISOString()}));
+      ARCUnified.setStageState("case",{status:data.matter&&data.scope?"complete":"in_progress",requirements:{caseId:true,matter:!!data.matter,scope:!!data.scope},blockers:[]});
+      message.className="notice ok"; message.textContent="Case intake saved. Shared case ID: "+ARCUnified.canonicalCaseId(saved); render();
+    }catch(err){message.className="notice error";message.textContent=err.message}
+  });
+  document.getElementById("newCase").addEventListener("click",function(){
+    if(!confirm("Start a separate case? Unsaved form edits will be discarded.")) return;
+    ARCUnified.beginNewCase(); render(); message.className="notice";message.textContent="New case ID created. Complete and save the intake.";
+  });
+  document.addEventListener("DOMContentLoaded",render);
+})();
+</script></body></html>

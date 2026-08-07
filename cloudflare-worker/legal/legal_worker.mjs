@@ -66,7 +66,7 @@ async function requireUser(request, env) {
 async function requireCaseAccess(env, user, caseId) {
   if (!caseId) throw Object.assign(new Error('No active ARC case selected.'), { status: 400 });
   if (['administrator', 'supervisor'].includes(user.role)) return true;
-  const a = await env.DB.prepare('SELECT 1 x FROM case_assignments WHERE case_id=? AND email=?').bind(caseId, user.email).first();
+  const a = await env.DB.prepare('SELECT 1 x FROM case_members WHERE case_id=? AND user_id=?').bind(caseId, user.email).first();
   if (!a) throw Object.assign(new Error('You are not assigned to this case.'), { status: 403 });
   return true;
 }
@@ -238,9 +238,19 @@ export async function handleRequest(request, env) {
     if (path === 'assignments' && request.method === 'POST') {
       if (!['administrator', 'supervisor'].includes(user.role)) throw Object.assign(new Error('Supervisor role required'), { status: 403 });
       const b = await readJson(request);
+      const memberEmail = String(b.email || '').toLowerCase().trim();
+      if (!memberEmail) throw Object.assign(new Error('Member email required'), { status: 400 });
+      const requested = String(b.role || 'editor').toLowerCase();
+      const memberRole = ['owner','editor','reviewer','reader'].includes(requested)
+        ? requested
+        : (requested === 'readonly' ? 'reader' : requested === 'attorney' ? 'reviewer' : 'editor');
+      await env.DB.prepare(`INSERT INTO case_members (case_id, user_id, role, granted_by, granted_at)
+        VALUES (?,?,?,?,?) ON CONFLICT(case_id,user_id) DO UPDATE SET role=excluded.role, granted_by=excluded.granted_by, granted_at=excluded.granted_at`)
+        .bind(b.caseId, memberEmail, memberRole, user.email, now()).run();
+      // Legacy mirror retained only for older admin screens; authorization reads case_members exclusively.
       await env.DB.prepare('INSERT OR REPLACE INTO case_assignments (case_id, email, assigned_role, assigned_at) VALUES (?,?,?,?)')
-        .bind(b.caseId, String(b.email).toLowerCase(), b.role || 'investigator', now()).run();
-      await audit(env, user.email, 'assignment.set', { caseId: b.caseId, summary: b.email });
+        .bind(b.caseId, memberEmail, memberRole, now()).run();
+      await audit(env, user.email, 'assignment.set', { caseId: b.caseId, summary: memberEmail + ' -> ' + memberRole });
       return json({ ok: true }, 200, cors);
     }
 
@@ -527,18 +537,38 @@ export async function handleRequest(request, env) {
       if (!ALLOWED_EXT.includes(ext)) throw Object.assign(new Error('File type not accepted: ' + ext), { status: 415 });
       const len = Number(request.headers.get('content-length') || 0);
       if (len > MAX_UPLOAD) throw Object.assign(new Error('File exceeds 250 MB limit'), { status: 413 });
+      if (!request.body) throw Object.assign(new Error('Upload body is required'), { status: 400 });
       const id = uuid();
       const key = `legal/${caseId}/${id}_${safeName(filename)}`;
-      const { hash, size, chunks } = await hashStream(request.body, { retain: true });
-      const bytes = chunks.length === 1 ? chunks[0] : chunks.reduce((acc, c) => { const o = new Uint8Array(acc.length + c.length); o.set(acc); o.set(c, acc.length); return o; }, new Uint8Array(0));
-      await env.FILES.put(key, bytes);
-      await env.DB.prepare(`INSERT INTO legal_files (id, case_id, original_filename, stored_key, mime_type, size, sha256,
-        uploaded_by, uploaded_at, category, confidentiality, related_motion_id, exhibit_title)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-        .bind(id, caseId, filename, key, request.headers.get('content-type') || '', size, hash, user.email, now(),
-          url.searchParams.get('category') || 'exhibit', url.searchParams.get('confidentiality') || 'standard',
-          url.searchParams.get('motionId') || '', url.searchParams.get('title') || '').run();
-      await audit(env, user.email, 'file.upload', { caseId, recordType: 'file', recordId: id, summary: filename });
+      const contentType = request.headers.get('content-type') || 'application/octet-stream';
+      const [r2Stream, hashInput] = request.body.tee();
+      const putPromise = env.FILES.put(key, r2Stream, { httpMetadata: { contentType } });
+      let hash, size;
+      try {
+        const measured = await hashStream(hashInput, { retain: false });
+        hash = measured.hash;
+        size = measured.size;
+        await putPromise;
+      } catch (error) {
+        try { await env.FILES.delete(key); } catch (_) {}
+        throw error;
+      }
+      if (size > MAX_UPLOAD) {
+        try { await env.FILES.delete(key); } catch (_) {}
+        throw Object.assign(new Error('File exceeds 250 MB limit'), { status: 413 });
+      }
+      try {
+        await env.DB.prepare(`INSERT INTO legal_files (id, case_id, original_filename, stored_key, mime_type, size, sha256,
+          uploaded_by, uploaded_at, category, confidentiality, related_motion_id, exhibit_title)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+          .bind(id, caseId, filename, key, contentType, size, hash, user.email, now(),
+            url.searchParams.get('category') || 'exhibit', url.searchParams.get('confidentiality') || 'standard',
+            url.searchParams.get('motionId') || '', url.searchParams.get('title') || '').run();
+        await audit(env, user.email, 'file.upload', { caseId, recordType: 'file', recordId: id, summary: filename });
+      } catch (error) {
+        try { await env.FILES.delete(key); } catch (_) {}
+        throw error;
+      }
       return json(await env.DB.prepare('SELECT * FROM legal_files WHERE id=?').bind(id).first(), 200, cors);
     }
     if (seg[0] === 'files' && seg[1] && !seg[2] && request.method === 'GET') {

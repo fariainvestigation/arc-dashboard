@@ -144,7 +144,7 @@ const jwksCache = { keys: null, fetched: 0 };
  * Validate a Cloudflare Access JWT (Cf-Access-Jwt-Assertion header).
  * env.ACCESS_TEAM_DOMAIN e.g. "example.cloudflareaccess.com"; env.ACCESS_AUD is the app AUD tag.
  * Tests may inject env.__verifyJwt(token) -> identity to bypass network JWKS.
- * Returns { email } or throws.
+ * Returns { email, sub } or throws.
  */
 export async function verifyAccessJwt(token, env) {
   if (!token) throw new Error('Missing Cloudflare Access token');
@@ -170,7 +170,7 @@ export async function verifyAccessJwt(token, env) {
   const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64uToBytes(sig), enc.encode(`${h}.${p}`));
   if (!ok) throw new Error('Access token signature invalid');
   if (!payload.email) throw new Error('Access token has no email identity');
-  return { email: String(payload.email).toLowerCase() };
+  return { email: String(payload.email).toLowerCase(), sub: String(payload.sub || '').trim() };
 }
 
 // ---- misc -------------------------------------------------------------------

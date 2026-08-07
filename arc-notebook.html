@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARC Notebook - Case Analysis Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14161c;
+  --bg2:#1a1d25;
+  --panel:#1e222c;
+  --panel2:#232836;
+  --line:#2c3242;
+  --gold:#C9A84C;
+  --gold-dim:#8a7434;
+  --ink:#e8e6df;
+  --ink-dim:#9aa0ad;
+  --ink-faint:#6b7280;
+  --red:#B42318;
+  --red-bg:#2a1512;
+  --amber:#B7791F;
+  --amber-bg:#261d0e;
+  --green:#2F855A;
+  --green-bg:#0f2018;
+  --font-head:'Playfair Display',serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;overflow:hidden}
+button{font-family:var(--font-body);cursor:pointer}
+input,textarea,select{font-family:var(--font-body)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- App frame ---------- */
+#app{display:flex;flex-direction:column;height:100vh}
+header.topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--bg2);border-bottom:1px solid var(--line);flex:0 0 auto}
+.brandmark{width:38px;height:38px;border:1px solid var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:19px;color:var(--gold);flex:0 0 auto}
+.matter-id{min-width:0}
+.matter-name{font-family:var(--font-head);font-size:19px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:1px dashed transparent}
+.matter-name:hover{border-bottom-color:var(--gold-dim)}
+.matter-meta{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin-top:2px}
+.topbar-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.chip-live{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:20px;border:1px solid var(--line);color:var(--ink-dim)}
+.chip-live.ok{border-color:var(--green);color:#7fc9a3}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--gold-dim)}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#17130a;font-weight:600}
+.btn-gold:hover{background:#d6b65e}
+.btn-gold:disabled,.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink-dim)}
+.btn-ghost:hover{color:var(--ink)}
+
+main.workspace{display:grid;grid-template-columns:290px 1fr 330px;flex:1 1 auto;min-height:0}
+
+/* ---------- Panels ---------- */
+.pane{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line);background:var(--bg)}
+.pane:last-child{border-right:none;background:var(--bg2)}
+.pane-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.pane-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+.count-dot{font-family:var(--font-mono);font-size:10.5px;color:var(--gold);border:1px solid var(--gold-dim);border-radius:10px;padding:1px 7px}
+.pane-body{flex:1 1 auto;overflow-y:auto;min-height:0}
+
+/* ---------- Sources ---------- */
+#dropzone{margin:12px;border:1.5px dashed var(--line);border-radius:10px;padding:18px 12px;text-align:center;color:var(--ink-dim);font-size:12.5px;line-height:1.5;transition:border-color .15s}
+#dropzone.drag{border-color:var(--gold);color:var(--ink)}
+#dropzone a{color:var(--gold);cursor:pointer;text-decoration:underline}
+.src-actions{display:flex;gap:8px;padding:0 12px 10px}
+.src-item{margin:0 12px 8px;padding:10px 11px;background:var(--panel);border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.src-item:hover{border-color:var(--gold-dim)}
+.src-item.active{border-color:var(--gold)}
+.src-name{font-size:12.5px;font-weight:600;color:var(--ink);word-break:break-word;line-height:1.35}
+.src-sub{display:flex;align-items:center;gap:7px;margin-top:5px;flex-wrap:wrap}
+.src-type{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+.st{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:9px;border:1px solid}
+.st-ready{color:#7fc9a3;border-color:var(--green);background:var(--green-bg)}
+.st-partial,.st-pending{color:#dfb571;border-color:var(--amber);background:var(--amber-bg)}
+.st-failed{color:#e08a80;border-color:var(--red);background:var(--red-bg)}
+.src-x{float:right;color:var(--ink-faint);background:none;border:none;font-size:15px;line-height:1;padding:0 0 0 6px}
+.src-x:hover{color:var(--red)}
+.intake-note{margin:4px 14px 12px;font-size:11.5px;color:var(--ink-faint);line-height:1.5}
+
+/* ---------- Chat ---------- */
+#paneChat{background:var(--bg)}
+.strict-banner{display:flex;align-items:center;gap:9px;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-dim);flex:0 0 auto}
+.strict-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto}
+#chatScroll{flex:1 1 auto;overflow-y:auto;padding:20px 22px;min-height:0}
+.empty-hero{max-width:480px;margin:11vh auto 0;text-align:center}
+.empty-hero h2{font-family:var(--font-head);font-size:25px;font-weight:600;margin-bottom:12px}
+.empty-hero p{color:var(--ink-dim);line-height:1.65;font-size:13.5px}
+.msg{max-width:86%;margin-bottom:16px}
+.msg.user{margin-left:auto}
+.msg-bubble{padding:11px 14px;border-radius:12px;line-height:1.6;font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.msg.user .msg-bubble{background:var(--panel2);border:1px solid var(--line)}
+.msg.ai .msg-bubble{background:var(--panel);border:1px solid var(--line)}
+.msg.ai.refused .msg-bubble{border-color:var(--amber)}
+.cite-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.cite-chip{font-family:var(--font-mono);font-size:10px;color:var(--gold);background:rgba(201,168,76,.08);border:1px solid var(--gold-dim);border-radius:12px;padding:2.5px 9px;cursor:pointer}
+.cite-chip:hover{background:rgba(201,168,76,.16)}
+.msg-tools{margin-top:6px;display:flex;gap:8px}
+.msg-tools button{background:none;border:none;color:var(--ink-faint);font-size:11px;padding:0}
+.msg-tools button:hover{color:var(--gold)}
+.thinking{display:flex;gap:5px;padding:12px 4px}
+.thinking span{width:6px;height:6px;border-radius:50%;background:var(--gold-dim);animation:pulse 1.2s infinite}
+.thinking span:nth-child(2){animation-delay:.2s}
+.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+#askBar{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line);background:var(--bg2);flex:0 0 auto}
+#askInput{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:11px 14px;font-size:13.5px;resize:none;max-height:120px;line-height:1.5}
+#askInput:focus{outline:none;border-color:var(--gold-dim)}
+
+/* ---------- Studio ---------- */
+.studio-sec{padding:12px 14px 4px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+.studio-card{margin:0 12px 9px;padding:11px 12px;background:var(--panel);border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.studio-card:hover{border-color:var(--gold-dim)}
+.studio-card.off{opacity:.42;cursor:not-allowed}
+.studio-card.off:hover{border-color:var(--line)}
+.studio-t{font-size:13px;font-weight:600}
+.studio-d{font-size:11.5px;color:var(--ink-dim);margin-top:3px;line-height:1.4}
+.studio-gate{margin:2px 14px 10px;font-size:11.5px;color:var(--ink-faint)}
+.out-item{margin:0 12px 8px;padding:9px 11px;background:var(--panel);border:1px solid var(--line);border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.out-item:hover{border-color:var(--gold-dim)}
+.out-kind{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold-dim);border-radius:9px;padding:2px 7px;flex:0 0 auto}
+.out-name{font-size:12px;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#noteInput{width:calc(100% - 24px);margin:0 12px 8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:10px 12px;font-size:12.5px;resize:vertical;min-height:56px;line-height:1.5}
+#noteInput:focus{outline:none;border-color:var(--gold-dim)}
+.note-actions{display:flex;gap:8px;padding:0 12px 10px}
+.note-item{margin:0 12px 8px;padding:9px 11px;background:var(--panel);border:1px solid var(--line);border-radius:9px;font-size:12.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.note-when{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-faint);margin-top:5px}
+.note-x{float:right;color:var(--ink-faint);background:none;border:none;font-size:14px;padding:0 0 0 6px}
+.note-x:hover{color:var(--red)}
+
+/* ---------- Overlays ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,11,15,.72);display:none;align-items:center;justify-content:center;z-index:60}
+.overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--line);border-radius:14px;width:min(520px,92vw);max-height:86vh;overflow-y:auto;padding:22px}
+.modal h3{font-family:var(--font-head);font-size:19px;margin-bottom:14px}
+.field{margin-bottom:13px}
+.field label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:6px}
+.field input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px 12px;font-size:13px}
+.field input:focus{outline:none;border-color:var(--gold-dim)}
+.field .hint{font-size:11.5px;color:var(--ink-faint);margin-top:5px;line-height:1.45}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+/* Output viewer */
+#outViewer{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column}
+#outViewer.show{display:flex}
+.ov-head{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--line);flex:0 0 auto}
+.ov-title{font-family:var(--font-head);font-size:17px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-body{flex:1;overflow-y:auto;padding:26px 30px;min-height:0}
+.ov-inner{max-width:960px;margin:0 auto}
+
+/* Source viewer */
+#srcViewer .modal{width:min(860px,94vw)}
+.page-block{margin-bottom:18px}
+.page-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--gold);margin-bottom:6px;text-transform:uppercase}
+.page-text{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 15px;font-size:12.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+mark.hl{background:rgba(201,168,76,.3);color:var(--ink);border-radius:3px;padding:0 2px}
+
+/* ---------- Report rendering (scoped) ---------- */
+#arc-investigator-analysis{color:var(--ink)}
+#arc-investigator-analysis .wp-labels{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+#arc-investigator-analysis .wp-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:11px;border:1px solid var(--gold-dim);color:var(--gold)}
+#arc-investigator-analysis .wp-label.warn{border-color:var(--amber);color:#dfb571}
+#arc-investigator-analysis h1{font-family:var(--font-head);font-size:27px;margin-bottom:4px}
+#arc-investigator-analysis .subtitle{color:var(--ink-dim);font-size:13px;margin-bottom:18px}
+#arc-investigator-analysis .case-head{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:15px 17px;margin-bottom:22px}
+#arc-investigator-analysis .ch-k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint)}
+#arc-investigator-analysis .ch-v{font-size:13px;margin-top:3px;font-weight:500}
+#arc-investigator-analysis h2.secn{font-family:var(--font-head);font-size:18px;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+#arc-investigator-analysis h2.secn .n{color:var(--gold);margin-right:8px}
+#arc-investigator-analysis .alert{background:var(--red-bg);border:1px solid var(--red);border-radius:10px;padding:13px 15px;margin-bottom:11px}
+#arc-investigator-analysis .alert-tag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;color:#e08a80;text-transform:uppercase;margin-bottom:6px}
+#arc-investigator-analysis .alert-issue{font-weight:600;font-size:13.5px;line-height:1.5;margin-bottom:7px}
+#arc-investigator-analysis .alert-row{font-size:12.5px;line-height:1.55;color:var(--ink);margin-bottom:4px}
+#arc-investigator-analysis .alert-row b{color:var(--ink-dim);font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:500}
+#arc-investigator-analysis ul.facts{list-style:none}
+#arc-investigator-analysis ul.facts li{padding:7px 0 7px 20px;position:relative;font-size:13.5px;line-height:1.6;border-bottom:1px solid rgba(44,50,66,.5)}
+#arc-investigator-analysis ul.facts li::before{content:'';position:absolute;left:2px;top:15px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+#arc-investigator-analysis .fact-class{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-left:8px;border:1px solid var(--line);border-radius:8px;padding:1px 6px;white-space:nowrap}
+#arc-investigator-analysis .fact-class.disputed{color:#e08a80;border-color:var(--red)}
+#arc-investigator-analysis .fact-class.inference{color:#dfb571;border-color:var(--amber)}
+#arc-investigator-analysis .src-ref{font-family:var(--font-mono);font-size:10px;color:var(--gold);margin-left:8px;white-space:nowrap}
+#arc-investigator-analysis p.brief{font-size:13.5px;line-height:1.75;margin-bottom:12px}
+#arc-investigator-analysis .kv-line{background:var(--panel);border-left:3px solid var(--gold);border-radius:6px;padding:10px 14px;margin-bottom:9px;font-size:13px;line-height:1.6}
+#arc-investigator-analysis .kv-line b{font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:3px}
+#arc-investigator-analysis table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+#arc-investigator-analysis th{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-dim);text-align:left;padding:8px 9px;border-bottom:1px solid var(--line)}
+#arc-investigator-analysis td{padding:8px 9px;border-bottom:1px solid rgba(44,50,66,.5);vertical-align:top;line-height:1.5}
+#arc-investigator-analysis tr.crit td{background:var(--red-bg)}
+#arc-investigator-analysis tr.warn td{background:var(--amber-bg)}
+#arc-investigator-analysis .pill{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:9px;border:1px solid var(--line);color:var(--ink-dim);white-space:nowrap}
+#arc-investigator-analysis .pill.red{color:#e08a80;border-color:var(--red)}
+#arc-investigator-analysis .pill.amber{color:#dfb571;border-color:var(--amber)}
+#arc-investigator-analysis .pill.green{color:#7fc9a3;border-color:var(--green)}
+#arc-investigator-analysis .strategy-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+#arc-investigator-analysis .strategy-item.urgent{border-color:var(--red)}
+#arc-investigator-analysis .qlist{margin:6px 0 0 16px;font-size:12.5px;line-height:1.7}
+#arc-investigator-analysis .limit-note{background:var(--panel);border:1px dashed var(--line);border-radius:9px;padding:11px 14px;font-size:12.5px;line-height:1.6;color:var(--ink-dim)}
+#arc-investigator-analysis .none-msg{color:var(--ink-dim);font-size:13px;padding:6px 0}
+
+/* Mind map */
+#mindmapSvgWrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:auto}
+#mindmapSvgWrap svg text{font-family:var(--font-body)}
+
+/* Print */
+@media print{
+  body *{visibility:hidden}
+  #outViewer,#outViewer *{visibility:visible}
+  #outViewer{position:absolute;inset:0;background:#fff}
+  #outViewer .ov-head{display:none}
+  #outViewer .ov-body{padding:0;color:#000}
+}
+
+/* Responsive */
+@media (max-width:1080px){
+  main.workspace{grid-template-columns:240px 1fr 280px}
+}
+@media (max-width:860px){
+  main.workspace{display:flex;flex-direction:column;overflow-y:auto}
+  .pane{border-right:none;border-bottom:1px solid var(--line)}
+  #paneChat{min-height:60vh}
+  body{overflow:auto}
+}
+</style>
+<script src="arc_provider_client.js"></script>
+<script src="arc_ai_client.js"></script>
+<script src="arc_unified_bridge.js"></script>
+<script src="arc_case_document_bridge.js"></script>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brandmark">A</div>
+    <div class="matter-id">
+      <div class="matter-name" id="matterName" title="Click to edit matter details">Untitled matter</div>
+      <div class="matter-meta" id="matterMeta">0 sources</div>
+    </div>
+    <div class="topbar-right">
+      <span class="chip-live ok" id="keyChip">AI gateway secured</span>
+      <button class="btn btn-gold" id="btnContinueEvidence">Continue to Evidence</button>
+      <button class="btn" id="btnSettings">Settings</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- SOURCES -->
+    <section class="pane" id="paneSources">
+      <div class="pane-head">
+        <span class="pane-title">Sources</span>
+        <span class="count-dot" id="srcCount">0</span>
+      </div>
+      <div class="pane-body">
+        <div id="dropzone">
+          Drop PDF, DOCX, TXT, or MD files here, or <a id="browseLink">browse</a>
+          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md" style="display:none">
+        </div>
+        <div class="src-actions">
+          <button class="btn btn-sm btn-ghost" id="btnIntakeSync">Sync from intake</button>
+          <button class="btn btn-sm btn-ghost" id="btnIntakeImport">Import intake .json</button>
+          <input type="file" id="intakeJsonInput" accept=".json" style="display:none">
+        </div>
+        <div id="srcList"></div>
+        <div class="intake-note" id="intakeNote"></div>
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section class="pane" id="paneChat">
+      <div class="strict-banner">
+        <span class="strict-dot"></span>
+        Strict mode: answers come only from your uploaded sources. Anything outside them is refused.
+      </div>
+      <div id="chatScroll">
+        <div class="empty-hero" id="emptyHero">
+          <h2>Ask the record, not the internet.</h2>
+          <p>Upload reports on the left, then ask a question. Every answer cites the exact source passage, and anything not in the documents is refused.</p>
+        </div>
+        <div id="chatMsgs"></div>
+      </div>
+      <div id="askBar">
+        <textarea id="askInput" rows="1" placeholder="Ask the sources a question..."></textarea>
+        <button class="btn btn-gold" id="btnAsk">Ask</button>
+      </div>
+    </section>
+
+    <!-- STUDIO -->
+    <section class="pane" id="paneStudio">
+      <div class="pane-head"><span class="pane-title">Studio</span></div>
+      <div class="pane-body">
+        <div class="studio-sec">Synthesis</div>
+        <div class="studio-card gated" data-gen="briefing">
+          <div class="studio-t">Briefing document</div>
+          <div class="studio-d">Overview, parties, key facts, issues</div>
+        </div>
+        <div class="studio-card gated" data-gen="timeline">
+          <div class="studio-t">Timeline of events</div>
+          <div class="studio-d">Chronology built from the sources</div>
+        </div>
+        <div class="studio-card gated" data-gen="contradictions">
+          <div class="studio-t">Contradiction check</div>
+          <div class="studio-d">Conflicts between sources</div>
+        </div>
+        <div class="studio-gate gate-msg">Upload sources to enable synthesis.</div>
+
+        <div class="studio-sec">Create</div>
+        <div class="studio-card gated" data-gen="mindmap">
+          <div class="studio-t">Mind map</div>
+          <div class="studio-d">Topic tree with cited nodes</div>
+        </div>
+        <div class="studio-card gated" data-gen="report">
+          <div class="studio-t">Initial Case Analysis</div>
+          <div class="studio-d">Seven-section investigator report</div>
+        </div>
+        <div class="studio-gate gate-msg">Upload sources to enable creation tools.</div>
+
+        <div class="studio-sec" id="outsSecTitle" style="display:none">Generated outputs</div>
+        <div id="outsList"></div>
+
+        <div class="studio-sec">Notes</div>
+        <textarea id="noteInput" placeholder="Write a note for this notebook..."></textarea>
+        <div class="note-actions">
+          <button class="btn btn-sm btn-gold" id="btnAddNote">Add note</button>
+          <button class="btn btn-sm btn-ghost" id="btnExportNotes">Export .md</button>
+        </div>
+        <div id="notesList"></div>
+        <div class="intake-note">Pin an answer from the chat or add a note above. Notes export to Markdown.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <h3>Settings</h3>
+    <div class="field">
+      <label>Matter name</label>
+      <input type="text" id="setMatterName" placeholder="Commonwealth v. ...">
+    </div>
+    <div class="field">
+      <label>Case number</label>
+      <input type="text" id="setCaseNo" placeholder="Docket number (optional)">
+    </div>
+    <div class="field">
+      <label>AI provider</label>
+      <div class="hint">Gemini requests are routed through the ARC Cloudflare AI gateway. Provider credentials are Worker secrets and are never entered or stored in this browser.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="btnSettingsCancel">Cancel</button>
+      <button class="btn btn-gold" id="btnSettingsSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Source viewer modal -->
+<div class="overlay" id="srcViewer">
+  <div class="modal">
+    <h3 id="srcViewerTitle">Source</h3>
+    <div id="srcViewerBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="btnSrcViewerClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Output viewer -->
+<div id="outViewer">
+  <div class="ov-head">
+    <div class="ov-title" id="ovTitle">Output</div>
+    <button class="btn btn-sm" id="btnOvCopy">Copy</button>
+    <button class="btn btn-sm" id="btnOvExport">Export HTML</button>
+    <button class="btn btn-sm" id="btnOvJson">Export JSON</button>
+    <button class="btn btn-sm" id="btnOvPrint">Print</button>
+    <button class="btn btn-sm btn-ghost" id="btnOvClose">Close</button>
+  </div>
+  <div class="ov-body"><div class="ov-inner" id="ovInner"></div></div>
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* =====================================================
+   ARC NOTEBOOK
+   Single-page grounded case analysis workspace.
+   Reads documents handed off by New Matter Initiation,
+   answers questions strictly from those documents, and
+   generates investigator work product through Gemini.
+   ===================================================== */
+
+var LS_KEY_API = "ARC_GEMINI_KEY_V1"; try { localStorage.removeItem(LS_KEY_API); } catch(e) {}
+var LS_KEY_ACTIVE_CASE = "ARC_ACTIVE_CASE_V1";
+var IDB_NAME = "ARC_CASE_DOCS_V1";
+var IDB_VERSION = 1;
+var MODEL_LADDER = ["gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash","gemini-flash-latest"];
+var MAX_CONTEXT_CHARS = 300000;
+
+var state = {
+  caseId: null,
+  caseName: "Untitled matter",
+  caseNo: "",
+  sources: [],
+  chat: [],
+  outputs: [],
+  notes: [],
+  busy: false,
+  currentOutput: null
+};
+
+var db = null;
+
+/* ---------------- Utilities ---------------- */
+
+function $(id){ return document.getElementById(id); }
+
+function el(tag, cls, text){
+  var node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+}
+
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function uid(){
+  return "d" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function nowStamp(){
+  return new Date().toLocaleString("en-US", { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+}
+
+function download(name, text, mime){
+  var blob = new Blob([text], { type: mime || "text/plain" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+
+function toast(msg){
+  var t = el("div", null, msg);
+  t.style.cssText = "position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#232836;border:1px solid #C9A84C;color:#e8e6df;padding:10px 18px;border-radius:9px;z-index:99;font-size:13px;max-width:80vw";
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3200);
+}
+
+/* ---------------- API key vault ---------------- */
+
+function arcGetGeminiKey(){ return window.ARCAI ? "gateway" : ""; }
+
+function arcSetGeminiKey(){
+  try { localStorage.removeItem(LS_KEY_API); } catch(e){}
+  return true;
+}
+
+/* ---------------- IndexedDB ---------------- */
+
+function openDb(){
+  return new Promise(function(resolve, reject){
+    var req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = function(ev){
+      var d = ev.target.result;
+      if (!d.objectStoreNames.contains("documents")){
+        var s = d.createObjectStore("documents", { keyPath: "id" });
+        s.createIndex("caseId", "caseId", { unique: false });
+      }
+      if (!d.objectStoreNames.contains("outputs")){
+        var o = d.createObjectStore("outputs", { keyPath: "id" });
+        o.createIndex("caseId", "caseId", { unique: false });
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+
+function idbPut(store, record){
+  return new Promise(function(resolve, reject){
+    var tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).put(record);
+    tx.oncomplete = function(){ resolve(); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+
+function idbDelete(store, id){
+  return new Promise(function(resolve, reject){
+    var tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).delete(id);
+    tx.oncomplete = function(){ resolve(); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+
+function idbByCase(store, caseId){
+  return new Promise(function(resolve, reject){
+    var tx = db.transaction(store, "readonly");
+    var idx = tx.objectStore(store).index("caseId");
+    var req = idx.getAll(caseId);
+    req.onsuccess = function(){ resolve(req.result || []); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+
+/* ---------------- Case bootstrap ---------------- */
+
+function loadActiveCase(){
+  var fromUrl = null;
+  try {
+    var params = new URLSearchParams(location.search);
+    fromUrl = params.get("case");
+  } catch(e){}
+  var stored = null;
+  try { stored = JSON.parse(localStorage.getItem(LS_KEY_ACTIVE_CASE) || "null"); } catch(e){}
+  if (fromUrl){
+    state.caseId = fromUrl;
+    if (stored && stored.caseId === fromUrl){
+      state.caseName = stored.caseName || state.caseName;
+      state.caseNo = stored.caseNo || "";
+    }
+  } else if (stored && stored.caseId){
+    state.caseId = stored.caseId;
+    state.caseName = stored.caseName || state.caseName;
+    state.caseNo = stored.caseNo || "";
+  } else if (window.ARCUnified && typeof window.ARCUnified.getCase === "function") {
+    var unified = window.ARCUnified.getCase() || {};
+    state.caseId = unified.caseId || unified.docket || uid();
+    state.caseName = unified.matter || unified.caseName || state.caseName;
+    state.caseNo = unified.docket || unified.docketNumber || "";
+  } else {
+    state.caseId = uid();
+  }
+  saveActiveCase();
+}
+
+function saveActiveCase(){
+  try {
+    localStorage.setItem(LS_KEY_ACTIVE_CASE, JSON.stringify({
+      caseId: state.caseId, caseName: state.caseName, caseNo: state.caseNo
+    }));
+  } catch(e){}
+}
+
+function loadNotes(){
+  try { state.notes = JSON.parse(localStorage.getItem("ARC_NOTEBOOK_NOTES_" + state.caseId) || "[]"); } catch(e){ state.notes = []; }
+}
+
+function saveNotes(){
+  try { localStorage.setItem("ARC_NOTEBOOK_NOTES_" + state.caseId, JSON.stringify(state.notes)); } catch(e){}
+}
+
+/* ---------------- Source ingestion ---------------- */
+
+var pdfLibPromise = null;
+function ensurePdfJs(){
+  if (pdfLibPromise) return pdfLibPromise;
+  pdfLibPromise = new Promise(function(resolve, reject){
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload = function(){
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      resolve(window.pdfjsLib);
+    };
+    s.onerror = function(){ pdfLibPromise = null; reject(new Error("Could not load the PDF reader.")); };
+    document.head.appendChild(s);
+  });
+  return pdfLibPromise;
+}
+
+var mammothPromise = null;
+function ensureMammoth(){
+  if (mammothPromise) return mammothPromise;
+  mammothPromise = new Promise(function(resolve, reject){
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+    s.onload = function(){ resolve(window.mammoth); };
+    s.onerror = function(){ mammothPromise = null; reject(new Error("Could not load the DOCX reader.")); };
+    document.head.appendChild(s);
+  });
+  return mammothPromise;
+}
+
+function extFromName(name){
+  var m = /\.([a-z0-9]+)$/i.exec(name || "");
+  return m ? m[1].toLowerCase() : "";
+}
+
+function extractPdf(file){
+  return ensurePdfJs().then(function(pdfjs){
+    return file.arrayBuffer().then(function(buf){
+      return pdfjs.getDocument({ data: buf }).promise;
+    }).then(function(doc){
+      var pages = [];
+      var chain = Promise.resolve();
+      var i;
+      for (i = 1; i <= doc.numPages; i++){
+        (function(n){
+          chain = chain.then(function(){
+            return doc.getPage(n).then(function(page){
+              return page.getTextContent();
+            }).then(function(tc){
+              var text = tc.items.map(function(it){ return it.str; }).join(" ").replace(/\s+/g," ").trim();
+              pages.push({ n: n, text: text });
+            });
+          });
+        })(i);
+      }
+      return chain.then(function(){ return pages; });
+    });
+  });
+}
+
+function extractDocx(file){
+  return ensureMammoth().then(function(mm){
+    return file.arrayBuffer().then(function(buf){
+      return mm.extractRawText({ arrayBuffer: buf });
+    }).then(function(res){
+      return [{ n: 1, text: (res.value || "").trim() }];
+    });
+  });
+}
+
+function extractPlain(file){
+  return file.text().then(function(t){
+    return [{ n: 1, text: (t || "").trim() }];
+  });
+}
+
+function classifyStatus(pages){
+  if (!pages || !pages.length) return "FAILED";
+  var total = pages.reduce(function(a,p){ return a + (p.text ? p.text.length : 0); }, 0);
+  if (total < 40) return "FAILED";
+  var emptyPages = pages.filter(function(p){ return !p.text || p.text.length < 15; }).length;
+  if (emptyPages > 0 && emptyPages >= pages.length / 2) return "PARTIAL";
+  return "READY";
+}
+
+function addFiles(fileList){
+  var files = Array.prototype.slice.call(fileList || []);
+  if (!files.length) return;
+  files.forEach(function(file){
+    var ext = extFromName(file.name);
+    var rec = {
+      id: uid(),
+      caseId: state.caseId,
+      name: file.name,
+      mime: file.type || ext,
+      size: file.size,
+      uploadedAt: Date.now(),
+      status: "PENDING",
+      pages: [],
+      origin: "notebook-upload"
+    };
+    state.sources.push(rec);
+    renderSources();
+    var extractor;
+    if (ext === "pdf") extractor = extractPdf(file);
+    else if (ext === "docx") extractor = extractDocx(file);
+    else if (ext === "txt" || ext === "md") extractor = extractPlain(file);
+    else extractor = Promise.reject(new Error("Unsupported file type: " + ext));
+    extractor.then(function(pages){
+      rec.pages = pages;
+      rec.status = classifyStatus(pages);
+      return idbPut("documents", rec);
+    }).catch(function(err){
+      rec.status = "FAILED";
+      rec.error = String(err && err.message || err);
+      idbPut("documents", rec);
+    }).then(function(){
+      renderSources();
+    });
+  });
+}
+
+/* ---------------- Intake handoff ---------------- */
+
+function syncFromIntake(){
+  return idbByCase("documents", state.caseId).then(function(records){
+    var known = {};
+    state.sources.forEach(function(s){ known[s.id] = true; });
+    var added = 0;
+    records.forEach(function(r){
+      if (!known[r.id]){
+        state.sources.push(r);
+        added++;
+      }
+    });
+    state.sources.sort(function(a,b){ return (a.uploadedAt||0) - (b.uploadedAt||0); });
+    renderSources();
+    return added;
+  });
+}
+
+function importIntakeJson(file){
+  file.text().then(function(txt){
+    var data = JSON.parse(txt);
+    if (data.case && data.case.caseId){
+      state.caseId = data.case.caseId;
+      if (data.case.caseName) state.caseName = data.case.caseName;
+      if (data.case.caseNo) state.caseNo = data.case.caseNo;
+      saveActiveCase();
+      loadNotes();
+    }
+    var docs = data.documents || [];
+    var chain = Promise.resolve();
+    docs.forEach(function(d){
+      var rec = {
+        id: d.id || uid(),
+        caseId: state.caseId,
+        name: d.name || "Untitled document",
+        mime: d.mime || "",
+        size: d.size || 0,
+        uploadedAt: d.uploadedAt || Date.now(),
+        status: d.status || (d.pages && d.pages.length ? classifyStatus(d.pages) : "FAILED"),
+        pages: d.pages || (d.text ? [{ n: 1, text: d.text }] : []),
+        docType: d.docType || "",
+        origin: "intake-json"
+      };
+      if (!rec.pages.length && d.text) rec.pages = [{ n: 1, text: d.text }];
+      chain = chain.then(function(){ return idbPut("documents", rec); });
+    });
+    chain.then(function(){
+      state.sources = [];
+      return syncFromIntake();
+    }).then(function(){
+      renderHeader();
+      toast("Imported " + docs.length + " document" + (docs.length === 1 ? "" : "s") + " from intake.");
+    });
+  }).catch(function(err){
+    toast("Import failed: " + String(err && err.message || err));
+  });
+}
+
+/* ---------------- Grounding context ---------------- */
+
+function readySources(){
+  return state.sources.filter(function(s){ return s.status === "READY" || s.status === "PARTIAL"; });
+}
+
+function buildContext(){
+  var docs = readySources();
+  if (!docs.length) return "";
+  var perDoc = Math.floor(MAX_CONTEXT_CHARS / docs.length);
+  var parts = [];
+  docs.forEach(function(d){
+    var body = "";
+    (d.pages || []).forEach(function(p){
+      body += "[PAGE " + p.n + "]\n" + (p.text || "") + "\n";
+    });
+    if (body.length > perDoc){
+      body = body.slice(0, perDoc) + "\n[TRUNCATED FOR LENGTH]";
+    }
+    parts.push(
+      "===== DOCUMENT START =====\n" +
+      "DOCUMENT_ID: " + d.id + "\n" +
+      "DOCUMENT_NAME: " + d.name + "\n" +
+      "EXTRACTION_STATUS: " + d.status + "\n" +
+      body +
+      "===== DOCUMENT END ====="
+    );
+  });
+  return parts.join("\n\n");
+}
+
+/* ---------------- Gemini ---------------- */
+
+var GROUNDING_RULES =
+"You are the analysis engine inside ARC, a criminal defense investigation tool. " +
+"You must obey these rules without exception:\n" +
+"1. Use ONLY the supplied source documents. Never use outside knowledge, the internet, or general legal knowledge to fill missing case facts.\n" +
+"2. Never invent facts, names, dates, times, contact information, evidence, quotations, page numbers, legal authorities, or citations.\n" +
+"3. Distinguish police allegations, witness statements, direct observations, corroborated facts, disputed facts, documented procedural actions, and AI inferences. Label inferences as inferences.\n" +
+"4. Preserve contradictions between sources. Never silently reconcile them.\n" +
+"5. Every material claim must carry a source reference with documentId, documentName, and page number when available.\n" +
+"6. Do not convert a police paraphrase into a direct quotation.\n" +
+"7. If the sources do not contain the answer, say so plainly instead of guessing.\n" +
+"8. Return ONLY valid JSON matching the requested schema. No markdown, no code fences, no commentary outside the JSON.";
+
+function callGemini(promptText, maxTokens, task){
+  if (!window.ARCAI || typeof window.ARCAI.run !== "function") {
+    return Promise.reject(new Error("ARC AI gateway client is not loaded."));
+  }
+  return window.ARCAI.run(task || "notebook.query", {
+    system: GROUNDING_RULES,
+    prompt: promptText,
+    maxTokens: maxTokens || 8192,
+    caseId: state.caseId || ""
+  }, { caseId: state.caseId || "" });
+}
+
+/* ---------------- Chat flow ---------------- */
+
+function pushMsg(role, text, extra){
+  var m = { role: role, text: text, ts: Date.now() };
+  if (extra) Object.keys(extra).forEach(function(k){ m[k] = extra[k]; });
+  state.chat.push(m);
+  renderChat();
+  return m;
+}
+
+function askQuestion(){
+  var input = $("askInput");
+  var q = input.value.trim();
+  if (!q || state.busy) return;
+  if (!readySources().length){
+    toast("Upload and process at least one source first.");
+    return;
+  }
+  input.value = "";
+  autosizeAsk();
+  pushMsg("user", q);
+  state.busy = true;
+  renderThinking(true);
+  callGemini(chatPrompt(q, state.chat), 4096, "notebook.query").then(function(raw){
+    var j = parseModelJson(raw);
+    if (!validateChat(j)) throw new Error("The model returned an invalid answer format.");
+    pushMsg("ai", j.answer, { citations: j.citations, grounded: j.grounded });
+  }).catch(function(err){
+    handleGenError(err, function(){
+      pushMsg("ai", "The request failed: " + String(err && err.message || err), { grounded: false, citations: [] });
+    });
+  }).then(function(){
+    state.busy = false;
+    renderThinking(false);
+  });
+}
+
+function handleGenError(err, fallback){
+  var msg = String(err && err.message || err);
+  if (fallback) fallback();
+  else toast(msg);
+}
+
+/* ---------------- Studio flow ---------------- */
+
+var GEN_DEFS = {
+  briefing: { title: "Briefing document", prompt: briefingPrompt, validate: validateBriefing, tokens: 6144 },
+  timeline: { title: "Timeline of events", prompt: timelinePrompt, validate: validateTimeline, tokens: 6144 },
+  contradictions: { title: "Contradiction check", prompt: contradictionsPrompt, validate: validateContradictions, tokens: 6144 },
+  mindmap: { title: "Mind map", prompt: mindmapPrompt, validate: validateMindmap, tokens: 4096 },
+  report: { title: "Initial Case Analysis", prompt: reportPrompt, validate: validateReport, tokens: 16384 }
+};
+
+function runStudio(kind){
+  var def = GEN_DEFS[kind];
+  if (!def || state.busy) return;
+  if (!readySources().length){
+    toast("Upload and process the initial case reports before generating the analysis.");
+    return;
+  }
+  state.busy = true;
+  toast("Generating " + def.title + "...");
+  callGemini(def.prompt(), def.tokens, "notebook.summarize").then(function(raw){
+    var j = parseModelJson(raw);
+    if (!def.validate(j)) throw new Error("The model response did not match the required " + def.title + " schema. Nothing was rendered.");
+    var out = {
+      id: uid(),
+      caseId: state.caseId,
+      kind: kind,
+      title: def.title,
+      createdAt: Date.now(),
+      data: j
+    };
+    state.outputs.unshift(out);
+    idbPut("outputs", out);
+    renderOutputs();
+    openOutput(out);
+  }).catch(function(err){
+    handleGenError(err, function(){ toast(String(err && err.message || err)); });
+  }).then(function(){
+    state.busy = false;
+  });
+}
+
+/* ---------------- Rendering: header, sources ---------------- */
+
+function renderHeader(){
+  $("matterName").textContent = state.caseName || "Untitled matter";
+  var bits = [];
+  bits.push(state.sources.length + " source" + (state.sources.length === 1 ? "" : "s"));
+  if (state.caseNo) bits.push(state.caseNo);
+  $("matterMeta").textContent = bits.join("  |  ");
+  var chip = $("keyChip");
+  chip.textContent = window.ARCAI ? "AI gateway secured" : "AI gateway unavailable";
+  chip.classList.toggle("ok", Boolean(window.ARCAI));
+}
+
+function renderSources(){
+  var list = $("srcList");
+  list.innerHTML = "";
+  state.sources.forEach(function(s){
+    var item = el("div", "src-item");
+    item.dataset.id = s.id;
+    var x = el("button", "src-x", "\u00d7");
+    x.title = "Remove from notebook";
+    x.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      removeSource(s.id);
+    });
+    item.appendChild(x);
+    item.appendChild(el("div", "src-name", s.name));
+    var sub = el("div", "src-sub");
+    var pages = (s.pages || []).length;
+    sub.appendChild(el("span", "src-type", (extFromName(s.name) || "doc") + (pages ? " | " + pages + " pg" : "")));
+    var stCls = "st-pending";
+    if (s.status === "READY") stCls = "st-ready";
+    else if (s.status === "PARTIAL") stCls = "st-partial";
+    else if (s.status === "FAILED") stCls = "st-failed";
+    sub.appendChild(el("span", "st " + stCls, s.status));
+    if (s.origin === "intake-json" || s.origin === "intake"){
+      sub.appendChild(el("span", "src-type", "intake"));
+    }
+    item.appendChild(sub);
+    item.addEventListener("click", function(){ openSourceViewer(s.id, null, null); });
+    list.appendChild(item);
+  });
+  $("srcCount").textContent = String(state.sources.length);
+  var note = $("intakeNote");
+  if (!state.sources.length){
+    note.textContent = "Documents processed in New Matter Initiation for this case appear here automatically. Use Sync from intake if this notebook was opened before intake finished.";
+  } else {
+    note.textContent = "";
+  }
+  updateGates();
+  renderHeader();
+}
+
+function removeSource(id){
+  state.sources = state.sources.filter(function(s){ return s.id !== id; });
+  idbDelete("documents", id);
+  renderSources();
+}
+
+function updateGates(){
+  var enabled = readySources().length > 0;
+  var cards = document.querySelectorAll(".studio-card.gated");
+  var i;
+  for (i = 0; i < cards.length; i++){
+    cards[i].classList.toggle("off", !enabled);
+  }
+  var gates = document.querySelectorAll(".gate-msg");
+  for (i = 0; i < gates.length; i++){
+    gates[i].style.display = enabled ? "none" : "block";
+  }
+}
+
+/* ---------------- Rendering: chat ---------------- */
+
+function renderChat(){
+  var wrap = $("chatMsgs");
+  wrap.innerHTML = "";
+  $("emptyHero").style.display = state.chat.length ? "none" : "block";
+  state.chat.forEach(function(m){
+    var box = el("div", "msg " + (m.role === "user" ? "user" : "ai" + (m.grounded === false ? " refused" : "")));
+    box.appendChild(el("div", "msg-bubble", m.text));
+    if (m.role === "ai" && m.citations && m.citations.length){
+      var row = el("div", "cite-row");
+      m.citations.forEach(function(c){
+        var label = (c.documentName || "Source") + (c.page ? ", p. " + c.page : "");
+        var chip = el("span", "cite-chip", label);
+        chip.title = c.quote || "";
+        chip.addEventListener("click", function(){
+          openSourceViewer(c.documentId, c.page, c.quote);
+        });
+        row.appendChild(chip);
+      });
+      box.appendChild(row);
+    }
+    if (m.role === "ai"){
+      var tools = el("div", "msg-tools");
+      var pin = el("button", null, "Pin to notes");
+      pin.addEventListener("click", function(){
+        addNote(m.text + citationsFootnote(m.citations));
+        toast("Pinned to notes.");
+      });
+      var copy = el("button", null, "Copy");
+      copy.addEventListener("click", function(){
+        copyText(m.text);
+      });
+      tools.appendChild(pin);
+      tools.appendChild(copy);
+      box.appendChild(tools);
+    }
+    wrap.appendChild(box);
+  });
+  var scroll = $("chatScroll");
+  scroll.scrollTop = scroll.scrollHeight;
+}
+
+function citationsFootnote(citations){
+  if (!citations || !citations.length) return "";
+  var lines = citations.map(function(c){
+    return "- " + (c.documentName || "Source") + (c.page ? ", p. " + c.page : "");
+  });
+  return "\n\nSources:\n" + lines.join("\n");
+}
+
+function copyText(t){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast("Copied."); }, function(){ toast("Copy failed."); });
+  } else {
+    toast("Clipboard unavailable in this browser.");
+  }
+}
+
+var thinkingNode = null;
+function renderThinking(on){
+  if (on && !thinkingNode){
+    thinkingNode = el("div", "thinking");
+    thinkingNode.appendChild(el("span"));
+    thinkingNode.appendChild(el("span"));
+    thinkingNode.appendChild(el("span"));
+    $("chatMsgs").appendChild(thinkingNode);
+    $("chatScroll").scrollTop = $("chatScroll").scrollHeight;
+  } else if (!on && thinkingNode){
+    thinkingNode.remove();
+    thinkingNode = null;
+  }
+}
+
+/* ---------------- Source viewer ---------------- */
+
+function openSourceViewer(docId, page, quote){
+  var s = null;
+  var i;
+  for (i = 0; i < state.sources.length; i++){
+    if (state.sources[i].id === docId){ s = state.sources[i]; break; }
+  }
+  if (!s){ toast("That source is no longer in the notebook."); return; }
+  $("srcViewerTitle").textContent = s.name;
+  var body = $("srcViewerBody");
+  body.innerHTML = "";
+  var target = null;
+  (s.pages || []).forEach(function(p){
+    var block = el("div", "page-block");
+    block.appendChild(el("div", "page-label", "Page " + p.n));
+    var textDiv = el("div", "page-text");
+    var content = p.text || "(No readable text on this page)";
+    if (quote && page && Number(page) === Number(p.n) && content.indexOf(quote) >= 0){
+      var idx = content.indexOf(quote);
+      textDiv.innerHTML = esc(content.slice(0, idx)) + '<mark class="hl">' + esc(quote) + "</mark>" + esc(content.slice(idx + quote.length));
+      target = block;
+    } else {
+      textDiv.textContent = content;
+      if (page && Number(page) === Number(p.n) && !target) target = block;
+    }
+    block.appendChild(textDiv);
+    body.appendChild(block);
+  });
+  $("srcViewer").classList.add("show");
+  if (target){
+    setTimeout(function(){ target.scrollIntoView({ block: "start", behavior: "smooth" }); }, 60);
+  }
+}
+
+/* ---------------- Notes ---------------- */
+
+function addNote(text){
+  if (!text || !text.trim()) return;
+  state.notes.unshift({ id: uid(), text: text.trim(), ts: Date.now() });
+  saveNotes();
+  renderNotes();
+}
+
+function renderNotes(){
+  var list = $("notesList");
+  list.innerHTML = "";
+  state.notes.forEach(function(n){
+    var item = el("div", "note-item");
+    var x = el("button", "note-x", "\u00d7");
+    x.addEventListener("click", function(){
+      state.notes = state.notes.filter(function(o){ return o.id !== n.id; });
+      saveNotes();
+      renderNotes();
+    });
+    item.appendChild(x);
+    item.appendChild(document.createTextNode(n.text));
+    item.appendChild(el("div", "note-when", nowStampFrom(n.ts)));
+    list.appendChild(item);
+  });
+}
+
+function nowStampFrom(ts){
+  return new Date(ts).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+}
+
+function exportNotesMd(){
+  if (!state.notes.length){ toast("No notes to export."); return; }
+  var md = "# " + (state.caseName || "ARC Notebook") + " - Notes\n\n";
+  if (state.caseNo) md += "Case number: " + state.caseNo + "\n\n";
+  md += "Exported " + nowStamp() + "\n\n---\n\n";
+  state.notes.slice().reverse().forEach(function(n){
+    md += n.text + "\n\n_" + nowStampFrom(n.ts) + "_\n\n---\n\n";
+  });
+  download(sanitizeFile(state.caseName) + "_notes.md", md, "text/markdown");
+}
+
+function sanitizeFile(name){
+  return String(name || "arc_notebook").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "arc_notebook";
+}
+
+/* ---------------- Outputs list and viewer ---------------- */
+
+function renderOutputs(){
+  var list = $("outsList");
+  list.innerHTML = "";
+  $("outsSecTitle").style.display = state.outputs.length ? "block" : "none";
+  state.outputs.forEach(function(o){
+    var item = el("div", "out-item");
+    item.appendChild(el("span", "out-kind", o.kind));
+    item.appendChild(el("span", "out-name", o.title + " - " + nowStampFrom(o.createdAt)));
+    var x = el("button", "note-x", "\u00d7");
+    x.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      state.outputs = state.outputs.filter(function(q){ return q.id !== o.id; });
+      idbDelete("outputs", o.id);
+      renderOutputs();
+    });
+    item.appendChild(x);
+    item.addEventListener("click", function(){ openOutput(o); });
+    list.appendChild(item);
+  });
+}
+
+function openOutput(o){
+  state.currentOutput = o;
+  $("ovTitle").textContent = o.title + "  |  " + (state.caseName || "");
+  var inner = $("ovInner");
+  inner.innerHTML = "";
+  if (o.kind === "briefing") inner.appendChild(renderBriefingView(o.data));
+  else if (o.kind === "timeline") inner.appendChild(renderTimelineView(o.data));
+  else if (o.kind === "contradictions") inner.appendChild(renderContradictionsView(o.data));
+  else if (o.kind === "mindmap") inner.appendChild(renderMindmapView(o.data));
+  else if (o.kind === "report") inner.appendChild(renderReportView(o.data));
+  $("outViewer").classList.add("show");
+}
+
+function srcRefText(src){
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  var name = src.documentName || src.fileName || "";
+  var page = src.page || "";
+  if (!name && !page) return "";
+  return "[" + name + (page ? ", p. " + page : "") + "]";
+}
+
+function refSpan(src){
+  var t = srcRefText(src);
+  if (!t) return null;
+  return el("span", "src-ref", t);
+}
+
+/* ---------------- Views: briefing ---------------- */
+
+function renderBriefingView(d){
+  var root = el("div");
+  root.id = "arc-investigator-analysis";
+  root.appendChild(workProductLabels());
+  var h = el("h1", null, "Briefing Document");
+  root.appendChild(h);
+  root.appendChild(el("div", "subtitle", "Executive briefing generated from the notebook sources."));
+
+  var s1 = el("h2", "secn"); s1.innerHTML = '<span class="n">1.</span> Situation summary';
+  root.appendChild(s1);
+  root.appendChild(el("p", "brief", d.situationSummary || "Not provided by the sources."));
+
+  var s2 = el("h2", "secn"); s2.innerHTML = '<span class="n">2.</span> Key findings';
+  root.appendChild(s2);
+  var ul = el("ul", "facts");
+  (d.keyFindings || []).forEach(function(f){
+    var li = el("li", null, f.finding || "");
+    var r = refSpan(f.source);
+    if (r) li.appendChild(r);
+    ul.appendChild(li);
+  });
+  if (!(d.keyFindings || []).length) root.appendChild(el("div", "none-msg", "No findings were supported by the sources."));
+  root.appendChild(ul);
+
+  var s3 = el("h2", "secn"); s3.innerHTML = '<span class="n">3.</span> Parties';
+  root.appendChild(s3);
+  var tbl = el("table");
+  tbl.innerHTML = "<thead><tr><th>Name</th><th>Role</th><th>Source</th></tr></thead>";
+  var tb = el("tbody");
+  (d.parties || []).forEach(function(p){
+    var tr = el("tr");
+    tr.appendChild(el("td", null, p.name || ""));
+    tr.appendChild(el("td", null, p.role || ""));
+    tr.appendChild(el("td", null, typeof p.source === "string" ? p.source : srcRefText(p.source)));
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+  root.appendChild(tbl);
+
+  var s4 = el("h2", "secn"); s4.innerHTML = '<span class="n">4.</span> Open issues';
+  root.appendChild(s4);
+  (d.openIssues || []).forEach(function(oi){
+    var box = el("div", "kv-line");
+    var b = el("b", null, oi.issue || "Issue");
+    box.appendChild(b);
+    box.appendChild(document.createTextNode(oi.whyItMatters || ""));
+    var r = refSpan(oi.source);
+    if (r) box.appendChild(r);
+    root.appendChild(box);
+  });
+  return root;
+}
+
+function workProductLabels(){
+  var wrap = el("div", "wp-labels");
+  wrap.appendChild(el("span", "wp-label", "Internal investigator work product"));
+  wrap.appendChild(el("span", "wp-label warn", "AI-generated draft - investigator review required"));
+  return wrap;
+}
+
+/* ---------------- Views: timeline ---------------- */
+
+function renderTimelineView(d){
+  var root = el("div");
+  root.id = "arc-investigator-analysis";
+  root.appendChild(workProductLabels());
+  root.appendChild(el("h1", null, "Preliminary Timeline"));
+  root.appendChild(el("div", "subtitle", "Chronology built from the notebook sources. Conflicting entries are preserved, not resolved."));
+  var tbl = el("table");
+  tbl.innerHTML = "<thead><tr><th>Date</th><th>Time</th><th>Event</th><th>Persons</th><th>Location</th><th>Status</th><th>Source</th></tr></thead>";
+  var tb = el("tbody");
+  (d.timeline || []).forEach(function(t){
+    var tr = el("tr");
+    if (t.status === "DISPUTED") tr.className = "crit";
+    else if (t.status === "ESTIMATED" || t.status === "TIME NOT LISTED") tr.className = "warn";
+    tr.appendChild(el("td", null, t.date || ""));
+    tr.appendChild(el("td", null, t.time || ""));
+    tr.appendChild(el("td", null, t.event || ""));
+    tr.appendChild(el("td", null, (t.persons || []).join(", ")));
+    tr.appendChild(el("td", null, t.location || ""));
+    var stTd = el("td");
+    var pill = el("span", "pill", t.status || "");
+    if (t.status === "DISPUTED") pill.classList.add("red");
+    else if (t.status === "CORROBORATED" || t.status === "CONFIRMED") pill.classList.add("green");
+    else if (t.status === "ESTIMATED") pill.classList.add("amber");
+    stTd.appendChild(pill);
+    tr.appendChild(stTd);
+    tr.appendChild(el("td", null, srcRefText(t.source)));
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+  root.appendChild(tbl);
+  var h2 = el("h2", "secn"); h2.innerHTML = '<span class="n">+</span> Timeline gaps';
+  root.appendChild(h2);
+  if ((d.timelineGaps || []).length){
+    var ul = el("ul", "facts");
+    d.timelineGaps.slice(0,5).forEach(function(g){ ul.appendChild(el("li", null, g)); });
+    root.appendChild(ul);
+  } else {
+    root.appendChild(el("div", "none-msg", "No material timeline gaps were identified from the materials reviewed."));
+  }
+  return root;
+}
+
+/* ---------------- Views: contradictions ---------------- */
+
+function renderContradictionsView(d){
+  var root = el("div");
+  root.id = "arc-investigator-analysis";
+  root.appendChild(workProductLabels());
+  root.appendChild(el("h1", null, "Contradiction Check"));
+  root.appendChild(el("div", "subtitle", "Cross-document comparison. Conflicts are preserved for investigator review."));
+  var groups = { "INCONSISTENT": [], "PARTIALLY CONSISTENT": [], "CONSISTENT": [], "NOT ENOUGH INFORMATION": [] };
+  (d.comparisons || []).forEach(function(c){
+    var k = groups[c.classification] ? c.classification : "NOT ENOUGH INFORMATION";
+    groups[k].push(c);
+  });
+  var order = ["INCONSISTENT", "PARTIALLY CONSISTENT", "CONSISTENT", "NOT ENOUGH INFORMATION"];
+  order.forEach(function(k){
+    if (!groups[k].length) return;
+    var h = el("h2", "secn");
+    h.innerHTML = '<span class="n">' + esc(String(groups[k].length)) + '</span> ' + esc(k.charAt(0) + k.slice(1).toLowerCase());
+    root.appendChild(h);
+    groups[k].forEach(function(c){
+      var box = el("div", k === "INCONSISTENT" ? "alert" : "kv-line");
+      if (k === "INCONSISTENT"){
+        box.appendChild(el("div", "alert-tag", "Investigator alert"));
+        box.appendChild(el("div", "alert-issue", c.topic || "Conflict"));
+        var rowA = el("div", "alert-row");
+        rowA.innerHTML = "<b>Version A</b> " + esc((c.versionA && c.versionA.claim) || "") + " " + esc(srcRefText(c.versionA && c.versionA.source));
+        var rowB = el("div", "alert-row");
+        rowB.innerHTML = "<b>Version B</b> " + esc((c.versionB && c.versionB.claim) || "") + " " + esc(srcRefText(c.versionB && c.versionB.source));
+        box.appendChild(rowA);
+        box.appendChild(rowB);
+        if (c.whyItMatters){
+          var rowW = el("div", "alert-row");
+          rowW.innerHTML = "<b>Why it matters</b> " + esc(c.whyItMatters);
+          box.appendChild(rowW);
+        }
+      } else {
+        var b = el("b", null, c.topic || "");
+        box.appendChild(b);
+        var txt = ((c.versionA && c.versionA.claim) || "");
+        if (c.versionB && c.versionB.claim) txt += "  |  " + c.versionB.claim;
+        box.appendChild(document.createTextNode(txt));
+        var r1 = refSpan(c.versionA && c.versionA.source);
+        if (r1) box.appendChild(r1);
+        var r2 = refSpan(c.versionB && c.versionB.source);
+        if (r2) box.appendChild(r2);
+      }
+      root.appendChild(box);
+    });
+  });
+  if (!(d.comparisons || []).length){
+    root.appendChild(el("div", "none-msg", "No comparable claims were found across the sources."));
+  }
+  return root;
+}
+
+/* ---------------- Views: mind map ---------------- */
+
+function renderMindmapView(d){
+  var root = el("div");
+  root.id = "arc-investigator-analysis";
+  root.appendChild(workProductLabels());
+  root.appendChild(el("h1", null, "Case Mind Map"));
+  root.appendChild(el("div", "subtitle", "Topic tree built from the notebook sources. Hover a node for its source citation."));
+  var wrap = el("div");
+  wrap.id = "mindmapSvgWrap";
+  wrap.innerHTML = buildMindmapSvg(d);
+  root.appendChild(wrap);
+  return root;
+}
+
+function buildMindmapSvg(d){
+  var nodes = d.nodes || [];
+  var edges = d.edges || [];
+  var byId = {};
+  nodes.forEach(function(n){ byId[n.id] = n; });
+  var root = null;
+  var i;
+  for (i = 0; i < nodes.length; i++){
+    if (nodes[i].level === 0 || nodes[i].id === "root"){ root = nodes[i]; break; }
+  }
+  if (!root && nodes.length) root = nodes[0];
+  if (!root) return "<div class='none-msg' style='padding:20px'>The map came back empty.</div>";
+  var children = {};
+  edges.forEach(function(e){
+    if (!children[e.source]) children[e.source] = [];
+    if (byId[e.target]) children[e.source].push(e.target);
+  });
+  var W = 1200, H = 760, cx = W/2, cy = H/2;
+  var svg = [];
+  var placed = {};
+  placed[root.id] = { x: cx, y: cy };
+  var lvl1 = children[root.id] || [];
+  var r1 = 235, r2 = 405;
+  lvl1.forEach(function(id, idx){
+    var ang = (idx / Math.max(lvl1.length,1)) * Math.PI * 2 - Math.PI/2;
+    placed[id] = { x: cx + r1 * Math.cos(ang), y: cy + r1 * Math.sin(ang), ang: ang };
+  });
+  lvl1.forEach(function(pid){
+    var kids = children[pid] || [];
+    var base = placed[pid].ang;
+    var spread = Math.PI / 5;
+    kids.forEach(function(kid, ki){
+      var off = kids.length === 1 ? 0 : (ki / (kids.length - 1) - 0.5) * spread;
+      var ang = base + off;
+      placed[kid] = { x: cx + r2 * Math.cos(ang), y: cy + r2 * Math.sin(ang) };
+    });
+  });
+  edges.forEach(function(e){
+    var a = placed[e.source], b = placed[e.target];
+    if (!a || !b) return;
+    svg.push('<line x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" stroke="#2c3242" stroke-width="1.5"/>');
+  });
+  nodes.forEach(function(n){
+    var p = placed[n.id];
+    if (!p) return;
+    var isRoot = n === root;
+    var label = String(n.label || "").slice(0, 44);
+    var w = Math.max(80, label.length * 7.4 + 26);
+    var h = isRoot ? 46 : 34;
+    var fill = isRoot ? "#C9A84C" : "#232836";
+    var stroke = isRoot ? "#C9A84C" : (n.level === 1 || (children[root.id]||[]).indexOf(n.id) >= 0 ? "#8a7434" : "#2c3242");
+    var color = isRoot ? "#17130a" : "#e8e6df";
+    var srcTitle = (n.sources || []).map(function(s){ return (s.documentName || "") + (s.page ? " p." + s.page : ""); }).join("; ");
+    svg.push('<g>' +
+      (srcTitle ? "<title>" + esc(srcTitle) + "</title>" : "") +
+      '<rect x="' + (p.x - w/2) + '" y="' + (p.y - h/2) + '" width="' + w + '" height="' + h + '" rx="10" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"/>' +
+      '<text x="' + p.x + '" y="' + (p.y + 4.5) + '" text-anchor="middle" fill="' + color + '" font-size="' + (isRoot ? 14.5 : 12.5) + '" font-weight="' + (isRoot ? 700 : 500) + '">' + esc(label) + "</text></g>");
+  });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:900px" xmlns="http://www.w3.org/2000/svg">' + svg.join("") + "</svg>";
+}
+
+/* ---------------- Views: full report ---------------- */
+
+function renderReportView(d){
+  var root = el("section");
+  root.id = "arc-investigator-analysis";
+  root.appendChild(workProductLabels());
+  root.appendChild(el("h1", null, "Initial Case Analysis"));
+  root.appendChild(el("div", "subtitle", "First-pass investigator review generated from uploaded reports."));
+
+  var ci = d.caseIdentification || {};
+  var head = el("div", "case-head");
+  var headPairs = [
+    ["Case name", ci.caseName || state.caseName || "Not listed"],
+    ["Defendant", ci.defendant || "Not listed"],
+    ["Docket number", ci.docketNumber || state.caseNo || "Not listed"],
+    ["Court", ci.court || "Not listed"],
+    ["Agency", ci.agency || "Not listed"],
+    ["Incident date", ci.incidentDate || "Not listed"],
+    ["Last analyzed", nowStamp()],
+    ["Source documents reviewed", String((d.sourceDocuments || []).length)]
+  ];
+  headPairs.forEach(function(pair){
+    var cell = el("div");
+    cell.appendChild(el("div", "ch-k", pair[0]));
+    cell.appendChild(el("div", "ch-v", pair[1]));
+    head.appendChild(cell);
+  });
+  root.appendChild(head);
+
+  var alertsHead = el("h2", "secn");
+  alertsHead.innerHTML = '<span class="n">!</span> Critical investigator alerts';
+  root.appendChild(alertsHead);
+  var alerts = (d.criticalAlerts || []).slice(0, 5);
+  if (alerts.length){
+    alerts.forEach(function(a){
+      var box = el("div", "alert");
+      box.appendChild(el("div", "alert-tag", "Investigator alert"));
+      box.appendChild(el("div", "alert-issue", a.issue || ""));
+      var r1 = el("div", "alert-row"); r1.innerHTML = "<b>Why it matters</b> " + esc(a.whyItMatters || "");
+      var r2 = el("div", "alert-row"); r2.innerHTML = "<b>Source</b> " + esc(srcRefText(a.source) || "Not listed");
+      var r3 = el("div", "alert-row"); r3.innerHTML = "<b>Required follow-up</b> " + esc(a.requiredFollowUp || "");
+      box.appendChild(r1); box.appendChild(r2); box.appendChild(r3);
+      root.appendChild(box);
+    });
+  } else {
+    root.appendChild(el("div", "none-msg", "No critical investigator alerts were identified from the materials reviewed."));
+  }
+
+  var s1 = el("h2", "secn"); s1.innerHTML = '<span class="n">1.</span> Statement of facts';
+  root.appendChild(s1);
+  var facts = el("ul", "facts");
+  (d.statementOfFacts || []).slice(0, 20).forEach(function(f){
+    var li = el("li", null, ((f.date || f.time) ? ((f.date || "") + (f.time ? " " + f.time : "") + " - ") : "") + (f.fact || ""));
+    if (f.classification){
+      var cls = el("span", "fact-class", f.classification);
+      if (/DISPUTED/i.test(f.classification)) cls.classList.add("disputed");
+      if (/INFERENCE/i.test(f.classification)) cls.classList.add("inference");
+      li.appendChild(cls);
+    }
+    var r = refSpan(f.source);
+    if (r) li.appendChild(r);
+    facts.appendChild(li);
+  });
+  root.appendChild(facts);
+
+  var s2 = el("h2", "secn"); s2.innerHTML = '<span class="n">2.</span> Police report brief';
+  root.appendChild(s2);
+  var prb = d.policeReportBrief || {};
+  root.appendChild(el("p", "brief", prb.summary || "Not available from the sources."));
+  if (prb.policeTheory){
+    var pt = el("div", "kv-line");
+    pt.appendChild(el("b", null, "Police theory"));
+    pt.appendChild(document.createTextNode(prb.policeTheory));
+    root.appendChild(pt);
+  }
+  if (prb.primaryWeakness){
+    var pw = el("div", "kv-line");
+    pw.appendChild(el("b", null, "Primary weakness"));
+    pw.appendChild(document.createTextNode(prb.primaryWeakness));
+    root.appendChild(pw);
+  }
+
+  var s3 = el("h2", "secn"); s3.innerHTML = '<span class="n">3.</span> Discovery review';
+  root.appendChild(s3);
+  var dtbl = el("table");
+  dtbl.innerHTML = "<thead><tr><th>Item</th><th>Status</th><th>What it shows</th><th>Issue or red flag</th><th>Follow-up</th><th>Source</th></tr></thead>";
+  var dtb = el("tbody");
+  (d.discoveryReview || []).forEach(function(row){
+    var tr = el("tr");
+    if (/MISSING|REFERENCED BUT NOT PRODUCED|CORRUPTED|UNREADABLE/i.test(row.status || "")) tr.className = "crit";
+    else if (/PARTIAL|REQUIRES REVIEW/i.test(row.status || "")) tr.className = "warn";
+    tr.appendChild(el("td", null, row.item || ""));
+    var stTd = el("td");
+    var pill = el("span", "pill", row.status || "");
+    if (tr.className === "crit") pill.classList.add("red");
+    else if (tr.className === "warn") pill.classList.add("amber");
+    else if (/RECEIVED/i.test(row.status || "")) pill.classList.add("green");
+    stTd.appendChild(pill);
+    tr.appendChild(stTd);
+    tr.appendChild(el("td", null, row.whatItShows || ""));
+    tr.appendChild(el("td", null, row.issue || ""));
+    tr.appendChild(el("td", null, row.followUp || ""));
+    tr.appendChild(el("td", null, srcRefText(row.source)));
+    dtb.appendChild(tr);
+  });
+  dtbl.appendChild(dtb);
+  root.appendChild(dtbl);
+
+  var s4 = el("h2", "secn"); s4.innerHTML = '<span class="n">4.</span> Preliminary timeline';
+  root.appendChild(s4);
+  var ttbl = el("table");
+  ttbl.innerHTML = "<thead><tr><th>Date</th><th>Time</th><th>Event</th><th>Persons</th><th>Location</th><th>Status</th><th>Source</th></tr></thead>";
+  var ttb = el("tbody");
+  (d.timeline || []).forEach(function(t){
+    var tr = el("tr");
+    if (t.status === "DISPUTED") tr.className = "crit";
+    tr.appendChild(el("td", null, t.date || ""));
+    tr.appendChild(el("td", null, t.time || ""));
+    tr.appendChild(el("td", null, t.event || ""));
+    tr.appendChild(el("td", null, (t.persons || []).join(", ")));
+    tr.appendChild(el("td", null, t.location || ""));
+    tr.appendChild(el("td", null, t.status || ""));
+    tr.appendChild(el("td", null, srcRefText(t.source)));
+    ttb.appendChild(tr);
+  });
+  ttbl.appendChild(ttb);
+  root.appendChild(ttbl);
+  if ((d.timelineGaps || []).length){
+    var gapsBox = el("div", "kv-line");
+    gapsBox.appendChild(el("b", null, "Timeline gaps"));
+    gapsBox.appendChild(document.createTextNode(d.timelineGaps.slice(0,5).join("  |  ")));
+    root.appendChild(gapsBox);
+  }
+
+  var s5 = el("h2", "secn"); s5.innerHTML = '<span class="n">5.</span> Investigation strategy';
+  root.appendChild(s5);
+  (d.investigationStrategy || []).forEach(function(st){
+    var box = el("div", "strategy-item" + (st.priority === "URGENT" ? " urgent" : ""));
+    var top = el("div");
+    top.style.cssText = "display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap";
+    var pill = el("span", "pill", st.priority || "NORMAL");
+    if (st.priority === "URGENT") pill.classList.add("red");
+    else if (st.priority === "HIGH") pill.classList.add("amber");
+    top.appendChild(pill);
+    if (st.category) top.appendChild(el("span", "pill", st.category));
+    box.appendChild(top);
+    var act = el("div", null, st.action || "");
+    act.style.cssText = "font-weight:600;font-size:13.5px;line-height:1.5";
+    box.appendChild(act);
+    if (st.purpose){
+      var pur = el("div", null, st.purpose);
+      pur.style.cssText = "font-size:12.5px;color:#9aa0ad;margin-top:4px;line-height:1.5";
+      box.appendChild(pur);
+    }
+    if (st.sourceOrReason){
+      var why = el("div", "src-ref", "[" + st.sourceOrReason + "]");
+      why.style.marginLeft = "0";
+      why.style.marginTop = "5px";
+      why.style.display = "block";
+      why.style.whiteSpace = "normal";
+      box.appendChild(why);
+    }
+    root.appendChild(box);
+  });
+
+  var s6 = el("h2", "secn"); s6.innerHTML = '<span class="n">6.</span> Parties involved';
+  root.appendChild(s6);
+  (d.parties || []).forEach(function(p){
+    var box = el("div", "strategy-item");
+    var top = el("div");
+    top.style.cssText = "display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:5px";
+    var nm = el("span", null, p.name || "Unnamed");
+    nm.style.cssText = "font-weight:700;font-size:14px";
+    top.appendChild(nm);
+    if (p.primaryRole) top.appendChild(el("span", "pill", p.primaryRole));
+    if (p.interviewStatus) top.appendChild(el("span", "pill", p.interviewStatus));
+    box.appendChild(top);
+    var contactBits = [];
+    if (p.phone) contactBits.push(p.phone);
+    if (p.email) contactBits.push(p.email);
+    if (p.badgeNumber) contactBits.push("Badge " + p.badgeNumber);
+    if (p.agency) contactBits.push(p.agency);
+    if (contactBits.length){
+      var ct = el("div", null, contactBits.join("  |  "));
+      ct.style.cssText = "font-size:12px;color:#9aa0ad;margin-bottom:4px";
+      box.appendChild(ct);
+    }
+    if (p.keyRelevance){
+      var kr = el("div", null, p.keyRelevance);
+      kr.style.cssText = "font-size:12.5px;line-height:1.55";
+      box.appendChild(kr);
+    }
+    if ((p.recommendedQuestions || []).length){
+      var ol = el("ol", "qlist");
+      p.recommendedQuestions.slice(0,5).forEach(function(q){ ol.appendChild(el("li", null, q)); });
+      box.appendChild(ol);
+    }
+    if ((p.sourceReferences || []).length){
+      var refs = el("div", "src-ref", "[" + p.sourceReferences.join("; ") + "]");
+      refs.style.cssText = "margin-left:0;margin-top:5px;display:block;white-space:normal";
+      box.appendChild(refs);
+    }
+    root.appendChild(box);
+  });
+
+  var s7 = el("h2", "secn"); s7.innerHTML = '<span class="n">7.</span> Legal questions for attorney review';
+  root.appendChild(s7);
+  (d.legalQuestions || []).forEach(function(q){
+    var box = el("div", "kv-line");
+    box.appendChild(el("b", null, q.issue || "Issue"));
+    var lines = [];
+    if (q.factsCreatingIssue) lines.push("Facts: " + q.factsCreatingIssue);
+    if (q.standardToResearch) lines.push("Standard to research: " + q.standardToResearch);
+    if (q.application) lines.push("Application: " + q.application);
+    if (q.missingInformation) lines.push("Missing: " + q.missingInformation);
+    if (q.attorneyReviewQuestion) lines.push("Attorney review question: " + q.attorneyReviewQuestion);
+    box.appendChild(document.createTextNode(lines.join("  ")));
+    root.appendChild(box);
+  });
+
+  if ((d.openInvestigativeQuestions || []).length){
+    var s8 = el("h2", "secn"); s8.innerHTML = '<span class="n">+</span> Open investigative questions';
+    root.appendChild(s8);
+    var oq = el("ul", "facts");
+    d.openInvestigativeQuestions.slice(0,10).forEach(function(q){ oq.appendChild(el("li", null, q)); });
+    root.appendChild(oq);
+  }
+
+  var s9 = el("h2", "secn"); s9.innerHTML = '<span class="n">+</span> Sources reviewed';
+  root.appendChild(s9);
+  var stbl = el("table");
+  stbl.innerHTML = "<thead><tr><th>Document name</th><th>Type</th><th>Date</th><th>Author</th><th>Pages</th><th>Analysis status</th></tr></thead>";
+  var stb = el("tbody");
+  (d.sourceDocuments || []).forEach(function(sd){
+    var tr = el("tr");
+    tr.appendChild(el("td", null, sd.fileName || sd.documentName || ""));
+    tr.appendChild(el("td", null, sd.documentType || ""));
+    tr.appendChild(el("td", null, sd.date || ""));
+    tr.appendChild(el("td", null, sd.author || ""));
+    tr.appendChild(el("td", null, sd.pageCount != null ? String(sd.pageCount) : ""));
+    tr.appendChild(el("td", null, sd.extractionStatus || ""));
+    stb.appendChild(tr);
+  });
+  stbl.appendChild(stb);
+  root.appendChild(stbl);
+
+  var s10 = el("h2", "secn"); s10.innerHTML = '<span class="n">+</span> Analysis limitations';
+  root.appendChild(s10);
+  var lim = el("div", "limit-note");
+  if ((d.analysisLimitations || []).length){
+    lim.textContent = d.analysisLimitations.join(" ");
+  } else {
+    lim.textContent = "No limitations were reported by the model. Verify against the source list above before relying on this draft.";
+  }
+  root.appendChild(lim);
+
+  return root;
+}
+
+/* ---------------- Output export ---------------- */
+
+function exportCurrentHtml(){
+  var o = state.currentOutput;
+  if (!o) return;
+  var inner = $("ovInner").innerHTML;
+  var css = "";
+  var i;
+  for (i = 0; i < document.styleSheets.length; i++){
+    var sheet = document.styleSheets[i];
+    try {
+      var rules = sheet.cssRules || [];
+      var j;
+      for (j = 0; j < rules.length; j++){
+        var t = rules[j].cssText || "";
+        if (t.indexOf("#arc-investigator-analysis") >= 0 || t.indexOf(":root") === 0 || t.indexOf("#mindmapSvgWrap") >= 0){
+          css += t + "\n";
+        }
+      }
+    } catch(e){}
+  }
+  var html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>" + esc(o.title) + " - " + esc(state.caseName) + "</title>" +
+    "<link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap' rel='stylesheet'>" +
+    "<style>body{background:#14161c;color:#e8e6df;font-family:'DM Sans',sans-serif;padding:34px;max-width:1000px;margin:0 auto}" + css + "</style></head><body>" +
+    inner + "<p style='margin-top:30px;font-size:11px;color:#6b7280;font-family:DM Mono,monospace'>Generated by ARC Notebook, " + esc(nowStamp()) + ". Internal investigator work product. AI-generated draft, investigator review required.</p></body></html>";
+  download(sanitizeFile(state.caseName) + "_" + o.kind + ".html", html, "text/html");
+}
+
+function exportCurrentJson(){
+  var o = state.currentOutput;
+  if (!o) return;
+  download(sanitizeFile(state.caseName) + "_" + o.kind + ".json", JSON.stringify(o.data, null, 2), "application/json");
+}
+
+/* ---------------- Settings ---------------- */
+
+function openSettings(){
+  $("setMatterName").value = state.caseName === "Untitled matter" ? "" : state.caseName;
+  $("setCaseNo").value = state.caseNo || "";
+  $("settingsOverlay").classList.add("show");
+}
+
+function saveSettings(){
+  var name = $("setMatterName").value.trim();
+  var no = $("setCaseNo").value.trim();
+  if (name) state.caseName = name;
+  state.caseNo = no;
+  arcSetGeminiKey();
+  saveActiveCase();
+  $("settingsOverlay").classList.remove("show");
+  renderHeader();
+  toast("Settings saved.");
+}
+
+/* ---------------- Wiring ---------------- */
+
+function autosizeAsk(){
+  var input = $("askInput");
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 120) + "px";
+}
+
+function wire(){
+  $("btnContinueEvidence").addEventListener("click", function(){
+    saveActiveCase();
+    location.href = "workspace.html?stage=evidence&tab=discovery";
+  });
+  $("btnSettings").addEventListener("click", openSettings);
+  $("matterName").addEventListener("click", openSettings);
+  $("btnSettingsCancel").addEventListener("click", function(){ $("settingsOverlay").classList.remove("show"); });
+  $("btnSettingsSave").addEventListener("click", saveSettings);
+
+  $("browseLink").addEventListener("click", function(){ $("fileInput").click(); });
+  $("fileInput").addEventListener("change", function(ev){
+    addFiles(ev.target.files);
+    ev.target.value = "";
+  });
+  var dz = $("dropzone");
+  dz.addEventListener("dragover", function(ev){ ev.preventDefault(); dz.classList.add("drag"); });
+  dz.addEventListener("dragleave", function(){ dz.classList.remove("drag"); });
+  dz.addEventListener("drop", function(ev){
+    ev.preventDefault();
+    dz.classList.remove("drag");
+    addFiles(ev.dataTransfer.files);
+  });
+
+  $("btnIntakeSync").addEventListener("click", function(){
+    syncFromIntake().then(function(added){
+      toast(added ? ("Synced " + added + " document" + (added === 1 ? "" : "s") + " from intake.") : "No new intake documents found for this case.");
+    });
+  });
+  $("btnIntakeImport").addEventListener("click", function(){ $("intakeJsonInput").click(); });
+  $("intakeJsonInput").addEventListener("change", function(ev){
+    if (ev.target.files && ev.target.files[0]) importIntakeJson(ev.target.files[0]);
+    ev.target.value = "";
+  });
+
+  $("btnAsk").addEventListener("click", askQuestion);
+  $("askInput").addEventListener("keydown", function(ev){
+    if (ev.key === "Enter" && !ev.shiftKey){
+      ev.preventDefault();
+      askQuestion();
+    }
+  });
+  $("askInput").addEventListener("input", autosizeAsk);
+
+  var cards = document.querySelectorAll(".studio-card[data-gen]");
+  var i;
+  for (i = 0; i < cards.length; i++){
+    (function(card){
+      card.addEventListener("click", function(){
+        if (card.classList.contains("off")){
+          toast("Upload and process the initial case reports before generating the analysis.");
+          return;
+        }
+        runStudio(card.dataset.gen);
+      });
+    })(cards[i]);
+  }
+
+  $("btnAddNote").addEventListener("click", function(){
+    addNote($("noteInput").value);
+    $("noteInput").value = "";
+  });
+  $("btnExportNotes").addEventListener("click", exportNotesMd);
+
+  $("btnSrcViewerClose").addEventListener("click", function(){ $("srcViewer").classList.remove("show"); });
+  $("btnOvClose").addEventListener("click", function(){ $("outViewer").classList.remove("show"); });
+  $("btnOvCopy").addEventListener("click", function(){ copyText($("ovInner").innerText); });
+  $("btnOvExport").addEventListener("click", exportCurrentHtml);
+  $("btnOvJson").addEventListener("click", exportCurrentJson);
+  $("btnOvPrint").addEventListener("click", function(){ window.print(); });
+
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === "Escape"){
+      $("settingsOverlay").classList.remove("show");
+      $("srcViewer").classList.remove("show");
+      $("outViewer").classList.remove("show");
+    }
+  });
+
+  window.addEventListener("message", function(ev){
+    var msg = ev.data;
+    if (!msg || msg.type !== "ARC_INTAKE_DOCUMENTS" || !msg.payload) return;
+    var payload = msg.payload;
+    if (payload.case && payload.case.caseId && payload.case.caseId !== state.caseId){
+      state.caseId = payload.case.caseId;
+      if (payload.case.caseName) state.caseName = payload.case.caseName;
+      if (payload.case.caseNo) state.caseNo = payload.case.caseNo;
+      saveActiveCase();
+      loadNotes();
+      renderNotes();
+    }
+    var docs = payload.documents || [];
+    var chain = Promise.resolve();
+    docs.forEach(function(dRec){
+      dRec.caseId = state.caseId;
+      if (!dRec.id) dRec.id = uid();
+      if (!dRec.origin) dRec.origin = "intake";
+      if (!dRec.status) dRec.status = classifyStatus(dRec.pages);
+      chain = chain.then(function(){ return idbPut("documents", dRec); });
+    });
+    chain.then(function(){ return syncFromIntake(); }).then(function(){
+      renderHeader();
+    });
+  });
+}
+
+/* ---------------- Boot ---------------- */
+
+function boot(){
+  loadActiveCase();
+  loadNotes();
+  openDb().then(function(d){
+    db = d;
+    return syncFromIntake();
+  }).then(function(){
+    return idbByCase("outputs", state.caseId);
+  }).then(function(outs){
+    state.outputs = (outs || []).sort(function(a,b){ return b.createdAt - a.createdAt; });
+    renderOutputs();
+    renderNotes();
+    renderHeader();
+    renderChat();
+  }).catch(function(err){
+    toast("Storage failed to open: " + String(err && err.message || err));
+    renderSources();
+    renderNotes();
+    renderChat();
+    renderHeader();
+  });
+  wire();
+}
+
+boot();
+
+})();
+</script>
+</body>
+</html>

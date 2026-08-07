@@ -1,13 +1,10 @@
 {
-  "name": "arc-motion-legal",
+  "name": "arc-motion-legal-test-mirror",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "ARC Motion & Legal module: Cloudflare Worker (D1 + R2), CourtListener integration, Claude drafting gateway",
+  "description": "Test mirror of the production Motion & Legal Worker. Deploy only cloudflare-worker/legal.",
   "scripts": {
-    "test": "node --test --test-force-exit tests/legal.test.mjs",
-    "db:migrate": "wrangler d1 execute arc_legal --file=worker/schema.sql --remote",
-    "db:migrate:local": "wrangler d1 execute arc_legal --file=worker/schema.sql --local",
-    "deploy": "wrangler deploy"
+    "test": "node --test --test-force-exit tests/legal.test.mjs"
   }
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ARC mark.
+
+  PLACEHOLDER. Generated from the brand language already present in the ARC
+  front page and the four-page entry designs: navy #0B162C field, gold #D4AF37
+  rule and border, Playfair-style serif capital.
+
+  TO REPLACE: drop the real logo in at this exact path (assets/arc-logo.svg)
+  and every header that references it updates at once. Pages 2, 3 and 4 all
+  load it as <img src="/assets/arc-logo.svg">, sized by CSS (h-8 on the secure
+  entry and operational dashboard, h-12 on the case dashboard), so any square
+  or near-square artwork drops in without markup changes. A PNG works too;
+  rename the reference in those three files if the extension differs.
+
+  NOTE: the ARC report suite elsewhere uses gold #C9A84C. These four pages use
+  #D4AF37. This mark follows the pages it appears on. Align the two if you want
+  one gold across the whole system.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="ARC">
+  <title>ARC</title>
+  <rect width="64" height="64" fill="#0B162C"/>
+  <rect x="3.5" y="3.5" width="57" height="57" fill="none" stroke="#D4AF37" stroke-width="1.5"/>
+  <text x="32" y="40" text-anchor="middle"
+        font-family="Playfair Display, Georgia, 'Times New Roman', serif"
+        font-size="30" font-weight="500" fill="#D4AF37">A</text>
+  <rect x="20" y="47" width="24" height="1.5" fill="#D4AF37"/>
+</svg>

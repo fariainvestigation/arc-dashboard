@@ -323,7 +323,7 @@ test('exports exclude API keys, internal notes, and other-case material', async 
   const zipText = new TextDecoder('latin1').decode(zipBytes);
   assert.equal(zipText.slice(0, 2), 'PK', 'valid zip container');
   assert.ok(!zipText.includes('cl-test-secret'), 'no CourtListener key in export');
-  assert.ok(!zipText.includes('sk-ant-test-secret'), 'no Anthropic key in export');
+  assert.ok(!zipText.includes('TEST_ANTHROPIC_SECRET'), 'no Anthropic key in export');
   assert.ok(!zipText.includes('PRIVILEGED-INTERNAL-NOTE'), 'no attorney notes in export');
   assert.ok(!zipText.includes('Case B exhibit'), 'no other-case material in export');
   assert.ok(!zipText.includes('[FACT:'), 'internal source tags stripped from filing documents');
@@ -439,10 +439,13 @@ test('CORS allowlist and no key exposure in frontend files', async () => {
   assert.equal(good.headers.get('Access-Control-Allow-Origin'), 'https://arcdefensereport.com');
 
   const fs = await import('fs');
-  const url = await import('url');
-  const dir = new URL('../frontend/', import.meta.url);
-  for (const f of fs.readdirSync(dir)) {
-    const src = fs.readFileSync(new URL(f, dir), 'utf8');
+  const root = new URL('../../../', import.meta.url);
+  const frontendFiles = [
+    '23_Motion_and_Legal.html', 'arc_motion_legal.css', 'arc_motion_legal.js',
+    'arc_courtlistener_client.js', 'arc_motion_templates.js', 'arc_legal_authority_store.js'
+  ];
+  for (const f of frontendFiles) {
+    const src = fs.readFileSync(new URL(f, root), 'utf8');
     assert.ok(!/sk-ant-[A-Za-z0-9]/.test(src), f + ' has no Anthropic key');
     assert.ok(!/Authorization:\s*['"`]Token /.test(src), f + ' never sends a CourtListener token');
     assert.ok(!/COURTLISTENER_API_KEY|ANTHROPIC_API_KEY/.test(src), f + ' does not reference provider secrets');
