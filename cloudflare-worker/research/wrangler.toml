@@ -1,0 +1,19 @@
+name = "arc-research"
+main = "research_worker.mjs"
+compatibility_date = "2026-08-01"
+
+[vars]
+ACCESS_TEAM_DOMAIN = "REPLACE.cloudflareaccess.com"
+ACCESS_AUD = "REPLACE_WITH_ACCESS_APP_AUD_TAG"
+ALLOWED_ORIGINS = "https://arcdefensereport.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "arc_legal"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# Secret: wrangler secret put FIRECRAWL_API_KEY
+
+[[routes]]
+pattern = "arcdefensereport.com/research-api/*"
+zone_name = "arcdefensereport.com"

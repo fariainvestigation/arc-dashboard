@@ -1,0 +1,6 @@
+ARC MOTION standard structure (applied by "Seed standard structure"):
+INTRODUCTION / PROCEDURAL HISTORY / STATEMENT OF FACTS / LEGAL STANDARD /
+ARGUMENT / REQUESTED RELIEF. Caption, title, signature block, certificate
+of service, and exhibit index generate automatically from the case and
+attorney profile. All client-specific content is dynamic; no sample
+client data exists in any template.

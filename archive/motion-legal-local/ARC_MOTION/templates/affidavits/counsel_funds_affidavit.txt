@@ -1,0 +1,12 @@
+AFFIDAVIT OF COUNSEL IN SUPPORT OF MOTION FOR FUNDS (dynamic template)
+Counsel: [ATTORNEY NAME], BBO [BBO]
+1. I am counsel of record for the Defendant, [CLIENT NAME].
+2. Based on my review of the charges, the procedural posture, and the
+   discovery, [SERVICE TYPE] services are reasonably necessary to assure
+   the Defendant as effective a defense as [PRONOUN] would have if
+   financially able to pay. G.L. c. 261, ss. 27A-27G; Commonwealth v.
+   Lockley, 381 Mass. 156 (1980) [AUTHORITY REQUIRES VERIFICATION].
+3. The services required include: [INVESTIGATIVE TASKS].
+4. The requested amount, $[AMOUNT], is reasonable under the circumstances.
+Signed under the pains and penalties of perjury.
+[ATTORNEY SIGNATURE]   [DATE]

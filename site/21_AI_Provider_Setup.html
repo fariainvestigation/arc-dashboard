@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARC Provider Setup</title><link rel="stylesheet" href="arc_uniform_design.css">
+<style>body{background:#14181c;color:#e8ecef;font:14px system-ui}.wrap{max-width:980px;margin:auto;padding:28px}.card{background:#1b2127;border:1px solid #2e3841;border-radius:10px;padding:18px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}code,pre{font-family:monospace;color:#e7c66b;background:#0f1418;border-radius:6px}pre{padding:12px;white-space:pre-wrap}.badge{display:inline-block;padding:3px 8px;border-radius:20px;border:1px solid #48535d}.ok{color:#74c69d}.bad{color:#ff8c8c}.muted{color:#94a2ad}button{background:#C9A84C;color:#14181c;border:0;border-radius:6px;padding:9px 13px;font-weight:700}</style>
+<script src="arc_api_client.js"></script></head><body><main class="wrap">
+<h1>ARC Provider Setup</h1>
+<p class="muted">ARC never accepts provider keys in a webpage. Enter each secret only through Wrangler on a trusted administrator machine.</p>
+<div class="card"><button id="refresh">Refresh deployment status</button><div id="status" class="grid" style="margin-top:12px"></div></div>
+<div class="grid">
+<section class="card"><h2>AI Worker</h2><p>Gemini analysis + Claude final reports.</p><pre>cd cloudflare-worker/ai
+wrangler secret put GOOGLE_API_KEY
+wrangler secret put ANTHROPIC_API_KEY
+wrangler deploy</pre><p class="muted">Route: <code>/ai/*</code></p></section>
+<section class="card"><h2>Legal Worker</h2><p>CourtListener + Claude motion drafting.</p><pre>cd cloudflare-worker/legal
+wrangler secret put COURTLISTENER_API_KEY
+wrangler secret put ANTHROPIC_API_KEY
+wrangler deploy</pre><p class="muted">Route: <code>/legal-api/*</code></p></section>
+<section class="card"><h2>Research Worker</h2><p>Firecrawl public-web research.</p><pre>cd cloudflare-worker/research
+wrangler secret put FIRECRAWL_API_KEY
+wrangler deploy</pre><p class="muted">Route: <code>/research-api/*</code></p></section>
+</div>
+<div class="card"><h2>Security rule</h2><p>Never paste Gemini, Claude, CourtListener, or Firecrawl credentials into ARC HTML, localStorage, case files, prompts, exports, GitHub, or ZIP packages. Wrangler secrets are entered interactively and are not printed back.</p></div>
+<div class="card"><h2>Next check</h2><p>After all three Workers are deployed, open <a href="arc_preflight.html">ARC Preflight</a> while signed in through Cloudflare Access.</p></div>
+</main><script>
+(function(){function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}function box(name,ok,detail){return '<div class="card"><b>'+esc(name)+'</b><div class="badge '+(ok?'ok':'bad')+'">'+(ok?'ready':'attention')+'</div><p class="muted">'+esc(detail)+'</p></div>'}async function refresh(){var out=document.getElementById('status');out.innerHTML='<p>Checking…</p>';var rows=[];try{var a=await fetch('/ai/policy',{credentials:'include'});rows.push(box('AI gateway',a.ok,a.ok?'Route is reachable.':'HTTP '+a.status));}catch(e){rows.push(box('AI gateway',false,e.message))}try{var l=await ARCAPI.request('/legal-api/provider-status');rows.push(box('Legal worker',l.d1&&l.r2&&l.courtlistenerConfigured&&l.claudeConfigured,'D1 '+!!l.d1+', R2 '+!!l.r2+', CourtListener '+!!l.courtlistenerConfigured+', Claude '+!!l.claudeConfigured));}catch(e){rows.push(box('Legal worker',false,e.message))}try{var r=await ARCAPI.request('/research-api/status');rows.push(box('Public web research',!!r.configured,'Firecrawl configured: '+!!r.configured));}catch(e){rows.push(box('Public web research',false,e.message))}out.innerHTML=rows.join('')}document.getElementById('refresh').onclick=refresh;refresh()})();
+</script></body></html>

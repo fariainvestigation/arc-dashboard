@@ -1,0 +1,19 @@
+{
+  "name": "arc-motion",
+  "version": "1.0.0",
+  "description": "ARC MOTION - Massachusetts Criminal Defense Motion and Litigation Workspace (offline-first, localhost only)",
+  "type": "module",
+  "main": "server/server.mjs",
+  "scripts": {
+    "start": "node server/server.mjs",
+    "test": "node --test tests/core.test.mjs"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "better-sqlite3": "^11.10.0",
+    "docx": "^9.5.0",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.2",
+    "pdfkit": "^0.15.2"
+  }
+}

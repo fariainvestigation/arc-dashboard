@@ -1,0 +1,4 @@
+ARC Final Full Code
+Build: 2026-08-07-final-repaired
+Validation: 64/64 automated tests passed; 89 JS/MJS syntax checks passed; 19 inline script checks passed; 0 broken deployable local links; 0 live provider-key pattern matches in deployable code.
+Deployment status: locally validated only. Run staging arc_preflight.html with real Cloudflare Access, D1, R2 and provider secrets before live case use.
