@@ -1,0 +1,7 @@
+ARC MOTION skeleton (Massachusetts criminal, defense perspective)
+Sections in order: caption, title, introduction, procedural history, statement of facts,
+legal standard, argument (or IRAC blocks), requested relief, conclusion, signature block,
+certificate of service, supporting affidavit, proposed order, exhibit index.
+Placeholders: [CLIENT NAME] [DOCKET NUMBER] [COURT] [DATE] [OFFICER NAME]
+[DISCOVERY ITEM] [FACTUAL SUPPORT REQUIRED] [AUTHORITY REQUIRES VERIFICATION] [ATTORNEY SIGNATURE]
+Never fill a placeholder with invented information.
