@@ -3,15 +3,15 @@ main = "arc_ai_gateway.mjs"
 compatibility_date = "2026-08-01"
 
 [vars]
-ACCESS_TEAM_DOMAIN = "your-team.cloudflareaccess.com"
-ACCESS_AUD = "your-access-application-aud-tag"
+ACCESS_TEAM_DOMAIN = "old-lake-2c90.cloudflareaccess.com"
+ACCESS_AUD = "165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212"
 ALLOWED_ORIGINS = "https://arcdefensereport.com"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "arc_legal"
-database_id = "your-d1-database-id"
+database_id = "6c04c557-f8de-4590-a235-76fa117ff6d8"
 
 # Secrets, set with wrangler and never placed in this file:
 #   wrangler secret put GOOGLE_API_KEY
