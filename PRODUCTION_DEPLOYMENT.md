@@ -13,15 +13,17 @@ This release is configured for `arcdefensereport.com` and uses **Cloudflare only
 | R2 bucket | `arc-legal-files` |
 | Production origins | `https://arcdefensereport.com`, `https://www.arcdefensereport.com` |
 
-## 1. Enable R2 first — required
+### Existing-production 11.7.2 upgrade
 
-R2 is not enabled on the account yet. Enable R2 in the Cloudflare dashboard, then create the bucket:
+If ARC is already deployed and the Workers/D1/R2/provider secrets are healthy, this Intake/Notebook upgrade is frontend-only. Run the release tests and redeploy `DEPLOY_PAGES/`. Do **not** recreate the database, bucket, admin account, or provider secrets. `DEPLOY_UPGRADE_ONLY.ps1` is provided for that path.
 
-```powershell
-npx wrangler r2 bucket create arc-legal-files
-```
+## 1. Verify private R2 storage
 
-If Cloudflare says R2 is not enabled, stop and enable it in the dashboard before continuing.
+The production bucket has already been created:
+
+`arc-legal-files`
+
+Keep **Public Access disabled**. For a fresh Cloudflare account only, enable R2 and create that exact bucket name. Existing production upgrades must reuse the same bucket rather than creating a second one.
 
 ## 2. Apply the shared D1 production schema
 

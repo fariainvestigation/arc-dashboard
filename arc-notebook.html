@@ -40,7 +40,7 @@ input,textarea,select{font-family:var(--font-body)}
 /* ---------- App frame ---------- */
 #app{display:flex;flex-direction:column;height:100vh}
 header.topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--bg2);border-bottom:1px solid var(--line);flex:0 0 auto}
-.brandmark{width:38px;height:38px;border:1px solid var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:19px;color:var(--gold);flex:0 0 auto}
+.brandmark{width:46px;height:46px;border:1px solid var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#151515;flex:0 0 auto}.brandmark img{width:100%;height:100%;object-fit:cover;display:block}
 .matter-id{min-width:0}
 .matter-name{font-family:var(--font-head);font-size:19px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:1px dashed transparent}
 .matter-name:hover{border-bottom-color:var(--gold-dim)}
@@ -85,6 +85,12 @@ main.workspace{display:grid;grid-template-columns:290px 1fr 330px;flex:1 1 auto;
 .src-x{float:right;color:var(--ink-faint);background:none;border:none;font-size:15px;line-height:1;padding:0 0 0 6px}
 .src-x:hover{color:var(--red)}
 .intake-note{margin:4px 14px 12px;font-size:11.5px;color:var(--ink-faint);line-height:1.5}
+.src-group{padding:7px 14px 5px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.src-actions{flex-wrap:wrap}
+.image-tools{margin:10px 12px 6px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}.image-tools strong{font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-dim)}
+#imageGallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 12px 14px}.img-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}.img-card img{display:block;width:100%;aspect-ratio:1.2;object-fit:cover;background:#080b10;cursor:pointer}.img-meta{padding:7px;font-size:10.5px;line-height:1.35;color:var(--ink-dim)}.img-meta b{display:block;color:var(--ink);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.img-actions{display:flex;gap:5px;padding:0 7px 7px}.img-actions button{flex:1;padding:4px 5px;font-size:9.5px}
+#bootOverlay{position:fixed;inset:0;z-index:2147483500;background:rgba(13,16,23,.96);display:flex;align-items:center;justify-content:center;padding:24px}#bootOverlay[hidden]{display:none}.boot-card{width:min(520px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:0 22px 70px rgba(0,0,0,.45)}.boot-card h2{font-family:var(--font-head);font-size:23px;margin-bottom:8px}.boot-card p{color:var(--ink-dim);line-height:1.6}.boot-spinner{width:30px;height:30px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--gold);animation:arcspin .8s linear infinite;margin-bottom:16px}@keyframes arcspin{to{transform:rotate(360deg)}}.boot-error{border-color:var(--red)!important}.boot-error .boot-spinner{display:none}.boot-actions{margin-top:16px;display:flex;gap:8px}
+
 
 /* ---------- Chat ---------- */
 #paneChat{background:var(--bg)}
@@ -233,11 +239,12 @@ mark.hl{background:rgba(201,168,76,.3);color:var(--ink);border-radius:3px;paddin
 <script src="arc_ai_client.js"></script>
 <script src="arc_unified_bridge.js"></script>
 <script src="arc_case_document_bridge.js"></script>
-</head>
+<script src="arc_report_assets.js"></script>
+<script src="libs/purify.min.js"></script><script src="arc_security.js"></script></head>
 <body>
 <div id="app">
   <header class="topbar">
-    <div class="brandmark">A</div>
+    <div class="brandmark"><img src="assets/arc-logo-real.webp" alt="ARC Investigations & Consulting"></div>
     <div class="matter-id">
       <div class="matter-name" id="matterName" title="Click to edit matter details">Untitled matter</div>
       <div class="matter-meta" id="matterMeta">0 sources</div>
@@ -262,12 +269,15 @@ mark.hl{background:rgba(201,168,76,.3);color:var(--ink);border-radius:3px;paddin
           <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md" style="display:none">
         </div>
         <div class="src-actions">
-          <button class="btn btn-sm btn-ghost" id="btnIntakeSync">Sync from intake</button>
+          <button class="btn btn-sm btn-ghost" id="btnIntakeSync">Refresh case files</button>
+          <button class="btn btn-sm btn-ghost" id="btnExtractPictures">Extract all pictures</button>
           <button class="btn btn-sm btn-ghost" id="btnIntakeImport">Import intake .json</button>
           <input type="file" id="intakeJsonInput" accept=".json" style="display:none">
         </div>
         <div id="srcList"></div>
         <div class="intake-note" id="intakeNote"></div>
+        <div class="image-tools"><strong>Extracted pictures</strong><span class="count-dot" id="imgCount">0</span></div>
+        <div id="imageGallery"></div>
       </div>
     </section>
 
@@ -334,6 +344,16 @@ mark.hl{background:rgba(201,168,76,.3);color:var(--ink);border-radius:3px;paddin
       </div>
     </section>
   </main>
+</div>
+
+
+<div id="bootOverlay">
+  <div class="boot-card" id="bootCard">
+    <div class="boot-spinner"></div>
+    <h2 id="bootTitle">Loading case...</h2>
+    <p id="bootMessage">Connecting the Notebook to the active ARC case.</p>
+    <div class="boot-actions" id="bootActions" hidden><button class="btn btn-gold" id="btnBootRetry" type="button">Retry</button><button class="btn" id="btnBootCases" type="button">Open Case Dashboard</button></div>
+  </div>
 </div>
 
 <!-- Settings modal -->
@@ -410,6 +430,7 @@ var state = {
   chat: [],
   outputs: [],
   notes: [],
+  images: [],
   busy: false,
   currentOutput: null
 };
@@ -457,6 +478,20 @@ function toast(msg){
   document.body.appendChild(t);
   setTimeout(function(){ t.remove(); }, 3200);
 }
+
+
+function bootStatus(title, message, error){
+  var overlay = $("bootOverlay");
+  var card = $("bootCard");
+  if (!overlay || !card) return;
+  overlay.hidden = false;
+  card.classList.toggle("boot-error", Boolean(error));
+  $("bootTitle").textContent = title || "Loading case...";
+  $("bootMessage").textContent = message || "";
+  $("bootActions").hidden = !error;
+}
+
+function bootReady(){ var overlay = $("bootOverlay"); if (overlay) overlay.hidden = true; }
 
 /* ---------------- API key vault ---------------- */
 
@@ -518,33 +553,47 @@ function idbByCase(store, caseId){
 
 /* ---------------- Case bootstrap ---------------- */
 
+function requestedNotebookCaseId(){
+  try { return String(new URLSearchParams(location.search).get("case") || new URLSearchParams(location.search).get("caseId") || "").trim(); }
+  catch(e){ return ""; }
+}
+
+function applyCaseIdentity(record){
+  var c = record && typeof record === "object" ? record : {};
+  var id = String(c.caseId || c.id || "").trim();
+  if (id) state.caseId = id;
+  state.caseName = c.matter || c.caseName || c.subjectName || c.clientName || state.caseName;
+  state.caseNo = c.docket || c.docketNumber || c.caseNo || state.caseNo;
+}
+
 function loadActiveCase(){
-  var fromUrl = null;
-  try {
-    var params = new URLSearchParams(location.search);
-    fromUrl = params.get("case");
-  } catch(e){}
+  var fromUrl = requestedNotebookCaseId();
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem(LS_KEY_ACTIVE_CASE) || "null"); } catch(e){}
-  if (fromUrl){
+  var unified = {};
+  try { if (window.ARCUnified && typeof window.ARCUnified.getCase === "function") unified = window.ARCUnified.getCase() || {}; } catch(e){}
+
+  if (fromUrl) {
     state.caseId = fromUrl;
-    if (stored && stored.caseId === fromUrl){
-      state.caseName = stored.caseName || state.caseName;
-      state.caseNo = stored.caseNo || "";
-    }
-  } else if (stored && stored.caseId){
-    state.caseId = stored.caseId;
-    state.caseName = stored.caseName || state.caseName;
-    state.caseNo = stored.caseNo || "";
-  } else if (window.ARCUnified && typeof window.ARCUnified.getCase === "function") {
-    var unified = window.ARCUnified.getCase() || {};
-    state.caseId = unified.caseId || unified.docket || uid();
-    state.caseName = unified.matter || unified.caseName || state.caseName;
-    state.caseNo = unified.docket || unified.docketNumber || "";
-  } else {
+    if (String(unified.caseId || unified.id || "") === fromUrl) applyCaseIdentity(unified);
+    else if (stored && stored.caseId === fromUrl) applyCaseIdentity(stored);
+  } else if (unified && (unified.caseId || unified.id)) {
+    applyCaseIdentity(unified);
+  } else if (stored && stored.caseId) {
+    applyCaseIdentity(stored);
+  } else if (location.protocol === "file:") {
     state.caseId = uid();
+  } else {
+    state.caseId = "";
+    return false;
   }
+
+  if (!state.caseId) return false;
   saveActiveCase();
+  if (window.ARCCaseDocuments && typeof window.ARCCaseDocuments.setActiveCase === "function") {
+    window.ARCCaseDocuments.setActiveCase({ caseId: state.caseId, caseName: state.caseName, caseNo: state.caseNo });
+  }
+  return true;
 }
 
 function saveActiveCase(){
@@ -570,9 +619,9 @@ function ensurePdfJs(){
   if (pdfLibPromise) return pdfLibPromise;
   pdfLibPromise = new Promise(function(resolve, reject){
     var s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.src = "libs/pdf.min.js";
     s.onload = function(){
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "libs/pdf.worker.min.js";
       resolve(window.pdfjsLib);
     };
     s.onerror = function(){ pdfLibPromise = null; reject(new Error("Could not load the PDF reader.")); };
@@ -586,7 +635,7 @@ function ensureMammoth(){
   if (mammothPromise) return mammothPromise;
   mammothPromise = new Promise(function(resolve, reject){
     var s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+    s.src = "libs/mammoth.browser.min.js";
     s.onload = function(){ resolve(window.mammoth); };
     s.onerror = function(){ mammothPromise = null; reject(new Error("Could not load the DOCX reader.")); };
     document.head.appendChild(s);
@@ -649,41 +698,91 @@ function classifyStatus(pages){
   return "READY";
 }
 
-function addFiles(fileList){
+async function extractPagesForFile(file){
+  var ext = extFromName(file.name);
+  if (ext === "pdf") return extractPdf(file);
+  if (ext === "docx") return extractDocx(file);
+  if (ext === "txt" || ext === "md") return extractPlain(file);
+  throw new Error("Unsupported file type: " + ext);
+}
+
+async function saveSourceAsset(rec, file){
+  if (!window.ARCReportAssets || typeof window.ARCReportAssets.saveWithFile !== "function") return null;
+  if (!(await window.ARCReportAssets.serverReady())) return null;
+  var asset = await window.ARCReportAssets.saveWithFile({
+    id: rec.serverAssetId || ("source_" + rec.id),
+    caseId: state.caseId,
+    type: "source-document",
+    title: rec.name,
+    description: "Case source document added from ARC Notebook.",
+    source: "notebook",
+    status: "draft",
+    selectedForFinal: false,
+    sourceDocumentId: rec.id,
+    documentCategory: rec.docType || "notebook",
+    extractionStatus: rec.processingStatus || rec.status || "uploaded",
+    origin: rec.origin || "notebook-upload"
+  }, file);
+  rec.serverAssetId = asset.id;
+  rec.serverStored = true;
+  if (asset.file && asset.file.sha256) rec.sha256 = asset.file.sha256;
+  return asset;
+}
+
+async function attachSourceMetaToCase(rec){
+  if (!window.ARCUnified || typeof window.ARCUnified.getCase !== "function") return;
+  var c = window.ARCUnified.getCase() || {};
+  if (!c.caseId || c.caseId !== state.caseId) return;
+  var files = Array.isArray(c.uploadedFiles) ? c.uploadedFiles.slice() : [];
+  var meta = {
+    id: rec.id, name: rec.name, size: rec.size || 0, type: rec.mime || "",
+    category: rec.docType || "notebook", uploadedAt: rec.uploadedAt || new Date().toISOString(),
+    serverAssetId: rec.serverAssetId || "", sha256: rec.sha256 || "", origin: rec.origin || "notebook-upload",
+    extraction: { status: rec.processingStatus || rec.status || "uploaded", textChars: (rec.pages || []).reduce(function(a,p){return a+String(p.text||"").length;},0), preview: (rec.pages && rec.pages[0] && rec.pages[0].text || "").slice(0,2500) }
+  };
+  var found = files.findIndex(function(x){ return x.id === rec.id; });
+  if (found >= 0) files[found] = Object.assign({}, files[found], meta); else files.push(meta);
+  var payload = Object.assign({}, c, { uploadedFiles: files });
+  try {
+    if (typeof window.ARCUnified.saveCaseAsync === "function") await window.ARCUnified.saveCaseAsync(payload);
+    else window.ARCUnified.saveCase(payload);
+  } catch(e){ console.warn("Notebook document metadata could not be attached to the case record", e); }
+}
+
+async function addFiles(fileList){
   var files = Array.prototype.slice.call(fileList || []);
   if (!files.length) return;
-  files.forEach(function(file){
-    var ext = extFromName(file.name);
+  if (!state.caseId) { toast("Open an ARC case before adding documents."); return; }
+  for (var fi = 0; fi < files.length; fi++){
+    var file = files[fi];
     var rec = {
-      id: uid(),
-      caseId: state.caseId,
-      name: file.name,
-      mime: file.type || ext,
-      size: file.size,
-      uploadedAt: Date.now(),
-      status: "PENDING",
-      pages: [],
-      origin: "notebook-upload"
+      id: uid(), caseId: state.caseId, name: file.name, mime: file.type || extFromName(file.name),
+      size: file.size, uploadedAt: new Date().toISOString(), status: "PENDING", processingStatus: "Uploaded",
+      pages: [], origin: "notebook-upload", docType: "notebook"
     };
     state.sources.push(rec);
     renderSources();
-    var extractor;
-    if (ext === "pdf") extractor = extractPdf(file);
-    else if (ext === "docx") extractor = extractDocx(file);
-    else if (ext === "txt" || ext === "md") extractor = extractPlain(file);
-    else extractor = Promise.reject(new Error("Unsupported file type: " + ext));
-    extractor.then(function(pages){
+    bootStatus("Adding case document...", (fi + 1) + " of " + files.length + ": " + file.name, false);
+    try {
+      var serverPromise = saveSourceAsset(rec, file);
+      var pages = await extractPagesForFile(file);
       rec.pages = pages;
       rec.status = classifyStatus(pages);
-      return idbPut("documents", rec);
-    }).catch(function(err){
+      rec.processingStatus = rec.status === "READY" ? "Text extracted" : rec.status === "PARTIAL" ? "Partial text extracted" : "No readable text detected";
+      await serverPromise;
+      await idbPut("documents", rec);
+      await attachSourceMetaToCase(rec);
+    } catch(err){
       rec.status = "FAILED";
+      rec.processingStatus = "Processing error";
       rec.error = String(err && err.message || err);
-      idbPut("documents", rec);
-    }).then(function(){
-      renderSources();
-    });
-  });
+      try { await idbPut("documents", rec); } catch(e){}
+      toast(file.name + ": " + rec.error);
+    }
+    renderSources();
+  }
+  await syncImagesFromServer().catch(function(){});
+  bootReady();
 }
 
 /* ---------------- Intake handoff ---------------- */
@@ -703,6 +802,73 @@ function syncFromIntake(){
     renderSources();
     return added;
   });
+}
+
+
+async function sourceBlobFromAsset(asset){
+  if (!asset) return null;
+  if (window.ARCReportAssets && typeof window.ARCReportAssets.fetchFile === "function") {
+    return window.ARCReportAssets.fetchFile(asset);
+  }
+  var id = asset.id || asset.serverAssetId;
+  if (!id) return null;
+  var response = await fetch("/api/report-assets/files/" + encodeURIComponent(id) + "?caseId=" + encodeURIComponent(state.caseId), { credentials:"include", cache:"no-store" });
+  if (!response.ok) throw new Error("Stored source could not be loaded");
+  return response.blob();
+}
+
+async function syncFromServerAssets(){
+  if (!window.ARCReportAssets || typeof window.ARCReportAssets.list !== "function") return 0;
+  if (!(await window.ARCReportAssets.serverReady())) return 0;
+  var assets = await window.ARCReportAssets.list("source-document");
+  var byId = {};
+  state.sources.forEach(function(rec){ byId[rec.id] = rec; });
+  var added = 0;
+  for (var i = 0; i < assets.length; i++){
+    var asset = assets[i];
+    var id = String(asset.sourceDocumentId || asset.id || "");
+    if (!id) continue;
+    var rec = byId[id];
+    if (!rec){
+      rec = { id:id, caseId:state.caseId, pages:[] };
+      state.sources.push(rec); byId[id] = rec; added++;
+    }
+    rec.serverAssetId = asset.id;
+    rec.serverStored = true;
+    rec.name = asset.title || (asset.file && asset.file.name) || rec.name || "Untitled document";
+    rec.mime = (asset.file && asset.file.type) || rec.mime || "";
+    rec.size = (asset.file && asset.file.size) || rec.size || 0;
+    rec.sha256 = (asset.file && asset.file.sha256) || rec.sha256 || "";
+    rec.docType = asset.documentCategory || rec.docType || "case-document";
+    rec.origin = asset.origin || asset.source || rec.origin || "case-document";
+    rec.processingStatus = asset.extractionStatus || rec.processingStatus || "Uploaded";
+    rec.uploadedAt = asset.createdAt || rec.uploadedAt || new Date().toISOString();
+
+    if ((!rec.pages || !rec.pages.length) && asset.file){
+      bootStatus("Loading case documents...", "Preparing " + rec.name + " for Notebook search.", false);
+      try {
+        var blob = await sourceBlobFromAsset(asset);
+        var file = new File([blob], rec.name, { type: rec.mime || blob.type || "application/octet-stream" });
+        rec.pages = await extractPagesForFile(file);
+        rec.status = classifyStatus(rec.pages);
+        rec.processingStatus = rec.status === "READY" ? "Text extracted" : rec.status === "PARTIAL" ? "Partial text extracted" : "No readable text detected";
+      } catch(error){
+        rec.status = rec.status || "FAILED";
+        rec.error = String(error && error.message || error);
+        rec.processingStatus = rec.processingStatus || "Could not prepare text";
+      }
+    }
+    await idbPut("documents", rec);
+  }
+  state.sources.sort(function(a,b){ return String(a.uploadedAt||"").localeCompare(String(b.uploadedAt||"")); });
+  renderSources();
+  return added;
+}
+
+async function syncCaseDocuments(){
+  var localAdded = await syncFromIntake();
+  var serverAdded = await syncFromServerAssets();
+  return localAdded + serverAdded;
 }
 
 function importIntakeJson(file){
@@ -886,6 +1052,166 @@ function runStudio(kind){
   });
 }
 
+
+/* ---------------- Extracted picture gallery ---------------- */
+
+async function sha256Blob(blob){
+  if (!blob || !crypto || !crypto.subtle) return "";
+  var digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+  return Array.from(new Uint8Array(digest)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");
+}
+
+async function syncImagesFromServer(){
+  if (!window.ARCReportAssets || typeof window.ARCReportAssets.list !== "function") { state.images=[]; renderImages(); return []; }
+  try {
+    var all = await window.ARCReportAssets.list("picture");
+    state.images = (all || []).filter(function(x){ return x.derivedFromDocumentId || x.origin === "notebook-image-extract"; });
+  } catch(e){ state.images=[]; }
+  renderImages();
+  return state.images;
+}
+
+function renderImages(){
+  var root = $("imageGallery");
+  if (!root) return;
+  root.innerHTML = "";
+  $("imgCount").textContent = String(state.images.length);
+  state.images.forEach(function(asset){
+    var card = el("div","img-card");
+    var img = document.createElement("img");
+    img.loading = "lazy";
+    img.alt = asset.title || "Extracted case image";
+    var url = window.ARCReportAssets && window.ARCReportAssets.fileUrl ? window.ARCReportAssets.fileUrl(asset) : "";
+    if (url) img.src = url;
+    img.addEventListener("click",function(){ if(url) window.open(url,"_blank","noopener"); });
+    card.appendChild(img);
+    var meta = el("div","img-meta");
+    var title = el("b",null,asset.title || "Extracted picture"); meta.appendChild(title);
+    meta.appendChild(document.createTextNode((asset.sourceDocumentName || asset.source || "Source") + (asset.sourcePage ? " · p. " + asset.sourcePage : "")));
+    card.appendChild(meta);
+    var actions=el("div","img-actions");
+    var open=el("button","btn btn-ghost","Open"); open.type="button"; open.addEventListener("click",function(){ if(url) window.open(url,"_blank","noopener"); });
+    var select=el("button","btn btn-ghost",asset.status === "selected" || asset.selectedForFinal ? "Selected" : "Select exhibit"); select.type="button";
+    select.addEventListener("click",async function(){
+      try{
+        var next=await window.ARCReportAssets.save(Object.assign({},asset,{status:"selected",selectedForFinal:true}));
+        Object.assign(asset,next); renderImages(); toast("Picture selected for exhibit review. It still requires approval before final release.");
+      }catch(e){toast(String(e.message||e));}
+    });
+    actions.appendChild(open);actions.appendChild(select);card.appendChild(actions);root.appendChild(card);
+  });
+}
+
+function pdfObject(page,name){
+  return new Promise(function(resolve,reject){
+    try { page.objs.get(name,function(obj){ resolve(obj); }); }
+    catch(e){ reject(e); }
+  });
+}
+
+function canvasToBlob(canvas,type){ return new Promise(function(resolve){ canvas.toBlob(resolve,type||"image/png",0.94); }); }
+
+async function pdfImageObjectToBlob(obj){
+  if (!obj || !obj.width || !obj.height) return null;
+  var canvas=document.createElement("canvas"); canvas.width=obj.width; canvas.height=obj.height;
+  var ctx=canvas.getContext("2d",{willReadFrequently:false});
+  if (obj.bitmap){ ctx.drawImage(obj.bitmap,0,0,obj.width,obj.height); return canvasToBlob(canvas,"image/png"); }
+  var data=obj.data;
+  if (!data) return null;
+  var w=obj.width,h=obj.height,total=w*h,rgba=new Uint8ClampedArray(total*4);
+  if (data.length === total*4){ rgba.set(data); }
+  else if (data.length === total*3){ for(var i=0,j=0;i<total;i++,j+=3){var k=i*4;rgba[k]=data[j];rgba[k+1]=data[j+1];rgba[k+2]=data[j+2];rgba[k+3]=255;} }
+  else if (data.length === total){ for(var n=0;n<total;n++){var q=n*4;rgba[q]=rgba[q+1]=rgba[q+2]=data[n];rgba[q+3]=255;} }
+  else return null;
+  ctx.putImageData(new ImageData(rgba,w,h),0,0);
+  return canvasToBlob(canvas,"image/png");
+}
+
+async function extractPdfPictures(file, source){
+  var pdfjs=await ensurePdfJs();
+  var doc=await pdfjs.getDocument({data:await file.arrayBuffer()}).promise;
+  var out=[];
+  for(var p=1;p<=doc.numPages;p++){
+    var page=await doc.getPage(p),ops=await page.getOperatorList(),seq=0;
+    for(var i=0;i<ops.fnArray.length;i++){
+      var fn=ops.fnArray[i],obj=null;
+      if(fn===pdfjs.OPS.paintImageXObject){ try{obj=await pdfObject(page,ops.argsArray[i][0]);}catch(e){} }
+      else if(fn===pdfjs.OPS.paintInlineImageXObject){ obj=ops.argsArray[i] && ops.argsArray[i][0]; }
+      if(!obj) continue;
+      var blob=await pdfImageObjectToBlob(obj);
+      if(!blob || !blob.size) continue;
+      seq++; out.push({blob:blob,page:p,index:seq,extension:"png",contentType:"image/png"});
+      if(out.length>=500) return out;
+    }
+  }
+  return out;
+}
+
+function base64Blob(base64,type){
+  var binary=atob(base64),len=binary.length,bytes=new Uint8Array(len);
+  for(var i=0;i<len;i++)bytes[i]=binary.charCodeAt(i);
+  return new Blob([bytes],{type:type||"application/octet-stream"});
+}
+
+async function extractDocxPictures(file){
+  var mm=await ensureMammoth(),out=[],seq=0;
+  await mm.convertToHtml({arrayBuffer:await file.arrayBuffer()},{convertImage:mm.images.imgElement(function(image){
+    return image.read("base64").then(function(data){
+      seq++; var ct=image.contentType||"image/png",ext=(ct.split("/")[1]||"png").replace("jpeg","jpg");
+      out.push({blob:base64Blob(data,ct),page:null,index:seq,extension:ext,contentType:ct});
+      return {src:"data:"+ct+";base64,"+data};
+    });
+  })});
+  return out.slice(0,500);
+}
+
+async function sourceOriginalBlob(source){
+  if (source.serverAssetId && window.ARCReportAssets){
+    var assets=await window.ARCReportAssets.list("source-document");
+    var asset=(assets||[]).find(function(x){return x.id===source.serverAssetId || x.sourceDocumentId===source.id;});
+    if(asset) return sourceBlobFromAsset(asset);
+  }
+  if(window.ARCCaseDocuments && typeof window.ARCCaseDocuments.getIntakeFile==="function"){
+    var row=await window.ARCCaseDocuments.getIntakeFile(source.originalFileId||source.id);
+    if(row&&row.blob)return row.blob;
+  }
+  throw new Error("Original file is not available for " + source.name);
+}
+
+async function extractAllPictures(){
+  if(!state.sources.length){toast("No case documents are available.");return;}
+  if(!window.ARCReportAssets || !(await window.ARCReportAssets.serverReady())){toast("Secure R2 storage is required to extract and save pictures.");return;}
+  $("btnExtractPictures").disabled=true;
+  try{
+    var existing=await window.ARCReportAssets.list("picture"),known=new Set();
+    (existing||[]).forEach(function(x){ if(x.contentHash)known.add(x.contentHash); });
+    var saved=0,unsupported=0;
+    for(var si=0;si<state.sources.length;si++){
+      var source=state.sources[si],ext=extFromName(source.name);
+      if(ext!=="pdf"&&ext!=="docx"){unsupported++;continue;}
+      bootStatus("Extracting pictures...",(si+1)+" of "+state.sources.length+": "+source.name,false);
+      var blob=await sourceOriginalBlob(source);
+      var file=new File([blob],source.name,{type:source.mime||blob.type||"application/octet-stream"});
+      var pics=ext==="pdf"?await extractPdfPictures(file,source):await extractDocxPictures(file);
+      for(var pi=0;pi<pics.length;pi++){
+        var pic=pics[pi],hash=await sha256Blob(pic.blob); if(hash&&known.has(hash))continue; if(hash)known.add(hash);
+        var stem=String(source.name||"document").replace(/\.[^.]+$/,"").replace(/[^a-z0-9_-]+/gi,"_").slice(0,70);
+        var fname=stem+(pic.page?"_p"+pic.page:"")+"_image_"+(pi+1)+"."+pic.extension;
+        var imgFile=new File([pic.blob],fname,{type:pic.contentType});
+        await window.ARCReportAssets.saveWithFile({
+          caseId:state.caseId,type:"picture",title:fname,description:"Derived picture extracted from "+source.name+(pic.page?", page "+pic.page:"")+". The original document remains the source of record.",
+          source:source.name,citation:source.name+(pic.page?", p. "+pic.page:""),status:"draft",selectedForFinal:false,
+          origin:"notebook-image-extract",derived:true,derivedFromDocumentId:source.id,derivedFromAssetId:source.serverAssetId||"",sourceDocumentName:source.name,sourcePage:pic.page||null,contentHash:hash
+        },imgFile);
+        saved++;
+      }
+    }
+    await syncImagesFromServer();
+    toast(saved+" picture"+(saved===1?"":"s")+" extracted and secured"+(unsupported?". Non-PDF/DOCX files were skipped.":"."));
+  }catch(e){toast("Picture extraction stopped: "+String(e.message||e));}
+  finally{$("btnExtractPictures").disabled=false;bootReady();}
+}
+
 /* ---------------- Rendering: header, sources ---------------- */
 
 function renderHeader(){
@@ -899,42 +1225,71 @@ function renderHeader(){
   chip.classList.toggle("ok", Boolean(window.ARCAI));
 }
 
+function sourceCategoryLabel(value){
+  var v = String(value || "").toLowerCase();
+  if (/docket|masscourt|court/.test(v)) return "Court / Docket";
+  if (/police|criminal/.test(v)) return "Police Reports";
+  if (/discovery/.test(v)) return "Discovery";
+  if (/investigator/.test(v)) return "Investigator Reports";
+  if (/witness|interview|statement/.test(v)) return "Witness / Interview Records";
+  if (/media|news/.test(v)) return "Media / News";
+  if (/motion|legal/.test(v)) return "Legal / Motions";
+  if (/notebook/.test(v)) return "Notebook Additions";
+  return "Other Case Documents";
+}
+
+function sourceStatusLabel(source){
+  var raw = String(source.processingStatus || source.extractionStatus || source.status || "Uploaded");
+  var low = raw.toLowerCase();
+  if (low === "extracted" || low === "ready" || low === "text extracted") return "Text extracted";
+  if (low === "read-no-fields") return "No structured fields detected";
+  if (low === "stored-only") return "Uploaded · text unavailable";
+  if (low === "pending" || low === "uploaded") return "Uploaded";
+  if (low === "partial") return "Partial text extracted";
+  if (low === "failed") return "Processing needs review";
+  return raw;
+}
+
 function renderSources(){
   var list = $("srcList");
   list.innerHTML = "";
+  var groups = {};
   state.sources.forEach(function(s){
-    var item = el("div", "src-item");
-    item.dataset.id = s.id;
-    var x = el("button", "src-x", "\u00d7");
-    x.title = "Remove from notebook";
-    x.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      removeSource(s.id);
+    var label = sourceCategoryLabel(s.docType || s.category || s.origin);
+    (groups[label] = groups[label] || []).push(s);
+  });
+  var order = ["Court / Docket","Police Reports","Discovery","Investigator Reports","Witness / Interview Records","Media / News","Legal / Motions","Notebook Additions","Other Case Documents"];
+  order.forEach(function(groupName){
+    var records = groups[groupName] || [];
+    if (!records.length) return;
+    list.appendChild(el("div", "src-group", groupName + " · " + records.length));
+    records.forEach(function(s){
+      var item = el("div", "src-item");
+      item.dataset.id = s.id;
+      var x = el("button", "src-x", "\u00d7");
+      x.title = "Remove from this Notebook view (the case file remains stored)";
+      x.addEventListener("click", function(ev){ ev.stopPropagation(); removeSource(s.id); });
+      item.appendChild(x);
+      item.appendChild(el("div", "src-name", s.name));
+      var sub = el("div", "src-sub");
+      var pages = (s.pages || []).length;
+      sub.appendChild(el("span", "src-type", (extFromName(s.name) || "doc") + (pages ? " | " + pages + " pg" : "")));
+      var stCls = "st-pending";
+      if (s.status === "READY") stCls = "st-ready";
+      else if (s.status === "PARTIAL") stCls = "st-partial";
+      else if (s.status === "FAILED") stCls = "st-failed";
+      sub.appendChild(el("span", "st " + stCls, sourceStatusLabel(s)));
+      if (s.serverStored) sub.appendChild(el("span", "src-type", "R2 secured"));
+      item.appendChild(sub);
+      item.addEventListener("click", function(){ openSourceViewer(s.id, null, null); });
+      list.appendChild(item);
     });
-    item.appendChild(x);
-    item.appendChild(el("div", "src-name", s.name));
-    var sub = el("div", "src-sub");
-    var pages = (s.pages || []).length;
-    sub.appendChild(el("span", "src-type", (extFromName(s.name) || "doc") + (pages ? " | " + pages + " pg" : "")));
-    var stCls = "st-pending";
-    if (s.status === "READY") stCls = "st-ready";
-    else if (s.status === "PARTIAL") stCls = "st-partial";
-    else if (s.status === "FAILED") stCls = "st-failed";
-    sub.appendChild(el("span", "st " + stCls, s.status));
-    if (s.origin === "intake-json" || s.origin === "intake"){
-      sub.appendChild(el("span", "src-type", "intake"));
-    }
-    item.appendChild(sub);
-    item.addEventListener("click", function(){ openSourceViewer(s.id, null, null); });
-    list.appendChild(item);
   });
   $("srcCount").textContent = String(state.sources.length);
   var note = $("intakeNote");
-  if (!state.sources.length){
-    note.textContent = "Documents processed in New Matter Initiation for this case appear here automatically. Use Sync from intake if this notebook was opened before intake finished.";
-  } else {
-    note.textContent = "";
-  }
+  note.textContent = state.sources.length
+    ? "All case documents are linked to this Notebook. New Notebook uploads are added to the same ARC case and secured in R2."
+    : "No case documents are available yet. Upload during New Matter Initiation or drop a report here.";
   updateGates();
   renderHeader();
 }
@@ -1335,7 +1690,7 @@ function renderMindmapView(d){
   root.appendChild(el("div", "subtitle", "Topic tree built from the notebook sources. Hover a node for its source citation."));
   var wrap = el("div");
   wrap.id = "mindmapSvgWrap";
-  wrap.innerHTML = buildMindmapSvg(d);
+  wrap.innerHTML = (window.ARC && ARC.safeSvg) ? ARC.safeSvg(buildMindmapSvg(d)) : "";
   root.appendChild(wrap);
   return root;
 }
@@ -1731,6 +2086,8 @@ function wire(){
   $("matterName").addEventListener("click", openSettings);
   $("btnSettingsCancel").addEventListener("click", function(){ $("settingsOverlay").classList.remove("show"); });
   $("btnSettingsSave").addEventListener("click", saveSettings);
+  $("btnBootRetry").addEventListener("click", function(){ location.reload(); });
+  $("btnBootCases").addEventListener("click", function(){ location.href = "cases/index.html?action=search"; });
 
   $("browseLink").addEventListener("click", function(){ $("fileInput").click(); });
   $("fileInput").addEventListener("change", function(ev){
@@ -1747,10 +2104,15 @@ function wire(){
   });
 
   $("btnIntakeSync").addEventListener("click", function(){
-    syncFromIntake().then(function(added){
-      toast(added ? ("Synced " + added + " document" + (added === 1 ? "" : "s") + " from intake.") : "No new intake documents found for this case.");
-    });
+    bootStatus("Refreshing case files...", "Checking intake, D1, and R2 for documents linked to this case.", false);
+    syncCaseDocuments().then(function(added){
+      return syncImagesFromServer().then(function(){ return added; });
+    }).then(function(added){
+      bootReady();
+      toast(added ? ("Added " + added + " case document" + (added === 1 ? "" : "s") + ".") : "Case files are up to date.");
+    }).catch(function(error){ bootReady(); toast("Refresh failed: " + String(error.message || error)); });
   });
+  $("btnExtractPictures").addEventListener("click", extractAllPictures);
   $("btnIntakeImport").addEventListener("click", function(){ $("intakeJsonInput").click(); });
   $("intakeJsonInput").addEventListener("change", function(ev){
     if (ev.target.files && ev.target.files[0]) importIntakeJson(ev.target.files[0]);
@@ -1801,6 +2163,17 @@ function wire(){
     }
   });
 
+  document.addEventListener("arc:case-context", function(ev){
+    var c = ev.detail || {};
+    if (!state.caseId || String(c.caseId || "") === String(state.caseId || "")) {
+      applyCaseIdentity(c); saveActiveCase(); renderHeader();
+    }
+  });
+  document.addEventListener("arc:case-updated", function(ev){
+    var c = ev.detail || {};
+    if (String(c.caseId || c.id || "") === String(state.caseId || "")) { applyCaseIdentity(c); saveActiveCase(); renderHeader(); }
+  });
+
   window.addEventListener("message", function(ev){
     var msg = ev.data;
     if (!msg || msg.type !== "ARC_INTAKE_DOCUMENTS" || !msg.payload) return;
@@ -1822,7 +2195,7 @@ function wire(){
       if (!dRec.status) dRec.status = classifyStatus(dRec.pages);
       chain = chain.then(function(){ return idbPut("documents", dRec); });
     });
-    chain.then(function(){ return syncFromIntake(); }).then(function(){
+    chain.then(function(){ return syncCaseDocuments(); }).then(function(){
       renderHeader();
     });
   });
@@ -1830,28 +2203,31 @@ function wire(){
 
 /* ---------------- Boot ---------------- */
 
-function boot(){
-  loadActiveCase();
-  loadNotes();
-  openDb().then(function(d){
-    db = d;
-    return syncFromIntake();
-  }).then(function(){
-    return idbByCase("outputs", state.caseId);
-  }).then(function(outs){
-    state.outputs = (outs || []).sort(function(a,b){ return b.createdAt - a.createdAt; });
-    renderOutputs();
-    renderNotes();
-    renderHeader();
-    renderChat();
-  }).catch(function(err){
-    toast("Storage failed to open: " + String(err && err.message || err));
-    renderSources();
-    renderNotes();
-    renderChat();
-    renderHeader();
-  });
+async function boot(){
   wire();
+  bootStatus("Loading case...", "Connecting the Notebook to the active ARC case.", false);
+  try {
+    if (window.ARCUnified && typeof window.ARCUnified.hydrateFromUrl === "function") {
+      var hydrated = await window.ARCUnified.hydrateFromUrl();
+      if (requestedNotebookCaseId() && !hydrated) throw new Error("The requested case could not be loaded from the ARC server.");
+    }
+    if (!loadActiveCase()) throw new Error("No active ARC case was provided. Open a case from the Case Dashboard and try again.");
+    loadNotes();
+    renderHeader();
+    bootStatus("Loading case documents...", "Opening the Notebook document index for " + (state.caseName || state.caseId) + ".", false);
+    db = await openDb();
+    await syncCaseDocuments();
+    await syncImagesFromServer();
+    var outs = await idbByCase("outputs", state.caseId);
+    state.outputs = (outs || []).sort(function(a,b){ return b.createdAt - a.createdAt; });
+    renderOutputs(); renderNotes(); renderHeader(); renderChat(); renderSources(); renderImages();
+    bootReady();
+    toast("Notebook ready · " + state.sources.length + " case source" + (state.sources.length===1?"":"s") + ".");
+  } catch(err){
+    console.error("ARC Notebook startup failed", err);
+    renderSources(); renderNotes(); renderChat(); renderHeader(); renderImages();
+    bootStatus("Notebook could not finish loading", String(err && err.message || err) + " Nothing was changed. Retry or return to the Case Dashboard.", true);
+  }
 }
 
 boot();

@@ -155,9 +155,12 @@
       size: Number(opts.size || 0) || 0,
       uploadedAt: opts.uploadedAt || Date.now(),
       status: normalizeStatus(opts.status, pages),
+      processingStatus: text(opts.processingStatus || opts.extractionStatus),
       docType: text(opts.docType || opts.category),
       origin: text(opts.origin) || "intake",
       sha256: text(opts.sha256),
+      serverAssetId: text(opts.serverAssetId || opts.assetId),
+      serverStored: Boolean(opts.serverStored || opts.serverAssetId || opts.assetId),
       pages: pages,
       extractionError: text(opts.extractionError),
       updatedAt: new Date().toISOString()

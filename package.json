@@ -1,15 +1,19 @@
 {
   "name": "arc-integrated-system",
-  "version": "11.7.0-production",
+  "version": "11.7.4-production",
   "private": true,
-  "description": "ARC Integrated Case System — Cloudflare production release",
+  "description": "ARC Integrated Case System \u2014 Cloudflare production release",
   "scripts": {
-    "test": "node scripts/production-config-check.mjs && node --test tests/arc_sync_worker_auth.test.mjs tests/arc_ai_routing.test.mjs tests/arc_case_link.test.mjs tests/arc_research_worker.test.mjs tests/arc_people_bridge.test.mjs && npm --prefix modules/motion-legal-integrated test && node scripts/final-report-smoke.js && node scripts/local-navigation-check.mjs",
-    "test:api": "node --test tests/arc_sync_worker_auth.test.mjs tests/arc_ai_routing.test.mjs tests/arc_research_worker.test.mjs tests/arc_people_bridge.test.mjs",
+    "test": "node scripts/security-hardening-check.mjs && node scripts/deploy-pages-sync-check.mjs && node scripts/production-config-check.mjs && node scripts/notebook-upgrade-check.mjs && node --test tests/arc_sync_worker_auth.test.mjs tests/arc_ai_routing.test.mjs tests/arc_case_link.test.mjs tests/arc_research_worker.test.mjs tests/arc_people_bridge.test.mjs tests/arc_case_sync_conflict.test.mjs && npm --prefix modules/motion-legal-integrated test && node scripts/final-report-smoke.js && node scripts/local-navigation-check.mjs",
+    "test:api": "node --test tests/arc_sync_worker_auth.test.mjs tests/arc_ai_routing.test.mjs tests/arc_research_worker.test.mjs tests/arc_people_bridge.test.mjs tests/arc_case_sync_conflict.test.mjs",
     "test:staging": "node scripts/production-api-smoke.mjs",
     "test:local-links": "node scripts/local-navigation-check.mjs",
     "test:pages-links": "node scripts/production-pages-link-check.mjs",
-    "serve": "node scripts/static-serve.mjs"
+    "serve": "node scripts/static-serve.mjs",
+    "test:security": "node scripts/security-hardening-check.mjs",
+    "test:pages-sync": "node scripts/deploy-pages-sync-check.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

@@ -22,6 +22,6 @@ Before editing Gemini integrations:
 
 ## Claude-only final report polish
 
-Client-facing final report polishing is locked to Anthropic Claude through `/api/ai/final-polish`.
+Client-facing final report polishing is locked to Anthropic Claude through `/ai/run` with task `report.final.revise` (see `ARCProviders.finalReportPolish`).
 Gemini remains the tool/research/PDF-review engine and OpenAI remains an optional fallback for non-final-polish workflows, but neither Gemini nor OpenAI may polish final report text. All Claude-polished drafts are returned as `needs_review` and are not saved automatically.
-Configure `ANTHROPIC_API_KEY` and optionally `FINAL_REPORT_CLAUDE_MODEL`; the endpoint ignores non-Claude provider selections.
+Configure `ANTHROPIC_API_KEY` and optionally `CLAUDE_MODEL` / `FINAL_REPORT_CLAUDE_MODEL`; the gateway ignores non-Claude provider selections for final-report tasks.

@@ -1,23 +1,24 @@
-ARC GO-LIVE CHECKLIST — 2026-08-07
-=================================
+ARC GO-LIVE / UPGRADE CHECKLIST — 2026-08-07
+===========================================
 
-1. Enable Cloudflare R2.
-2. Create R2 bucket exactly: arc-legal-files
-3. Apply cloudflare-worker/production_schema.sql to D1 arc_legal.
-4. Seed your Access email as the first active administrator (see PRODUCTION_DEPLOYMENT.md).
-5. Set Worker secrets (never in Pages or this ZIP):
-   AI: GOOGLE_API_KEY, ANTHROPIC_API_KEY
-   Legal: COURTLISTENER_API_KEY, ANTHROPIC_API_KEY
-   Research: FIRECRAWL_API_KEY
-6. Deploy arc-sync-backend, AI, Legal, and Research Workers.
-7. Protect private pages and API routes with the configured Cloudflare Access app.
-8. Deploy ONLY the contents of DEPLOY_PAGES/ to Cloudflare Pages.
-9. Sign in and run /arc_preflight.html. Do not use live case data if any check is red.
-10. Run a closed case end-to-end, including final report and motion export, before first live matter.
+CURRENT PRODUCTION INFRASTRUCTURE
+1. R2 bucket arc-legal-files exists. Keep Public Access DISABLED.
+2. D1 arc_legal is the shared production database.
+3. Cloudflare Access protects the investigator/private routes.
+4. Gemini, Claude, CourtListener, and Firecrawl secrets remain Worker secrets in Cloudflare — never put them in this ZIP.
 
-Production configuration embedded in this release:
+11.7.4 GO-LIVE DEPLOYMENT
+5. Run npm test.
+6. Deploy DEPLOY_PAGES/ to the existing Cloudflare Pages project (includes bridge conflict/rebase fixes).
+7. Sync/Research Workers from 11.7.3 remain required if not already redeployed. No secret re-entry.
+8. Hard-refresh the browser after Pages finishes deploying.
+9. Sign in and run /arc_preflight.html.
+10. Prove New Case → Intake → Notebook handoff on a closed/test matter.
+11. Prove Workspace rapid edits + a forced multi-session field conflict resolve via Server/Your Version before Final Review approval.
+
+Production configuration:
 Access team: old-lake-2c90.cloudflareaccess.com
 Access AUD: 165b93a400b3aa4c67a33441298df65793a1b50886a070d5087e59ec0732b212
 D1: arc_legal / 6c04c557-f8de-4590-a235-76fa117ff6d8
-R2 expected: arc-legal-files
+R2: arc-legal-files (private)
 Origins: https://arcdefensereport.com and https://www.arcdefensereport.com

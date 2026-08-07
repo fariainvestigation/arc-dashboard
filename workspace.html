@@ -589,30 +589,67 @@
       document.getElementById("lastSaved").textContent = formatDate(context.updatedAt);
     }
 
-    function saveCaseContext(showConfirmation) {
-      const saved = window.ARCUnified.saveCase({
-        matter: document.getElementById("matter").value,
-        docket: document.getElementById("docket").value,
-        clientName: document.getElementById("clientName").value,
-        investigator: document.getElementById("investigator").value
-      });
-      if (window.ARCCaseDocuments && window.ARCCaseDocuments.setActiveCase) {
-        window.ARCCaseDocuments.setActiveCase(saved);
+    async function saveCaseContext(showConfirmation) {
+      const savedLabel = document.getElementById("lastSaved");
+      try {
+        const saver = typeof window.ARCUnified.saveCaseAsync === "function"
+          ? window.ARCUnified.saveCaseAsync.bind(window.ARCUnified)
+          : null;
+        if (!saver) throw new Error("Shared case bridge is not available.");
+        if (savedLabel) savedLabel.textContent = "Saving…";
+        const saved = await saver({
+          matter: document.getElementById("matter").value,
+          docket: document.getElementById("docket").value,
+          clientName: document.getElementById("clientName").value,
+          investigator: document.getElementById("investigator").value
+        });
+        if (window.ARCCaseDocuments && window.ARCCaseDocuments.setActiveCase) {
+          window.ARCCaseDocuments.setActiveCase(saved);
+        }
+        sendCaseContext();
+        renderCaseHeader();
+        renderWorkflow();
+        if (savedLabel) savedLabel.textContent = "Saved";
+        if (showConfirmation) alert("The active case context was shared with every ARC module.");
+        return saved;
+      } catch (error) {
+        const conflicts = window.ARCUnified && window.ARCUnified.hasUnresolvedCaseConflicts && window.ARCUnified.hasUnresolvedCaseConflicts();
+        if (savedLabel) savedLabel.textContent = conflicts ? "Sync conflict" : "Save failed — Retry";
+        if (showConfirmation) alert(error && error.message ? error.message : "Case could not be saved to ARC.");
+        throw error;
       }
-      sendCaseContext();
-      renderCaseHeader();
-      renderWorkflow();
-      if (showConfirmation) alert("The active case context was shared with every ARC module.");
-      return saved;
     }
+
+    document.addEventListener("arc:case-save-status", function (event) {
+      const detail = event.detail || {};
+      const savedLabel = document.getElementById("lastSaved");
+      if (!savedLabel) return;
+      if (detail.state === "saving") savedLabel.textContent = "Saving…";
+      else if (detail.state === "saved") savedLabel.textContent = "Saved";
+      else if (detail.state === "conflict") savedLabel.textContent = "Sync conflict";
+      else if (detail.state === "error") savedLabel.textContent = "Save failed — Retry";
+    });
+    document.addEventListener("arc:case-sync-conflict", function () {
+      renderCaseHeader();
+      const checklistHost = document.getElementById("releaseChecklist");
+      if (checklistHost && window.ARCUnified && window.ARCUnified.getReleaseChecklist) {
+        /* leave checklist content alone until Final Review is opened */
+      }
+    });
 
     ["matter", "docket", "clientName", "investigator"].forEach(function (id) {
       document.getElementById(id).addEventListener("input", function () {
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(function () { saveCaseContext(false); }, 500);
+        const savedLabel = document.getElementById("lastSaved");
+        if (savedLabel) savedLabel.textContent = "Saving…";
+        saveTimer = setTimeout(function () {
+          saveCaseContext(false).catch(function () { /* status already updated */ });
+        }, 500);
       });
     });
-    document.getElementById("saveCase").addEventListener("click", function () { saveCaseContext(true); });
+    document.getElementById("saveCase").addEventListener("click", function () {
+      saveCaseContext(true).catch(function () { /* alert already shown */ });
+    });
 
     function reportCard(report) {
       const reviewStatus = status(report.reviewStatus);

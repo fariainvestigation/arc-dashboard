@@ -317,6 +317,16 @@ function intakePutBlob(meta, blob) {
   });
 }
 
+function intakeGetBlob(fileId) {
+  return intakeOpenDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      const req = db.transaction("files", "readonly").objectStore("files").get(fileId);
+      req.onsuccess = function () { resolve(req.result || null); };
+      req.onerror = function () { reject(req.error); };
+    });
+  });
+}
+
 
 async function intakeSha256(file) {
   if (!file || !file.arrayBuffer || !window.crypto || !window.crypto.subtle) return "";
@@ -371,9 +381,12 @@ async function intakeMirrorSharedDocument(meta, extractedText, status, extractio
     size: meta.size,
     uploadedAt: meta.uploadedAt,
     status: status,
+    processingStatus: meta.extraction && meta.extraction.status || "",
     docType: meta.category,
     origin: "new-matter-initiation",
     sha256: meta.sha256 || "",
+    serverAssetId: meta.serverAssetId || "",
+    serverStored: Boolean(meta.serverStored || meta.serverAssetId),
     text: extractedText || "",
     extractionError: extractionError || ""
   });
@@ -839,9 +852,10 @@ function intakeBuildCasePayload() {
     docket: intakeState.docket,
     court: intakeState.court,
     subjectName: intakeState.defendant,
-    clientName: intakeState.attorney,
+    clientName: intakeState.defendant,
+    attorney: intakeState.attorney,
     incidentDate: intakeState.incidentDate,
-    status: "intake",
+    status: "open",
     source: "case-intake-dashboard",
     notes: summary,
     uploadedFiles: uploads,
@@ -873,7 +887,7 @@ function intakeRegisterCase(saved) {
     court: intakeText(saved.court),
     clientName: intakeText(saved.clientName),
     subjectName: intakeText(saved.subjectName),
-    attorney: intakeText(saved.clientName),
+    attorney: intakeText(saved.attorney),
     attorneyFirm: row ? intakeText(row.attorneyFirm) : "",
     investigator: intakeText(saved.investigator),
     charges: row ? intakeText(row.charges) : "",
@@ -895,13 +909,83 @@ function intakeRegisterCase(saved) {
   try { localStorage.setItem(key, JSON.stringify(registry)); } catch (error) {}
 }
 
-function intakeGenerate() {
+
+function intakeAllUploadedMetas() {
+  const uploads = [];
+  intakeState.policeSeed.forEach(function (file) { uploads.push(file); });
+  INTAKE_CORE.forEach(function (row) { (intakeState.core[row.id].files || []).forEach(function (file) { uploads.push(file); }); });
+  INTAKE_PARTIES.forEach(function (row) { (intakeState.parties[row.id].files || []).forEach(function (file) { uploads.push(file); }); });
+  const seen = new Set();
+  return uploads.filter(function (file) { const id = intakeText(file && file.id); if (!id || seen.has(id)) return false; seen.add(id); return true; });
+}
+
+async function intakePromoteUploadsToServer(savedCase) {
+  const caseId = intakeText(savedCase && savedCase.caseId);
+  const uploads = intakeAllUploadedMetas();
+  if (!uploads.length) return [];
+  if (!window.ARCReportAssets || typeof window.ARCReportAssets.saveWithFile !== "function") {
+    throw new Error("Secure case file storage is unavailable. The case was saved, but its uploaded documents were not committed to R2.");
+  }
+  const stored = [];
+  for (let i = 0; i < uploads.length; i += 1) {
+    const meta = uploads[i];
+    intakeNotify("Securing case document " + (i + 1) + " of " + uploads.length + ": " + meta.name);
+    const local = await intakeGetBlob(meta.id);
+    if (!local || !local.blob) throw new Error("The local upload could not be reopened: " + meta.name);
+    const assetId = "source_" + meta.id;
+    const extraction = meta.extraction || {};
+    const record = await window.ARCReportAssets.saveWithFile({
+      id: assetId,
+      caseId: caseId,
+      type: "source-document",
+      title: meta.name,
+      description: "Case source document uploaded through New Matter Initiation.",
+      source: "new-matter-initiation",
+      status: "draft",
+      selectedForFinal: false,
+      sourceDocumentId: meta.id,
+      documentCategory: meta.category || "",
+      extractionStatus: extraction.status || "uploaded",
+      extractionPreview: extraction.preview || "",
+      originalSha256: meta.sha256 || "",
+      origin: "new-matter-initiation"
+    }, local.blob);
+    meta.serverAssetId = record.id || assetId;
+    meta.serverStored = true;
+    if (window.ARCCaseDocuments && typeof window.ARCCaseDocuments.byCase === "function" && typeof window.ARCCaseDocuments.put === "function") {
+      const docs = await window.ARCCaseDocuments.byCase(caseId);
+      const existing = (docs || []).find(function (doc) { return doc.id === meta.id; });
+      if (existing) {
+        existing.serverAssetId = meta.serverAssetId;
+        existing.serverStored = true;
+        existing.sha256 = existing.sha256 || meta.sha256 || (record.file && record.file.sha256) || "";
+        existing.processingStatus = existing.processingStatus || extraction.status || "";
+        await window.ARCCaseDocuments.put(existing);
+      } else {
+        const extractionRow = (intakeState.extractions || []).find(function (row) { return row.id === meta.id; });
+        await intakeMirrorSharedDocument(meta, extractionRow && extractionRow.preview || extraction.preview || "", extraction.status === "stored-only" ? "FAILED" : "READY", extraction.error || "");
+      }
+    }
+    stored.push(record);
+  }
+  intakePersist();
+  return stored;
+}
+
+async function intakeGenerate() {
+  const generateButtons = [intakeEl("btnGenerate"), intakeEl("btnGenerateFooter")].filter(Boolean);
+  generateButtons.forEach(function (button) { button.disabled = true; button.setAttribute("aria-busy", "true"); });
   try {
     const payload = intakeBuildCasePayload();
-    if (!window.ARCUnified || typeof window.ARCUnified.saveCase !== "function") {
+    if (!window.ARCUnified || (typeof window.ARCUnified.saveCaseAsync !== "function" && typeof window.ARCUnified.saveCase !== "function")) {
       throw new Error("Shared case bridge is not available.");
     }
-    const saved = window.ARCUnified.saveCase(payload);
+    intakeSetStatus("Creating secure case record...");
+    const saved = typeof window.ARCUnified.saveCaseAsync === "function"
+      ? await window.ARCUnified.saveCaseAsync(payload)
+      : window.ARCUnified.saveCase(payload);
+    if (!saved || !saved.caseId) throw new Error("ARC created the case but did not return a valid case ID.");
+
     if (window.ARCCaseDocuments && typeof window.ARCCaseDocuments.setActiveCase === "function") {
       window.ARCCaseDocuments.setActiveCase({
         caseId: saved.caseId,
@@ -913,25 +997,38 @@ function intakeGenerate() {
         investigator: saved.investigator
       });
     }
+
     intakeRegisterCase(saved);
     intakePersist();
-    intakeSetStatus("Active case generated: " + (saved.matter || saved.docket) + " · shared to all modules");
+    await intakePromoteUploadsToServer(saved);
+
+    // Re-save the complete case after R2 promotion so the central case record
+    // carries the server asset IDs for every uploaded source.
+    const promotedPayload = intakeBuildCasePayload();
+    promotedPayload.uploadedFiles = intakeAllUploadedMetas();
+    const finalSaved = typeof window.ARCUnified.saveCaseAsync === "function"
+      ? await window.ARCUnified.saveCaseAsync(Object.assign({}, saved, promotedPayload, { caseId: saved.caseId }))
+      : window.ARCUnified.saveCase(Object.assign({}, saved, promotedPayload, { caseId: saved.caseId }));
+
+    intakeRegisterCase(finalSaved || saved);
+    intakeSetStatus("Active case generated: " + (saved.matter || saved.docket) + " · documents secured · shared to all modules");
     intakeSetShellMeta("Active: " + (saved.matter || "case") + (saved.docket ? " · " + saved.docket : ""));
     if (window.parent !== window) {
       try {
-        window.parent.postMessage({ type: "ARC_INTAKE_GENERATED", case: saved }, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"));
+        window.parent.postMessage({ type: "ARC_INTAKE_GENERATED", case: finalSaved || saved }, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"));
         window.parent.postMessage({ type: "ARC_MODULE_READY", title: document.title }, ((location.protocol === "http:" || location.protocol === "https:") ? location.origin : "*"));
       } catch (error) {}
     }
-    intakeNotify("Case information generated and shared. Opening Notebook.");
-    if (window.parent === window && /\/cases\/intake\/?$/.test(location.pathname)) {
-      setTimeout(function () {
-        location.href = "../../arc-notebook.html?case=" + encodeURIComponent(saved.caseId) +
-          "&mode=new&returnTo=" + encodeURIComponent("cases/index.html");
-      }, 220);
+    intakeNotify("Case saved. All intake documents are secured. Opening Notebook.");
+    if (window.parent === window) {
+      location.href = "../../arc-notebook.html?case=" + encodeURIComponent(saved.caseId) +
+        "&mode=new&returnTo=" + encodeURIComponent("cases/index.html");
     }
   } catch (error) {
     intakeNotify(error.message || "Generate failed.", true);
+    intakeSetStatus("Initiate Case failed: " + (error.message || "Unknown error"));
+  } finally {
+    generateButtons.forEach(function (button) { button.disabled = false; button.removeAttribute("aria-busy"); });
   }
 }
 

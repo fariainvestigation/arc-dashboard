@@ -479,15 +479,19 @@ export default {
       const headers = { ...grant };
       if (grant["Access-Control-Allow-Origin"]) {
         headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS";
-        headers["Access-Control-Allow-Headers"] = "Content-Type, If-Match";
+        headers["Access-Control-Allow-Headers"] = "Content-Type, If-Match, Cf-Access-Jwt-Assertion, X-ARC-Case-ID";
         headers["Access-Control-Max-Age"] = "600";
       }
       return new Response(null, { status: 204, headers });
     }
 
-    // For non-preflight requests from a non-allowlisted origin we simply omit
-    // CORS headers; the browser then refuses to expose the response.
-    const cors = corsFor(request, env) || {};
+    // Match AI/Research/Legal: reject disallowed Origins before auth or work.
+    // Same-origin requests (no Origin header) continue normally.
+    const corsGrant = corsFor(request, env);
+    if (corsGrant === null) {
+      return json({ error: "Origin not allowed" }, 403);
+    }
+    const cors = corsGrant;
 
     if (!env.ARC_DB) {
       return json({ error: "D1 binding ARC_DB is not configured" }, 500, cors);

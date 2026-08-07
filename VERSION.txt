@@ -1,5 +1,1 @@
-ARC Integrated Case System
-Production release: 11.7.0-production
-Build date: 2026-08-07
-Backend: Cloudflare Pages + Access + Workers + D1 + R2
-Domain: arcdefensereport.com
+ARC 11.7.4 — GO LIVE — 2026-08-07

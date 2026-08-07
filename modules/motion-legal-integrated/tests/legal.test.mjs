@@ -2,9 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { makeEnv, req, jsonOf, seedUser, stubFetch } from './harness.mjs';
-import { handleRequest, filingReview, attorneyHtml } from '../worker/legal_worker.mjs';
-import { findFabricatedCitations, USABLE_STATUSES } from '../worker/providers.mjs';
-import { normalizeOpinionType, pickOpinionText } from '../worker/arc_courtlistener_client.mjs';
+import { handleRequest, filingReview, attorneyHtml } from '../../../cloudflare-worker/legal/legal_worker.mjs';
+import { findFabricatedCitations, USABLE_STATUSES } from '../../../cloudflare-worker/legal/providers.mjs';
+import { normalizeOpinionType, pickOpinionText } from '../../../cloudflare-worker/legal/arc_courtlistener_client.mjs';
 
 const CASE_A = 'arc-case-aaa';
 const CASE_B = 'arc-case-bbb';

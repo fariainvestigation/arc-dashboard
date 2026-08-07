@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Case Intake | ARC</title>
-<link rel="icon" href="../../assets/arc-logo.svg" type="image/svg+xml">
+<link rel="icon" href="../../assets/arc-logo-real.webp" type="image/webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -72,7 +72,7 @@
 
 <div class="intake-page-bar">
   <div class="intake-page-brand">
-    <img src="../../assets/arc-logo.svg" alt="">
+    <img src="../../assets/arc-logo-real.webp" alt="">
     <strong>ARC Case Intake</strong>
   </div>
   <div class="intake-page-identity" id="intakeIdentity">confirming identity</div>
@@ -225,16 +225,15 @@
     user into the workspace. The URL id is authoritative; sessionStorage is a
     convenience only.
   */
-  let intakeNavigationStarted = false;
+  // The intake module owns navigation. arc:case-updated can fire after the
+  // D1 case record is created but before its files finish uploading to R2, so
+  // this page only mirrors the active id here and waits for intakeGenerate()
+  // to navigate after the full transaction is complete.
   document.addEventListener("arc:case-updated", function (event) {
-    if (intakeNavigationStarted) return;
     const record = event.detail || {};
     const caseId = String(record.caseId || record.id || "");
     if (!B.isCaseId(caseId)) return;
-    intakeNavigationStarted = true;
     B.setActiveCase(caseId, record.caseName || record.matter || "");
-    window.location.href = "../../arc-notebook.html?case=" + encodeURIComponent(caseId)
-      + "&mode=new&returnTo=" + encodeURIComponent("cases/index.html");
   });
 })();
 </script>

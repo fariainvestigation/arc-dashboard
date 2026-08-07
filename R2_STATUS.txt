@@ -1,0 +1,8 @@
+ARC R2 PRODUCTION STATUS
+========================
+
+Production bucket: arc-legal-files
+Status: CREATED
+Public Access: KEEP DISABLED
+
+ARC source documents, case attachments, legal files, and derived picture assets use this private bucket through authenticated Cloudflare Workers. Do not manually make the bucket public and do not create a second production bucket for this upgrade.

@@ -16,15 +16,11 @@ Shared D1 database:
 R2 bucket expected by the code:
   arc-legal-files
 
-IMPORTANT — ONE EXTERNAL STEP IS STILL REQUIRED
-------------------------------------------------
-R2 is not enabled on the Cloudflare account yet, so the bucket does not exist.
-Before deploying the Workers:
-  1. Enable R2 in Cloudflare.
-  2. Create the bucket named exactly: arc-legal-files
-
-The production code is intentionally configured to FAIL CLOSED when R2 is missing.
-Do not rename the bucket unless you also update both Worker wrangler.toml files.
+PRODUCTION R2 STATUS
+--------------------
+The private R2 bucket `arc-legal-files` has been created in the production Cloudflare account.
+Keep Public Access disabled. The production code is intentionally configured to FAIL CLOSED if the binding is ever missing.
+Do not rename the bucket unless you also update the Worker bindings.
 
 PROVIDER SECRETS — DO NOT PUT THEM IN THIS ZIP
 ----------------------------------------------
@@ -39,7 +35,7 @@ Legal Worker:
 Research Worker:
   FIRECRAWL_API_KEY
 
-Start with PRODUCTION_DEPLOYMENT.md.
+For the 11.7.3 go-live package, deploy DEPLOY_PAGES/ to Pages and redeploy the Sync + Research Workers (Origin/SSRF fixes). Existing secrets stay in Cloudflare. For a fresh full environment, see PRODUCTION_DEPLOYMENT.md.
 
 DEPLOY_PAGES/ is the only folder intended to be uploaded to Cloudflare Pages.
 The Worker source stays outside DEPLOY_PAGES and is deployed with Wrangler.

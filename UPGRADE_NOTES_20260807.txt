@@ -1,0 +1,27 @@
+ARC 11.7.1 PRODUCTION UPGRADE — 2026-08-07
+
+PURPOSE
+Repairs the live New Case → Intake → Initiate Case → Notebook workflow and turns Notebook into the shared case-document workspace. No provider keys or secrets are contained in this package.
+
+KEY REPAIRS
+1. Initiate Case now waits for the authoritative D1 save and R2 document promotion before navigating to Notebook.
+2. Cloudflare case-save ACK responses no longer overwrite full case details with an incomplete acknowledgement.
+3. Case hydration correctly unwraps the server {case: ...} response and accepts ?case= as well as ?caseId=.
+4. Intake files are promoted once to private R2 storage and remain associated with the same caseId.
+5. Notebook automatically hydrates the requested case and synchronizes source documents from Intake/D1/R2; it no longer silently creates a random production fallback case.
+6. Notebook displays visible loading, ready, and actionable error states rather than appearing frozen.
+7. New Notebook uploads become shared case source documents in R2/D1 and can feed the investigation/report workflow.
+8. Upload controls receive drag-and-drop support through the shared bridge, including dynamically rendered file inputs.
+9. Notebook source documents are grouped by case-document category and show clearer processing/storage status.
+10. Added Extract All Pictures for supported PDF/DOCX sources, with derived-image metadata, SHA-256 de-duplication, R2 storage, source-document/page linkage, gallery preview, and exhibit selection. Extracted images are marked DERIVED; the source document remains the record of origin.
+11. Replaced the placeholder large “A” branding with the ARC crest/logo asset derived from the existing ARC report banner and constrained oversized branding.
+12. Preflight Gemini/Claude tests explicitly pass the resolved active caseId.
+13. Fixed latent source-document type constants in arc_report_assets.js.
+14. Added an automated notebook-upgrade contract check to the production test gate.
+
+IMPORTANT PRODUCTION TEST
+After deployment, prove this exact sequence on a closed/test matter:
+New Case → enter case data → drag/drop several PDFs → Initiate Case → Notebook opens automatically → correct matter/docket shown → all intake documents visible → drag/drop another document into Notebook → reload/reopen case → document remains → Extract All Pictures → derived images appear in the Notebook gallery/Evidence workflow.
+
+DEPLOYMENT
+Publish DEPLOY_PAGES/ to Cloudflare Pages. Existing Worker secrets remain in Cloudflare and must not be placed in this ZIP. The existing private R2 bucket is arc-legal-files.
